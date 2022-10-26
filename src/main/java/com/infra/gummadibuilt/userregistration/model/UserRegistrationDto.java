@@ -15,6 +15,8 @@ import java.util.List;
 @Data
 public class UserRegistrationDto implements Serializable {
 
+    private int id;
+
     @NotBlank
     @Size(max = 75)
     private String firstName;
@@ -74,4 +76,29 @@ public class UserRegistrationDto implements Serializable {
     @NotBlank
     @Size(max = 10)
     private String coordinatorMobileNumber;
+
+    public static UserRegistrationDto valueOf(UserRegistration userRegistration) {
+        UserRegistrationDto result = new UserRegistrationDto();
+        result.setId(userRegistration.getId());
+        result.setFirstName(userRegistration.getFirstName());
+        result.setLastName(userRegistration.getLastName());
+        result.setAddress(userRegistration.getAddress());
+        result.setCompanyName(userRegistration.getCompanyName());
+        result.setEmail(userRegistration.getEmail());
+        result.setYearOfEstablishment(userRegistration.getYearOfEstablishment());
+        result.setTypeOfEstablishment(userRegistration.getTypeOfEstablishment());
+        result.setCountryCountryIsoCode(userRegistration.getCountry().getCountryIsoCode());
+        result.setStateStateIsoCode(userRegistration.getState().getStateIsoCode());
+        result.setCityId(userRegistration.getCity().getId());
+        result.setContactName(userRegistration.getContactName());
+        result.setContactPhoneNumber(userRegistration.getContactPhoneNumber());
+        result.setContactDesignation(userRegistration.getContactDesignation());
+        result.setContactEmailAddress(userRegistration.getContactEmailAddress());
+        result.setCoordinatorName(userRegistration.getCoordinatorName());
+        result.setCoordinatorMobileNumber(userRegistration.getCoordinatorMobileNumber());
+
+
+        return result;
+    }
+
 }

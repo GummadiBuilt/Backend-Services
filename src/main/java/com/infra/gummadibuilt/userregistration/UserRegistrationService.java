@@ -17,6 +17,9 @@ import com.infra.gummadibuilt.userregistration.model.UserRegistrationDto;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import static com.infra.gummadibuilt.common.util.CommonModuleUtils.*;
 
 @Service
@@ -65,5 +68,11 @@ public class UserRegistrationService {
         SaveEntityConstraintHelper.save(userRegistrationDao, userRegistration, null);
 
         return userRegistrationDto;
+    }
+
+    public List<UserRegistrationDto> getPendingForApproval() {
+        return userRegistrationDao.findAllByApproveReject(ApproveReject.IN_REVIEW)
+                .stream().map(UserRegistrationDto::valueOf).collect(Collectors.toList());
+
     }
 }

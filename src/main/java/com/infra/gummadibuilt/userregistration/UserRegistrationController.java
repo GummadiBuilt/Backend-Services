@@ -1,20 +1,17 @@
 package com.infra.gummadibuilt.userregistration;
 
-import com.infra.gummadibuilt.masterdata.geography.model.dto.StateDto;
 import com.infra.gummadibuilt.userregistration.model.UserRegistrationDto;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.List;
 
 @RestController
 @RequestMapping("/user-registration")
@@ -36,9 +33,20 @@ public class UserRegistrationController {
             @ApiResponse(responseCode = "404", description = "The resource you were trying to reach is not found")
     })
     @PostMapping
-    public UserRegistrationDto registerUser(@Parameter(description = "ISO2 code of the country")
-                               @Valid @RequestBody UserRegistrationDto userRegistrationDto) {
+    public UserRegistrationDto registerUser(@Valid @RequestBody UserRegistrationDto userRegistrationDto) {
         return userRegistrationService.registerUser(userRegistrationDto);
+    }
+
+    @Operation(summary = "Get applications pending for approval")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success, when pending list of users is returned",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = UserRegistrationDto.class)))
+            ),
+            @ApiResponse(responseCode = "404", description = "The resource you were trying to reach is not found")
+    })
+    @GetMapping
+    public List<UserRegistrationDto> getPendingForApproval() {
+        return userRegistrationService.getPendingForApproval();
     }
 
 }
