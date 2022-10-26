@@ -75,4 +75,10 @@ public class UserRegistrationService {
                 .stream().map(UserRegistrationDto::valueOf).collect(Collectors.toList());
 
     }
+
+    public List<UserRegistrationDto> approveOrRejectRequests(List<Integer> requestIds, ApproveReject approveReject){
+
+
+        return this.getPendingForApproval();
+    }
 }
