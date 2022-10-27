@@ -3,8 +3,8 @@ package com.infra.gummadibuilt.userandrole;
 import com.infra.gummadibuilt.userandrole.model.ApplicationUser;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface UserRepository extends JpaRepository<ApplicationUser, Integer> {
+import java.util.Optional;
 
-    ApplicationUser findByEmail(String email);
-
+public interface ApplicationUserDao extends JpaRepository<ApplicationUser, Integer> {
+    Optional<ApplicationUser> findByEmail(String email);
 }

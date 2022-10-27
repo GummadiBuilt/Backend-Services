@@ -219,6 +219,12 @@ public class GummadiBuiltExceptionHandler {
         return ex.getMessage();
     }
 
+    @ExceptionHandler(UserExistsException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public String userExistsException(UserExistsException ex) {
+        return ex.getMessage();
+    }
+
     @ExceptionHandler(InvalidActionException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public String invalidActionException(InvalidActionException ex) {

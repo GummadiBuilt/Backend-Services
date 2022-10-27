@@ -1,5 +1,6 @@
-package com.infra.gummadibuilt.userregistration.model;
+package com.infra.gummadibuilt.userregistration.model.dto;
 
+import com.infra.gummadibuilt.userregistration.model.UserRegistration;
 import lombok.Data;
 
 import javax.validation.constraints.Max;
