@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -31,7 +32,6 @@ import javax.validation.metadata.ConstraintDescriptor;
 import java.lang.annotation.Annotation;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.nio.file.AccessDeniedException;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -49,6 +49,12 @@ public class GummadiBuiltExceptionHandler {
     // decimal
     private static final Set<Class<?>> DECIMAL_CLASSES = ImmutableSet.of(float.class, double.class, Float.class,
             Double.class, BigDecimal.class);
+
+    @ExceptionHandler(AccessDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ErrorDetails handleAccessDeniedException(AccessDeniedException ex) {
+        return new PermissionDeniedErrorDetails(ex.getMessage());
+    }
 
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -187,12 +193,6 @@ public class GummadiBuiltExceptionHandler {
         ValidationErrorDetails error = new ValidationErrorDetails();
         error.getFields().put(e.getPropertyName(), FieldErrors.duplicate());
         return error;
-    }
-
-    @ExceptionHandler(AccessDeniedException.class)
-    @ResponseStatus(HttpStatus.FORBIDDEN)
-    public ErrorDetails handleAccessDeniedException(AccessDeniedException ex) {
-        return new PermissionDeniedErrorDetails(ex.getMessage());
     }
 
     @ExceptionHandler(EntityNotFoundException.class)
