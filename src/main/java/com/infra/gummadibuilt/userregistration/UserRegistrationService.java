@@ -20,6 +20,7 @@ import com.infra.gummadibuilt.userandrole.model.ApplicationRole;
 import com.infra.gummadibuilt.userandrole.model.ApplicationUser;
 import com.infra.gummadibuilt.userregistration.model.UserRegistration;
 import com.infra.gummadibuilt.userregistration.model.dto.ApproveRejectDto;
+import com.infra.gummadibuilt.userregistration.model.dto.RegistrationInfoDto;
 import com.infra.gummadibuilt.userregistration.model.dto.UserRegistrationDto;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -103,13 +104,13 @@ public class UserRegistrationService {
         return userRegistrationDto;
     }
 
-    public List<UserRegistrationDto> getPendingForApproval() {
+    public List<RegistrationInfoDto> getPendingForApproval() {
         return userRegistrationDao.findAllByApproveReject(ApproveReject.IN_REVIEW)
-                .stream().map(UserRegistrationDto::valueOf).collect(Collectors.toList());
+                .stream().map(RegistrationInfoDto::valueOf).collect(Collectors.toList());
 
     }
 
-    public List<UserRegistrationDto> approveOrRejectRequests(ApproveRejectDto approveRejectDto) {
+    public List<RegistrationInfoDto> approveOrRejectRequests(ApproveRejectDto approveRejectDto) {
 
         List<Integer> requestIds = approveRejectDto.getRequestId();
         String approveReject = approveRejectDto.getActionTaken();

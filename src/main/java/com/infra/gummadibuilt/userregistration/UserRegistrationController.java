@@ -1,6 +1,7 @@
 package com.infra.gummadibuilt.userregistration;
 
 import com.infra.gummadibuilt.userregistration.model.dto.ApproveRejectDto;
+import com.infra.gummadibuilt.userregistration.model.dto.RegistrationInfoDto;
 import com.infra.gummadibuilt.userregistration.model.dto.UserRegistrationDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -51,7 +52,7 @@ public class UserRegistrationController {
             @ApiResponse(responseCode = "404", description = "The resource you were trying to reach is not found")
     })
     @GetMapping
-    public List<UserRegistrationDto> getPendingForApproval() {
+    public List<RegistrationInfoDto> getPendingForApproval() {
         return userRegistrationService.getPendingForApproval();
     }
 
@@ -59,12 +60,12 @@ public class UserRegistrationController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success, when action taken is succeeded",
                     content = {@Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ApproveRejectDto.class))
+                            schema = @Schema(implementation = RegistrationInfoDto.class))
                     }),
             @ApiResponse(responseCode = "404", description = "The resource you were trying to reach is not found")
     })
     @PostMapping("/approve-reject")
-    public List<UserRegistrationDto> approveOrRejectRequests(@Valid @RequestBody ApproveRejectDto approveRejectDto) {
+    public List<RegistrationInfoDto> approveOrRejectRequests(@Valid @RequestBody ApproveRejectDto approveRejectDto) {
         return userRegistrationService.approveOrRejectRequests(approveRejectDto);
     }
 }

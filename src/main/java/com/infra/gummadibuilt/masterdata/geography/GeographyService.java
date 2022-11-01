@@ -1,7 +1,7 @@
 package com.infra.gummadibuilt.masterdata.geography;
 
 import com.infra.gummadibuilt.masterdata.geography.model.City;
-import com.infra.gummadibuilt.masterdata.geography.model.CityDto;
+import com.infra.gummadibuilt.masterdata.geography.model.dto.CityDto;
 import com.infra.gummadibuilt.masterdata.geography.model.Country;
 import com.infra.gummadibuilt.masterdata.geography.model.State;
 import com.infra.gummadibuilt.masterdata.geography.model.dto.StateDto;

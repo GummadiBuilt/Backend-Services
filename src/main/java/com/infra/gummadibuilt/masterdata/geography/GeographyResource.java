@@ -1,6 +1,6 @@
 package com.infra.gummadibuilt.masterdata.geography;
 
-import com.infra.gummadibuilt.masterdata.geography.model.CityDto;
+import com.infra.gummadibuilt.masterdata.geography.model.dto.CityDto;
 import com.infra.gummadibuilt.masterdata.geography.model.dto.StateDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

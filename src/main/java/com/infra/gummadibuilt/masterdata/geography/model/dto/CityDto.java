@@ -1,5 +1,6 @@
-package com.infra.gummadibuilt.masterdata.geography.model;
+package com.infra.gummadibuilt.masterdata.geography.model.dto;
 
+import com.infra.gummadibuilt.masterdata.geography.model.City;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
