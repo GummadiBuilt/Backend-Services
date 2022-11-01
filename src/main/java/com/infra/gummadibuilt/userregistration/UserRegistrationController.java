@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.security.RolesAllowed;
 import javax.validation.Valid;
 import java.util.List;
 
@@ -56,6 +57,7 @@ public class UserRegistrationController {
         return userRegistrationService.getPendingForApproval();
     }
 
+    @RolesAllowed("admin")
     @Operation(summary = "Approve/Reject a pending user access request")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success, when action taken is succeeded",
