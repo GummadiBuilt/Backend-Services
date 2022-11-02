@@ -10,8 +10,8 @@ import java.util.Optional;
 
 public interface UserRegistrationDao extends JpaRepository<UserRegistration, Integer> {
 
-    List<UserRegistration> findAllByApproveReject(ApproveReject approveReject);
+    List<UserRegistration> findAllByApproveRejectIn(List<ApproveReject> approveReject);
 
-    Optional<UserRegistration> findByEmail(String email);
+    Optional<UserRegistration> findByEmailAndApproveReject(String email, ApproveReject approveReject);
 
 }

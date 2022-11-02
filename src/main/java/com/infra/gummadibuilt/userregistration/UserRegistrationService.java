@@ -22,17 +22,46 @@ import com.infra.gummadibuilt.userregistration.model.UserRegistration;
 import com.infra.gummadibuilt.userregistration.model.dto.ApproveRejectDto;
 import com.infra.gummadibuilt.userregistration.model.dto.RegistrationInfoDto;
 import com.infra.gummadibuilt.userregistration.model.dto.UserRegistrationDto;
+import org.keycloak.admin.client.CreatedResponseUtil;
+import org.keycloak.admin.client.Keycloak;
+import org.keycloak.admin.client.KeycloakBuilder;
+import org.keycloak.admin.client.resource.RealmResource;
+import org.keycloak.admin.client.resource.UserResource;
+import org.keycloak.admin.client.resource.UsersResource;
+import org.keycloak.representations.idm.CredentialRepresentation;
+import org.keycloak.representations.idm.RoleRepresentation;
+import org.keycloak.representations.idm.UserRepresentation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.transaction.Transactional;
+import javax.ws.rs.core.Response;
+import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.infra.gummadibuilt.common.util.CommonModuleUtils.*;
+import static com.infra.gummadibuilt.common.util.UserInfo.loggedInUserInfo;
 
 @Service
 public class UserRegistrationService {
+
+    @Value("${keycloak.realm}")
+    private String realm;
+
+    @Value("${keycloak.auth-server-url}")
+    private String serverUrl;
+
+    @Value("${keycloak.resource}")
+    private String clientId;
+    private static final Logger logger = LoggerFactory.getLogger(UserRegistrationService.class);
 
     private final UserRegistrationDao userRegistrationDao;
 
@@ -70,7 +99,10 @@ public class UserRegistrationService {
 
         Optional<ApplicationUser> applicationUser = applicationUserDao.findByEmail(emailReceived);
 
-        Optional<UserRegistration> pendingApproval = userRegistrationDao.findByEmail(emailReceived);
+        Optional<UserRegistration> pendingApproval = userRegistrationDao.findByEmailAndApproveReject(
+                emailReceived,
+                ApproveReject.IN_REVIEW
+        );
 
         if (applicationUser.isPresent()) {
             throw new UserExistsException(
@@ -105,17 +137,20 @@ public class UserRegistrationService {
     }
 
     public List<RegistrationInfoDto> getPendingForApproval() {
-        return userRegistrationDao.findAllByApproveReject(ApproveReject.IN_REVIEW)
+        List<ApproveReject> approveRejects = Collections.singletonList(ApproveReject.IN_REVIEW);
+        return userRegistrationDao.findAllByApproveRejectIn(approveRejects)
                 .stream().map(RegistrationInfoDto::valueOf).collect(Collectors.toList());
 
     }
 
-    public List<RegistrationInfoDto> approveOrRejectRequests(ApproveRejectDto approveRejectDto) {
+    @Transactional
+    public List<RegistrationInfoDto> approveOrRejectRequests(HttpServletRequest request, ApproveRejectDto approveRejectDto) throws UnsupportedEncodingException {
+
+        LoggedInUser loggedInUser = loggedInUserInfo(request);
 
         List<Integer> requestIds = approveRejectDto.getRequestId();
         String approveReject = approveRejectDto.getActionTaken();
 
-        LoggedInUser loggedInUser = new LoggedInUser("AB", "CD");
         List<UserRegistration> userRegistrations = userRegistrationDao.findAllById(requestIds);
 
         if (userRegistrations.size() != requestIds.size()) {
@@ -131,6 +166,8 @@ public class UserRegistrationService {
             List<ApplicationUser> applicationUsers = userRegistrations.stream().map(user -> setUserInfo(user, loggedInUser)).collect(Collectors.toList());
             SaveEntityConstraintHelper.saveAll(applicationUserDao, applicationUsers, null);
             userRegistrations.forEach(item -> {
+                String password = passwordGenerator.generateSecureRandomPassword();
+                this.createUser(item, password, request);
                 item.setApproveReject(ApproveReject.APPROVE);
                 item.getChangeTracking().update(loggedInUser.toString());
             });
@@ -149,10 +186,16 @@ public class UserRegistrationService {
         return this.getPendingForApproval();
     }
 
+    public List<RegistrationInfoDto> auditApproveRejectRequests() {
+        List<ApproveReject> approveRejects = Arrays.asList(ApproveReject.APPROVE, ApproveReject.REJECT);
+
+        return userRegistrationDao.findAllByApproveRejectIn(approveRejects)
+                .stream()
+                .map(RegistrationInfoDto::valueOf)
+                .collect(Collectors.toList());
+    }
+
     public ApplicationUser setUserInfo(UserRegistration userRegistration, LoggedInUser loggedInUser) {
-
-        String password = passwordGenerator.generateSecureRandomPassword();
-
         ApplicationUser applicationUser = new ApplicationUser();
         applicationUser.setFirstName(userRegistration.getFirstName());
         applicationUser.setLastName(userRegistration.getLastName());
@@ -173,10 +216,61 @@ public class UserRegistrationService {
         applicationUser.setCoordinatorMobileNumber(userRegistration.getCoordinatorMobileNumber());
         applicationUser.setActive(true);
         applicationUser.setCredentialsExpired(true);
-        applicationUser.setUserSecret(password);
         applicationUser.setChangeTracking(new ChangeTracking(loggedInUser.toString()));
         return applicationUser;
     }
 
+
+    public void createUser(UserRegistration userRegistration, String tempPassword, HttpServletRequest request) {
+        Keycloak keycloak = this.generateBuild(request);
+
+        logger.info(String.format("Creating user %s", userRegistration.getEmail()));
+        UserRepresentation user = new UserRepresentation();
+        user.setEnabled(true);
+        user.setUsername(userRegistration.getEmail());
+        user.setFirstName(userRegistration.getFirstName());
+        user.setLastName(userRegistration.getLastName());
+        user.setEmail(userRegistration.getEmail());
+
+        RealmResource realmResource = keycloak.realm("Local-Realm");
+        UsersResource usersResource = realmResource.users();
+
+        // Create user (requires manage-users role)
+        Response response = usersResource.create(user);
+        logger.info(String.format("Response for create user: %s %s%n", response.getStatus(), response.getStatusInfo()));
+
+        String userId = CreatedResponseUtil.getCreatedId(response);
+        logger.info(String.format("Created user id: %s%n", userId));
+
+
+        CredentialRepresentation passwordCred = new CredentialRepresentation();
+        passwordCred.setTemporary(true);
+        passwordCred.setType(CredentialRepresentation.PASSWORD);
+        passwordCred.setValue(tempPassword);
+
+        logger.info(String.format("Temporary password %s", tempPassword));
+
+        UserResource userResource = usersResource.get(userId);
+        userResource.resetPassword(passwordCred);
+
+        String requiredRole = userRegistration.getApplicationRole().getRoleName().toLowerCase();
+
+        logger.info(String.format("Adding role %s for user %s%n ", requiredRole, userId));
+        RoleRepresentation testerRealmRole = realmResource.roles()//
+                .get(requiredRole).toRepresentation();
+        userResource.roles().realmLevel() //
+                .add(Collections.singletonList(testerRealmRole));
+    }
+
+    public Keycloak generateBuild(HttpServletRequest request) {
+        String token = request.getHeader("Authorization");
+
+        return KeycloakBuilder.builder() //
+                .serverUrl(serverUrl) //
+                .realm(realm) //
+                .authorization(token)
+                .clientId(clientId)
+                .build();
+    }
 
 }

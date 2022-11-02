@@ -31,7 +31,6 @@ CREATE TABLE application_user (
   first_name                VARCHAR(75) NOT NULL,
   last_name                 VARCHAR(75) NOT NULL,
   email                     VARCHAR(75) NOT NULL,
-  user_secret               VARCHAR(750) NOT NULL,
   application_role_id       INT4 NOT NULL REFERENCES application_role(id),
   company_name              VARCHAR(100),
   year_of_establishment     INTEGER         NOT NULL,

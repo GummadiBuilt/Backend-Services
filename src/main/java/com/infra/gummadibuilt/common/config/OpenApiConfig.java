@@ -10,7 +10,6 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 class OpenApiConfig {
-
     @Bean
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
@@ -18,10 +17,9 @@ class OpenApiConfig {
                         .addSecuritySchemes("bearerAuth",
                                 new SecurityScheme().type(SecurityScheme.Type.HTTP).scheme("bearer").bearerFormat("JWT")))
                 .info(new Info()
-                        .title("sample application API")
-                        .version("1")
-                        .description("GummadiBuilt")
-                        .termsOfService("http://swagger.io/terms/")
+                        .title("GummadiBuilt APIs")
+                        .version("v0.0.2")
+                        .description("APIs that support GummadiBuilt application")
                         .license(new License().
                                 name("Apache 2.0").
                                 url("http://springdoc.org")));

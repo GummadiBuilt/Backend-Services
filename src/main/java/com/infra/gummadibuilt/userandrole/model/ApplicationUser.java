@@ -46,10 +46,6 @@ public class ApplicationUser {
     @Size(max = 75)
     private String email;
 
-    @NotBlank
-    @Size(max = 750)
-    private String userSecret;
-
     @NotNull
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "application_role_id")
