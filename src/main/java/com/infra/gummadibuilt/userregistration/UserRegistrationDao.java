@@ -12,6 +12,6 @@ public interface UserRegistrationDao extends JpaRepository<UserRegistration, Int
 
     List<UserRegistration> findAllByApproveRejectIn(List<ApproveReject> approveReject);
 
-    Optional<UserRegistration> findByEmailAndApproveReject(String email, ApproveReject approveReject);
+    Optional<UserRegistration> findByContactEmailAddressAndApproveReject(String contactEmailAddress, ApproveReject approveReject);
 
 }

@@ -6,6 +6,7 @@ import com.infra.gummadibuilt.common.ChangeTracking;
 import com.infra.gummadibuilt.common.LoggedInUser;
 import com.infra.gummadibuilt.common.exception.InvalidActionException;
 import com.infra.gummadibuilt.common.exception.UserExistsException;
+import com.infra.gummadibuilt.common.mail.MailService;
 import com.infra.gummadibuilt.common.util.PasswordGenerator;
 import com.infra.gummadibuilt.common.util.SaveEntityConstraintHelper;
 import com.infra.gummadibuilt.masterdata.geography.CityDao;
@@ -22,6 +23,7 @@ import com.infra.gummadibuilt.userregistration.model.UserRegistration;
 import com.infra.gummadibuilt.userregistration.model.dto.ApproveRejectDto;
 import com.infra.gummadibuilt.userregistration.model.dto.RegistrationInfoDto;
 import com.infra.gummadibuilt.userregistration.model.dto.UserRegistrationDto;
+import freemarker.template.TemplateException;
 import org.keycloak.admin.client.CreatedResponseUtil;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
@@ -37,14 +39,13 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.transaction.Transactional;
 import javax.ws.rs.core.Response;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.infra.gummadibuilt.common.util.CommonModuleUtils.*;
@@ -77,13 +78,16 @@ public class UserRegistrationService {
 
     private final ApplicationUserDao applicationUserDao;
 
+    private final MailService mailService;
+
     public UserRegistrationService(UserRegistrationDao userRegistrationDao,
                                    CountryDao countryDao,
                                    StateDao stateDao,
                                    CityDao cityDao,
                                    ApplicationRoleDao applicationRoleDao,
                                    PasswordGenerator passwordGenerator,
-                                   ApplicationUserDao applicationUserDao) {
+                                   ApplicationUserDao applicationUserDao,
+                                   MailService mailService) {
         this.userRegistrationDao = userRegistrationDao;
         this.countryDao = countryDao;
         this.stateDao = stateDao;
@@ -91,15 +95,16 @@ public class UserRegistrationService {
         this.applicationRoleDao = applicationRoleDao;
         this.passwordGenerator = passwordGenerator;
         this.applicationUserDao = applicationUserDao;
+        this.mailService = mailService;
     }
 
-    public UserRegistrationDto registerUser(UserRegistrationDto userRegistrationDto) {
+    public UserRegistrationDto registerUser(UserRegistrationDto userRegistrationDto) throws MessagingException, TemplateException, IOException {
 
-        String emailReceived = userRegistrationDto.getEmail();
+        String emailReceived = userRegistrationDto.getContactEmailAddress();
 
-        Optional<ApplicationUser> applicationUser = applicationUserDao.findByEmail(emailReceived);
+        Optional<ApplicationUser> applicationUser = applicationUserDao.findByContactEmailAddress(emailReceived);
 
-        Optional<UserRegistration> pendingApproval = userRegistrationDao.findByEmailAndApproveReject(
+        Optional<UserRegistration> pendingApproval = userRegistrationDao.findByContactEmailAddressAndApproveReject(
                 emailReceived,
                 ApproveReject.IN_REVIEW
         );
@@ -115,7 +120,7 @@ public class UserRegistrationService {
             );
         }
 
-        LoggedInUser loggedInUser = new LoggedInUser(userRegistrationDto.getFirstName(), userRegistrationDto.getLastName());
+        LoggedInUser loggedInUser = new LoggedInUser(userRegistrationDto.getContactFirstName(), userRegistrationDto.getContactLastName());
 
         Country country = getById(countryDao, userRegistrationDto.getCountryCountryIsoCode(), COUNTRY_ID_NOT_FOUND);
         State state = getById(stateDao, userRegistrationDto.getStateStateIsoCode(), STATE_ID_NOT_FOUND);
@@ -132,6 +137,22 @@ public class UserRegistrationService {
         userRegistration.setChangeTracking(new ChangeTracking(loggedInUser.toString()));
 
         SaveEntityConstraintHelper.save(userRegistrationDao, userRegistration, null);
+
+        Map<String, Object> model = new HashMap<>();
+        model.put("companyName", userRegistrationDto.getCompanyName());
+        String[] mailTo = {emailReceived};
+        mailService.sendMail(mailTo, "registrationConfirmation", model);
+
+        Optional<ApplicationRole> adminRole = applicationRoleDao.findByRoleName("admin");
+        if (adminRole.isPresent()) {
+            String[] adminUsers = applicationUserDao.findAllByApplicationRole(adminRole.get())
+                    .stream()
+                    .map(ApplicationUser::getContactEmailAddress)
+                    .toArray(String[]::new);
+            mailService.sendMail(adminUsers, "pendingApproval", model);
+        } else {
+            throw new RuntimeException("No Admins found in the database, cannot register");
+        }
 
         return userRegistrationDto;
     }
@@ -167,7 +188,11 @@ public class UserRegistrationService {
             SaveEntityConstraintHelper.saveAll(applicationUserDao, applicationUsers, null);
             userRegistrations.forEach(item -> {
                 String password = passwordGenerator.generateSecureRandomPassword();
-                this.createUser(item, password, request);
+                try {
+                    this.createUser(item, password, request);
+                } catch (IOException | TemplateException | MessagingException e) {
+                    throw new RuntimeException(e);
+                }
                 item.setApproveReject(ApproveReject.APPROVE);
                 item.getChangeTracking().update(loggedInUser.toString());
             });
@@ -197,9 +222,6 @@ public class UserRegistrationService {
 
     public ApplicationUser setUserInfo(UserRegistration userRegistration, LoggedInUser loggedInUser) {
         ApplicationUser applicationUser = new ApplicationUser();
-        applicationUser.setFirstName(userRegistration.getFirstName());
-        applicationUser.setLastName(userRegistration.getLastName());
-        applicationUser.setEmail(userRegistration.getEmail());
         applicationUser.setApplicationRole(userRegistration.getApplicationRole());
         applicationUser.setCompanyName(userRegistration.getCompanyName());
         applicationUser.setYearOfEstablishment(userRegistration.getYearOfEstablishment());
@@ -208,12 +230,12 @@ public class UserRegistrationService {
         applicationUser.setCountry(userRegistration.getCountry());
         applicationUser.setState(userRegistration.getState());
         applicationUser.setCity(userRegistration.getCity());
-        applicationUser.setContactName(userRegistration.getContactName());
+        applicationUser.setContactFirstName(userRegistration.getContactFirstName());
+        applicationUser.setContactLastName(userRegistration.getContactLastName());
+        applicationUser.setContactLastName(userRegistration.getContactEmailAddress());
         applicationUser.setContactDesignation(userRegistration.getContactDesignation());
         applicationUser.setContactPhoneNumber(userRegistration.getContactPhoneNumber());
         applicationUser.setContactEmailAddress(userRegistration.getContactEmailAddress());
-        applicationUser.setCoordinatorName(userRegistration.getCoordinatorName());
-        applicationUser.setCoordinatorMobileNumber(userRegistration.getCoordinatorMobileNumber());
         applicationUser.setActive(true);
         applicationUser.setCredentialsExpired(true);
         applicationUser.setChangeTracking(new ChangeTracking(loggedInUser.toString()));
@@ -221,16 +243,16 @@ public class UserRegistrationService {
     }
 
 
-    public void createUser(UserRegistration userRegistration, String tempPassword, HttpServletRequest request) {
+    public void createUser(UserRegistration userRegistration, String tempPassword, HttpServletRequest request) throws IOException, MessagingException, TemplateException {
         Keycloak keycloak = this.generateBuild(request);
 
-        logger.info(String.format("Creating user %s", userRegistration.getEmail()));
+        logger.info(String.format("Creating user %s", userRegistration.getContactEmailAddress()));
         UserRepresentation user = new UserRepresentation();
         user.setEnabled(true);
-        user.setUsername(userRegistration.getEmail());
-        user.setFirstName(userRegistration.getFirstName());
-        user.setLastName(userRegistration.getLastName());
-        user.setEmail(userRegistration.getEmail());
+        user.setUsername(userRegistration.getContactEmailAddress());
+        user.setFirstName(userRegistration.getContactFirstName());
+        user.setLastName(userRegistration.getContactLastName());
+        user.setEmail(userRegistration.getContactEmailAddress());
 
         RealmResource realmResource = keycloak.realm("Local-Realm");
         UsersResource usersResource = realmResource.users();
@@ -260,6 +282,14 @@ public class UserRegistrationService {
                 .get(requiredRole).toRepresentation();
         userResource.roles().realmLevel() //
                 .add(Collections.singletonList(testerRealmRole));
+
+        Map<String, Object> model = new HashMap<>();
+        model.put("companyName", userRegistration.getCompanyName());
+        model.put("tempPassword", tempPassword);
+
+        logger.info(String.format("Sending email to user %s", userRegistration.getContactEmailAddress()));
+        String[] mailTo = {userRegistration.getContactEmailAddress()};
+        mailService.sendMail(mailTo, "temporaryPassword.ftl", model);
     }
 
     public Keycloak generateBuild(HttpServletRequest request) {

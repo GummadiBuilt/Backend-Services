@@ -34,18 +34,6 @@ public class ApplicationUser {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @NotBlank
-    @Size(max = 75)
-    private String firstName;
-
-    @NotBlank
-    @Size(max = 75)
-    private String lastName;
-
-    @NotBlank
-    @Size(max = 75)
-    private String email;
-
     @NotNull
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "application_role_id")
@@ -90,8 +78,12 @@ public class ApplicationUser {
      * Contact information
      */
     @NotBlank
-    @Size(max = 150)
-    private String contactName;
+    @Size(max = 75)
+    private String contactFirstName;
+
+    @NotBlank
+    @Size(max = 75)
+    private String contactLastName;
 
     @NotBlank
     @Size(max = 150)
@@ -104,18 +96,6 @@ public class ApplicationUser {
     @NotBlank
     @Size(max = 100)
     private String contactEmailAddress;
-
-    /**
-     * Project coordinator info
-     */
-
-    @NotBlank
-    @Size(max = 150)
-    private String coordinatorName;
-
-    @NotBlank
-    @Size(max = 10)
-    private String coordinatorMobileNumber;
 
     private boolean isActive;
 

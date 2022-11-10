@@ -18,18 +18,6 @@ public class UserRegistrationDto implements Serializable {
 
     private int id;
 
-    @NotBlank
-    @Size(max = 75)
-    private String firstName;
-
-    @NotBlank
-    @Size(max = 75)
-    private String lastName;
-
-    @NotBlank
-    @Size(max = 75)
-    private String email;
-
     private int applicationRoleId;
 
     @NotBlank
@@ -55,8 +43,12 @@ public class UserRegistrationDto implements Serializable {
     private int cityId;
 
     @NotBlank
-    @Size(max = 150)
-    private String contactName;
+    @Size(max = 75)
+    private String contactFirstName;
+
+    @NotBlank
+    @Size(max = 75)
+    private String contactLastName;
 
     @NotBlank
     @Size(max = 150)
@@ -70,34 +62,21 @@ public class UserRegistrationDto implements Serializable {
     @Size(max = 100)
     private String contactEmailAddress;
 
-    @NotBlank
-    @Size(max = 150)
-    private String coordinatorName;
-
-    @NotBlank
-    @Size(max = 10)
-    private String coordinatorMobileNumber;
-
     public static UserRegistrationDto valueOf(UserRegistration userRegistration) {
         UserRegistrationDto result = new UserRegistrationDto();
         result.setId(userRegistration.getId());
-        result.setFirstName(userRegistration.getFirstName());
-        result.setLastName(userRegistration.getLastName());
         result.setAddress(userRegistration.getAddress());
         result.setCompanyName(userRegistration.getCompanyName());
-        result.setEmail(userRegistration.getEmail());
         result.setYearOfEstablishment(userRegistration.getYearOfEstablishment());
         result.setTypeOfEstablishment(userRegistration.getTypeOfEstablishment());
         result.setCountryCountryIsoCode(userRegistration.getCountry().getCountryIsoCode());
         result.setStateStateIsoCode(userRegistration.getState().getStateIsoCode());
         result.setCityId(userRegistration.getCity().getId());
-        result.setContactName(userRegistration.getContactName());
+        result.setContactFirstName(userRegistration.getContactFirstName());
+        result.setContactLastName(userRegistration.getContactLastName());
         result.setContactPhoneNumber(userRegistration.getContactPhoneNumber());
         result.setContactDesignation(userRegistration.getContactDesignation());
         result.setContactEmailAddress(userRegistration.getContactEmailAddress());
-        result.setCoordinatorName(userRegistration.getCoordinatorName());
-        result.setCoordinatorMobileNumber(userRegistration.getCoordinatorMobileNumber());
-
 
         return result;
     }

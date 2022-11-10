@@ -3,6 +3,7 @@ package com.infra.gummadibuilt.userregistration;
 import com.infra.gummadibuilt.userregistration.model.dto.ApproveRejectDto;
 import com.infra.gummadibuilt.userregistration.model.dto.RegistrationInfoDto;
 import com.infra.gummadibuilt.userregistration.model.dto.UserRegistrationDto;
+import freemarker.template.TemplateException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -15,8 +16,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.security.RolesAllowed;
+import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
 
@@ -45,7 +48,7 @@ public class UserRegistrationController {
             @ApiResponse(responseCode = "404", description = "The resource you were trying to reach is not found")
     })
     @PostMapping
-    public UserRegistrationDto registerUser(@Valid @RequestBody UserRegistrationDto userRegistrationDto) {
+    public UserRegistrationDto registerUser(@Valid @RequestBody UserRegistrationDto userRegistrationDto) throws MessagingException, TemplateException, IOException {
         return userRegistrationService.registerUser(userRegistrationDto);
     }
 
