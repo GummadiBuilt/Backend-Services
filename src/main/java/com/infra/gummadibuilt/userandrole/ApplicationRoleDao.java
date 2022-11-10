@@ -7,5 +7,5 @@ import java.util.Optional;
 
 public interface ApplicationRoleDao extends JpaRepository<ApplicationRole, Integer> {
 
-    Optional<ApplicationRole> findByRoleName(String roleName);
+    Optional<ApplicationRole> findByRoleNameIgnoreCase(String roleName);
 }

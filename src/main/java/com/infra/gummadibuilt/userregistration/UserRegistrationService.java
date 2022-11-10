@@ -141,15 +141,15 @@ public class UserRegistrationService {
         Map<String, Object> model = new HashMap<>();
         model.put("companyName", userRegistrationDto.getCompanyName());
         String[] mailTo = {emailReceived};
-        mailService.sendMail(mailTo, "registrationConfirmation", model);
+        mailService.sendMail(mailTo, "registrationConfirmation.ftl", model);
 
-        Optional<ApplicationRole> adminRole = applicationRoleDao.findByRoleName("admin");
+        Optional<ApplicationRole> adminRole = applicationRoleDao.findByRoleNameIgnoreCase("admin");
         if (adminRole.isPresent()) {
             String[] adminUsers = applicationUserDao.findAllByApplicationRole(adminRole.get())
                     .stream()
                     .map(ApplicationUser::getContactEmailAddress)
                     .toArray(String[]::new);
-            mailService.sendMail(adminUsers, "pendingApproval", model);
+            mailService.sendMail(adminUsers, "pendingApproval.ftl", model);
         } else {
             throw new RuntimeException("No Admins found in the database, cannot register");
         }

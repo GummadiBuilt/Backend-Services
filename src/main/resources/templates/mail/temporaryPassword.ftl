@@ -29,8 +29,8 @@
                      <td bgcolor="#eaeaea" style="padding: 40px 30px 40px 30px;">
                         <p>Welcome OnBoard</p>
                         <p>Your successfully registered your company ${companyName} with Gummadi Built</p>
-                        <p>Login with this temporary password ${tempPassword}, username is your email address</p>
-                        <p>You will be prompted to change your password when logging in with this temporary password</p>
+                        <p>You can login using your email address as username and with temporary password <b>${tempPassword}</b></p>
+                        <p>You will be prompted to change your password when logging in for the first time</p>
                         <p>You can access Gummadi Built using the
                             <a href="${appUrl}">
                              url
