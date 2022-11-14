@@ -27,7 +27,7 @@ CREATE TABLE application_role (
 CREATE UNIQUE INDEX role_name_unq_name ON application_role (Lower(role_name));
 
 CREATE TABLE application_user (
-  id                        SERIAL          NOT NULL,
+  id                        VARCHAR(50)     NOT NULL,
   contact_email_address     VARCHAR(100)    NOT NULL,
   contact_first_name        VARCHAR(75)     NOT NULL,
   contact_last_name         VARCHAR(75)     NOT NULL,

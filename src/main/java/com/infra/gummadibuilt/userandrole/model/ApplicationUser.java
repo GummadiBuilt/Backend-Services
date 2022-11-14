@@ -31,8 +31,7 @@ public class ApplicationUser {
     public static final String UNQ_NAME_CONSTRAINT = "app_user_unq_email";
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private String id;
 
     @NotNull
     @OneToOne(cascade = CascadeType.ALL)
@@ -111,7 +110,7 @@ public class ApplicationUser {
         if (this == o) return true;
         if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
         ApplicationUser that = (ApplicationUser) o;
-        return id != 0 && Objects.equals(id, that.id);
+        return Objects.equals(id, that.id);
     }
 
     @Override

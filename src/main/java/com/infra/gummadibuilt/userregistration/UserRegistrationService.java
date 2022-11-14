@@ -80,14 +80,7 @@ public class UserRegistrationService {
 
     private final MailService mailService;
 
-    public UserRegistrationService(UserRegistrationDao userRegistrationDao,
-                                   CountryDao countryDao,
-                                   StateDao stateDao,
-                                   CityDao cityDao,
-                                   ApplicationRoleDao applicationRoleDao,
-                                   PasswordGenerator passwordGenerator,
-                                   ApplicationUserDao applicationUserDao,
-                                   MailService mailService) {
+    public UserRegistrationService(UserRegistrationDao userRegistrationDao, CountryDao countryDao, StateDao stateDao, CityDao cityDao, ApplicationRoleDao applicationRoleDao, PasswordGenerator passwordGenerator, ApplicationUserDao applicationUserDao, MailService mailService) {
         this.userRegistrationDao = userRegistrationDao;
         this.countryDao = countryDao;
         this.stateDao = stateDao;
@@ -104,20 +97,13 @@ public class UserRegistrationService {
 
         Optional<ApplicationUser> applicationUser = applicationUserDao.findByContactEmailAddress(emailReceived);
 
-        Optional<UserRegistration> pendingApproval = userRegistrationDao.findByContactEmailAddressAndApproveReject(
-                emailReceived,
-                ApproveReject.IN_REVIEW
-        );
+        Optional<UserRegistration> pendingApproval = userRegistrationDao.findByContactEmailAddressAndApproveReject(emailReceived, ApproveReject.IN_REVIEW);
 
         if (applicationUser.isPresent()) {
-            throw new UserExistsException(
-                    String.format("Email address %s is already in use. Did you forgot password?", emailReceived)
-            );
+            throw new UserExistsException(String.format("Email address %s is already in use. Did you forgot password?", emailReceived));
         }
         if (pendingApproval.isPresent()) {
-            throw new UserExistsException(
-                    String.format("A registration with email address %s is pending for approval", emailReceived)
-            );
+            throw new UserExistsException(String.format("A registration with email address %s is pending for approval", emailReceived));
         }
 
         LoggedInUser loggedInUser = new LoggedInUser(userRegistrationDto.getContactFirstName(), userRegistrationDto.getContactLastName());
@@ -145,10 +131,7 @@ public class UserRegistrationService {
 
         Optional<ApplicationRole> adminRole = applicationRoleDao.findByRoleNameIgnoreCase("admin");
         if (adminRole.isPresent()) {
-            String[] adminUsers = applicationUserDao.findAllByApplicationRole(adminRole.get())
-                    .stream()
-                    .map(ApplicationUser::getContactEmailAddress)
-                    .toArray(String[]::new);
+            String[] adminUsers = applicationUserDao.findAllByApplicationRole(adminRole.get()).stream().map(ApplicationUser::getContactEmailAddress).toArray(String[]::new);
             mailService.sendMail(adminUsers, "pendingApproval.ftl", model);
         } else {
             throw new RuntimeException("No Admins found in the database, cannot register");
@@ -159,8 +142,7 @@ public class UserRegistrationService {
 
     public List<RegistrationInfoDto> getPendingForApproval() {
         List<ApproveReject> approveRejects = Collections.singletonList(ApproveReject.IN_REVIEW);
-        return userRegistrationDao.findAllByApproveRejectIn(approveRejects)
-                .stream().map(RegistrationInfoDto::valueOf).collect(Collectors.toList());
+        return userRegistrationDao.findAllByApproveRejectIn(approveRejects).stream().map(RegistrationInfoDto::valueOf).collect(Collectors.toList());
 
     }
 
@@ -175,27 +157,25 @@ public class UserRegistrationService {
         List<UserRegistration> userRegistrations = userRegistrationDao.findAllById(requestIds);
 
         if (userRegistrations.size() != requestIds.size()) {
-            List<Integer> notFoundIds = userRegistrations.stream()
-                    .map(UserRegistration::getId)
-                    .filter(id -> !requestIds.contains(id))
-                    .collect(Collectors.toList());
+            List<Integer> notFoundIds = userRegistrations.stream().map(UserRegistration::getId).filter(id -> !requestIds.contains(id)).collect(Collectors.toList());
             String missingIds = Joiner.on(",").join(notFoundIds);
             throw new RuntimeException(String.format("Couldn't find following requests %s", missingIds));
         }
 
         if (approveReject.equals(ApproveReject.APPROVE.getText())) {
-            List<ApplicationUser> applicationUsers = userRegistrations.stream().map(user -> setUserInfo(user, loggedInUser)).collect(Collectors.toList());
-            SaveEntityConstraintHelper.saveAll(applicationUserDao, applicationUsers, null);
+            List<ApplicationUser> applicationUsers = new ArrayList<>();
             userRegistrations.forEach(item -> {
                 String password = passwordGenerator.generateSecureRandomPassword();
                 try {
-                    this.createUser(item, password, request);
+                    applicationUsers.add(this.createUser(item, password, request, loggedInUser));
                 } catch (IOException | TemplateException | MessagingException e) {
                     throw new RuntimeException(e);
                 }
                 item.setApproveReject(ApproveReject.APPROVE);
                 item.getChangeTracking().update(loggedInUser.toString());
             });
+
+            SaveEntityConstraintHelper.saveAll(applicationUserDao, applicationUsers, null);
         } else if (approveReject.equals(ApproveReject.REJECT.getText())) {
             userRegistrations.forEach(item -> {
                 item.setApproveReject(ApproveReject.REJECT);
@@ -214,14 +194,10 @@ public class UserRegistrationService {
     public List<RegistrationInfoDto> auditApproveRejectRequests() {
         List<ApproveReject> approveRejects = Arrays.asList(ApproveReject.APPROVE, ApproveReject.REJECT);
 
-        return userRegistrationDao.findAllByApproveRejectIn(approveRejects)
-                .stream()
-                .map(RegistrationInfoDto::valueOf)
-                .collect(Collectors.toList());
+        return userRegistrationDao.findAllByApproveRejectIn(approveRejects).stream().map(RegistrationInfoDto::valueOf).collect(Collectors.toList());
     }
 
-    public ApplicationUser setUserInfo(UserRegistration userRegistration, LoggedInUser loggedInUser) {
-        ApplicationUser applicationUser = new ApplicationUser();
+    public ApplicationUser setUserInfo(ApplicationUser applicationUser, UserRegistration userRegistration, LoggedInUser loggedInUser) {
         applicationUser.setApplicationRole(userRegistration.getApplicationRole());
         applicationUser.setCompanyName(userRegistration.getCompanyName());
         applicationUser.setYearOfEstablishment(userRegistration.getYearOfEstablishment());
@@ -243,7 +219,11 @@ public class UserRegistrationService {
     }
 
 
-    public void createUser(UserRegistration userRegistration, String tempPassword, HttpServletRequest request) throws IOException, MessagingException, TemplateException {
+    public ApplicationUser createUser(UserRegistration userRegistration,
+                                      String tempPassword,
+                                      HttpServletRequest request,
+                                      LoggedInUser loggedInUser) throws IOException, MessagingException, TemplateException {
+        ApplicationUser applicationUser = new ApplicationUser();
         Keycloak keycloak = this.generateBuild(request);
 
         logger.info(String.format("Creating user %s", userRegistration.getContactEmailAddress()));
@@ -290,6 +270,10 @@ public class UserRegistrationService {
         logger.info(String.format("Sending email to user %s", userRegistration.getContactEmailAddress()));
         String[] mailTo = {userRegistration.getContactEmailAddress()};
         mailService.sendMail(mailTo, "temporaryPassword.ftl", model);
+
+        applicationUser.setId(userId);
+
+        return setUserInfo(applicationUser, userRegistration, loggedInUser);
     }
 
     public Keycloak generateBuild(HttpServletRequest request) {
@@ -298,9 +282,7 @@ public class UserRegistrationService {
         return KeycloakBuilder.builder() //
                 .serverUrl(serverUrl) //
                 .realm(realm) //
-                .authorization(token)
-                .clientId(clientId)
-                .build();
+                .authorization(token).clientId(clientId).build();
     }
 
 }
