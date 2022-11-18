@@ -3,6 +3,7 @@ package com.infra.gummadibuilt.masterdata.common;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,6 +19,7 @@ import java.util.Map;
 @RequestMapping("/tender-master-data")
 @Tag(name = "Tender Creation Master Data APIs",
         description = "APIs that return master data needed for tender creation")
+@SecurityRequirement(name = "bearerAuth")
 
 public class TenderMasterDataResource {
 
