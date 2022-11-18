@@ -4,6 +4,7 @@ import com.infra.gummadibuilt.common.ChangeTracking;
 import com.infra.gummadibuilt.masterdata.geography.model.City;
 import com.infra.gummadibuilt.masterdata.geography.model.Country;
 import com.infra.gummadibuilt.masterdata.geography.model.State;
+import com.infra.gummadibuilt.tender.model.TenderInfo;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -99,6 +100,9 @@ public class ApplicationUser {
     private boolean isActive;
 
     private boolean credentialsExpired;
+
+    @OneToMany(mappedBy = "applicationUser", cascade = CascadeType.REMOVE)
+    private List<TenderInfo> tenderInfo;
 
     @Embedded
     @NotNull

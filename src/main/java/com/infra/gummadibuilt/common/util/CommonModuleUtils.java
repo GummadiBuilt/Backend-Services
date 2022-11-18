@@ -16,7 +16,10 @@ public class CommonModuleUtils {
     public static final String STATE_ID_NOT_FOUND = "State with iso-code %s not found";
     public static final String CITY_ID_NOT_FOUND = "City with id %d not found";
     public static final String ROLE_NOT_FOUND = "Role with id %d not found";
-    public static final String STATUS_DISC = "Discontinue";
+
+    public static final String TYPE_OF_CONTRACT_NOT_FOUND = "Couldn't find a contract for the given id %d";
+    public static final String TENDER_NOT_FOUND = "Couldn't find a tender with id %d";
+    public static final String USER_NOT_FOUND = "Couldn't find user with id %s";
 
     public static <T> T getById(JpaRepository<T, Integer> repository, int id, String exceptionMessage) {
 

@@ -106,7 +106,12 @@ public class UserRegistrationService {
             throw new UserExistsException(String.format("A registration with email address %s is pending for approval", emailReceived));
         }
 
-        LoggedInUser loggedInUser = new LoggedInUser(userRegistrationDto.getContactFirstName(), userRegistrationDto.getContactLastName());
+        LoggedInUser loggedInUser = new LoggedInUser(
+                userRegistrationDto.getContactFirstName(),
+                userRegistrationDto.getContactLastName(),
+                userRegistrationDto.getContactEmailAddress(),
+                "NEW-USER"
+        );
 
         Country country = getById(countryDao, userRegistrationDto.getCountryCountryIsoCode(), COUNTRY_ID_NOT_FOUND);
         State state = getById(stateDao, userRegistrationDto.getStateStateIsoCode(), STATE_ID_NOT_FOUND);

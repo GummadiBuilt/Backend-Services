@@ -25,7 +25,8 @@ public class UserInfo {
         JsonObject convertedObject = new Gson().fromJson(jsonString, JsonObject.class);
         String firstName = convertedObject.get("given_name").getAsString();
         String lastName = convertedObject.get("family_name").getAsString();
-        return new LoggedInUser(firstName, lastName);
+        String email = convertedObject.get("email").getAsString();
+        String userId = convertedObject.get("sub").getAsString();
+        return new LoggedInUser(firstName, lastName, email, userId);
     }
-
 }

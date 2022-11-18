@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.Optional;
 
-public interface ApplicationUserDao extends JpaRepository<ApplicationUser, Integer> {
+public interface ApplicationUserDao extends JpaRepository<ApplicationUser, String> {
     Optional<ApplicationUser> findByContactEmailAddress(String contactEmailAddress);
 
     List<ApplicationUser> findAllByApplicationRole(ApplicationRole applicationRole);

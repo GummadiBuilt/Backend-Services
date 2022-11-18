@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.infra.gummadibuilt.common.ApproveReject;
+import com.infra.gummadibuilt.tender.model.DurationCounter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -46,6 +47,7 @@ public class CommonOptionsResource {
 
         ObjectNode result = mapper.createObjectNode();
         addOptions(ApproveReject.class, result.putArray("approveReject"));
+        addOptions(DurationCounter.class, result.putArray("durationCounter"));
         return mapper.writeValueAsString(result);
     }
 
