@@ -10,7 +10,6 @@ import javax.validation.constraints.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
 
 @Data
 public class TenderDetailsDto implements Serializable {
@@ -20,7 +19,8 @@ public class TenderDetailsDto implements Serializable {
     private String tenderId;
 
     @NotBlank
-    private List<String> typeOfWork;
+    @Size(max = 255)
+    private String typeOfWork;
 
     @NotBlank
     @Size(max = 50)

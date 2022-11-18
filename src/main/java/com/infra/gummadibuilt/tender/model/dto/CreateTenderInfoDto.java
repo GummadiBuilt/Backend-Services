@@ -19,8 +19,9 @@ import java.util.List;
 @Data
 public class CreateTenderInfoDto implements Serializable {
 
-    @NotNull
-    private List<String> typeOfWork;
+    @NotBlank
+    @Size(max = 255)
+    private String typeOfWork;
 
     @NotBlank
     @Size(max = 50)
