@@ -129,8 +129,7 @@ public class TenderInfoService {
         return TenderDetailsDto.valueOf(tenderInfo);
     }
 
-    @Transactional
-    public List<TenderDetailsDto> getTenders(HttpServletRequest request) {
+    public List<TenderDetailsDto> getAllTenders(HttpServletRequest request) {
         List<TenderDetailsDto> tenderDetailsDtos;
         LoggedInUser loggedInUser = loggedInUserInfo(request);
         ApplicationUser applicationUser = getById(applicationUserDao, loggedInUser.getUserId(), USER_NOT_FOUND);
@@ -164,6 +163,25 @@ public class TenderInfoService {
         }
 
         return tenderDetailsDtos;
+    }
+
+
+    public TenderDetailsDto getTenderInfo(HttpServletRequest request, String tenderId) {
+        LoggedInUser loggedInUser = loggedInUserInfo(request);
+
+        TenderInfo tenderInfo = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
+
+        TenderDetailsDto tenderDetailsDto = new TenderDetailsDto();
+
+        if (request.isUserInRole("contractor") && (tenderInfo.getWorkflowStep() == WorkflowStep.PUBLISHED)) {
+            return TenderDetailsDto.valueOf(tenderInfo);
+        } else if (request.isUserInRole("client") && Objects.equals(tenderInfo.getApplicationUser().getId(), loggedInUser.getUserId())) {
+            return TenderDetailsDto.valueOf(tenderInfo);
+        } else if (request.isUserInRole("admin") && (tenderInfo.getWorkflowStep() != WorkflowStep.SAVE)) {
+            return TenderDetailsDto.valueOf(tenderInfo);
+        }
+
+        return tenderDetailsDto;
     }
 
     public FileDownloadDto downloadTender(String tenderId) {
