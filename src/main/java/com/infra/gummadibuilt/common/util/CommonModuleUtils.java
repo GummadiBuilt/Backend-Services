@@ -9,6 +9,8 @@ import java.util.Optional;
 @Component
 public class CommonModuleUtils {
 
+    public static final String DATE_PATTERN = "dd/MM/yyyy";
+
     /**
      * Item Discontinuous status Constants
      */

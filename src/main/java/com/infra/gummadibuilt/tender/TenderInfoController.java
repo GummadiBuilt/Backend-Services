@@ -20,6 +20,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import java.util.List;
 
 @RestController
 @RequestMapping("/tender")
@@ -72,6 +73,22 @@ public class TenderInfoController {
         return tenderInfoService.updateTender(request, tenderId, tenderDocument, tenderInfo);
     }
 
+
+    @Operation(summary = "Get tenders")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success, when list of tenders are retrieved",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(implementation = FileDownloadDto.class))
+                    }),
+            @ApiResponse(responseCode = "404", description = "The resource you were trying to reach is not found")
+    })
+    @RolesAllowed({"client", "contractor", "admin"})
+    @GetMapping
+    @Transactional(readOnly = true)
+    public List<TenderDetailsDto> get(HttpServletRequest request) {
+        return tenderInfoService.getTenders(request);
+    }
+
     @Operation(summary = "Download technical tender document")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success, when user is able to download tender document",
@@ -86,5 +103,4 @@ public class TenderInfoController {
     public FileDownloadDto downloadTender(@PathVariable("tenderId") String tenderId) {
         return tenderInfoService.downloadTender(tenderId);
     }
-
 }

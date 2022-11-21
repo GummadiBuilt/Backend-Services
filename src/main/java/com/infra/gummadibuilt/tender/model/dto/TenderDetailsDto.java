@@ -9,7 +9,9 @@ import lombok.Data;
 import javax.validation.constraints.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
+import static com.infra.gummadibuilt.common.util.CommonModuleUtils.DATE_PATTERN;
 
 @Data
 public class TenderDetailsDto implements Serializable {
@@ -40,7 +42,7 @@ public class TenderDetailsDto implements Serializable {
     private String durationCounter;
 
     @NotBlank
-    private LocalDate lastDateOfSubmission;
+    private String lastDateOfSubmission;
 
     @Digits(integer = 20, fraction = 0)
     private BigDecimal estimatedBudget;
@@ -69,7 +71,9 @@ public class TenderDetailsDto implements Serializable {
         result.setTypeOfContract(TypeOfContractDto.valueOf(tenderInfo.getTypeOfContract()));
         result.setContractDuration(tenderInfo.getContractDuration());
         result.setDurationCounter(tenderInfo.getDurationCounter().getText());
-        result.setLastDateOfSubmission(tenderInfo.getLastDateOfSubmission());
+        result.setLastDateOfSubmission(
+                tenderInfo.getLastDateOfSubmission().format(DateTimeFormatter.ofPattern(DATE_PATTERN))
+        );
         result.setEstimatedBudget(tenderInfo.getEstimatedBudget());
         result.setWorkflowStep(tenderInfo.getWorkflowStep().getText());
         result.setTenderDocumentName(tenderInfo.getTenderDocumentName());

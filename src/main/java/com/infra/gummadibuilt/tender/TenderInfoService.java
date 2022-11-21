@@ -12,6 +12,7 @@ import com.infra.gummadibuilt.common.util.FileUtils;
 import com.infra.gummadibuilt.common.util.SaveEntityConstraintHelper;
 import com.infra.gummadibuilt.tender.model.TenderInfo;
 import com.infra.gummadibuilt.tender.model.TypeOfContract;
+import com.infra.gummadibuilt.tender.model.WorkflowStep;
 import com.infra.gummadibuilt.tender.model.dto.CreateTenderInfoDto;
 import com.infra.gummadibuilt.tender.model.dto.TenderDetailsDto;
 import com.infra.gummadibuilt.userandrole.ApplicationUserDao;
@@ -27,9 +28,8 @@ import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.infra.gummadibuilt.common.util.CommonModuleUtils.*;
 import static com.infra.gummadibuilt.common.util.UserInfo.loggedInUserInfo;
@@ -129,13 +129,50 @@ public class TenderInfoService {
         return TenderDetailsDto.valueOf(tenderInfo);
     }
 
+    @Transactional
+    public List<TenderDetailsDto> getTenders(HttpServletRequest request) {
+        List<TenderDetailsDto> tenderDetailsDtos;
+        LoggedInUser loggedInUser = loggedInUserInfo(request);
+        ApplicationUser applicationUser = getById(applicationUserDao, loggedInUser.getUserId(), USER_NOT_FOUND);
+
+        if (request.isUserInRole("admin")) {
+            List<WorkflowStep> workflowSteps = Arrays.asList(
+                    WorkflowStep.ARCHIVED,
+                    WorkflowStep.UNDER_PROCESS,
+                    WorkflowStep.SUSPENDED,
+                    WorkflowStep.PUBLISHED,
+                    WorkflowStep.YET_TO_BE_PUBLISHED
+            );
+            tenderDetailsDtos = tenderInfoDao.findAllByWorkflowStepIn(workflowSteps)
+                    .stream()
+                    .map(TenderDetailsDto::valueOf)
+                    .collect(Collectors.toList());
+
+        } else if (request.isUserInRole("client")) {
+
+            tenderDetailsDtos = applicationUser.getTenderInfo().stream().map(TenderDetailsDto::valueOf).collect(Collectors.toList());
+
+        } else if (request.isUserInRole("contractor")) {
+            List<String> typeOfWorks = applicationUser.getTypeOfEstablishment();
+            List<WorkflowStep> workflowSteps = List.of(WorkflowStep.PUBLISHED);
+            tenderDetailsDtos = tenderInfoDao.findAllByWorkflowStepInAndTypeOfWorkIn(workflowSteps, typeOfWorks)
+                    .stream()
+                    .map(TenderDetailsDto::valueOf)
+                    .collect(Collectors.toList());
+        } else {
+            throw new RuntimeException("Token didnt match to any roles");
+        }
+
+        return tenderDetailsDtos;
+    }
+
     public FileDownloadDto downloadTender(String tenderId) {
         TenderInfo tenderInfo = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
         return amazonFileService.downloadFile(tenderInfo.getId(), tenderInfo.getTenderDocumentName());
     }
 
     private void createTenderInfo(TenderInfo tenderInfo, CreateTenderInfoDto createTenderInfoDto) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_PATTERN);
         LocalDate localDate = LocalDate.parse(createTenderInfoDto.getLastDateOfSubmission(), formatter);
         tenderInfo.setTypeOfWork(createTenderInfoDto.getTypeOfWork());
         tenderInfo.setWorkDescription(createTenderInfoDto.getWorkDescription());
