@@ -25,7 +25,7 @@ INSERT INTO type_of_contract (type_of_contract,contract_short_code,is_active,cre
 CREATE TABLE tender_info (
   id                                VARCHAR(50)  NOT NULL,
   application_user_id               VARCHAR(255) NOT NULL REFERENCES application_user(id),
-  type_of_work                      VARCHAR(255) NOT NULL,
+  type_of_establishment_desc        VARCHAR(255) NOT NULL REFERENCES type_of_establishment(establishment_description),
   work_description                  VARCHAR(50)  NOT NULL,
   project_location                  VARCHAR(50)  NOT NULL,
   type_of_contract_id               INT4         NOT NULL REFERENCES type_of_contract(id),

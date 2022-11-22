@@ -1,5 +1,6 @@
 package com.infra.gummadibuilt.tender;
 
+import com.infra.gummadibuilt.masterdata.common.model.TypeOfEstablishment;
 import com.infra.gummadibuilt.tender.model.TenderInfo;
 import com.infra.gummadibuilt.tender.model.WorkflowStep;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,5 +15,8 @@ public interface TenderInfoDao extends JpaRepository<TenderInfo, String> {
 
     List<TenderInfo> findAllByWorkflowStepIn(List<WorkflowStep> workflowSteps);
 
-    List<TenderInfo> findAllByWorkflowStepInAndTypeOfWorkIn(List<WorkflowStep> workflowSteps, List<String> typeOfWork);
+    List<TenderInfo> findAllByWorkflowStepInAndTypeOfEstablishmentIn(
+            List<WorkflowStep> workflowSteps,
+            List<TypeOfEstablishment> typeOfWork
+    );
 }

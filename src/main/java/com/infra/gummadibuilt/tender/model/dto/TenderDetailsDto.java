@@ -2,6 +2,7 @@ package com.infra.gummadibuilt.tender.model.dto;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.infra.gummadibuilt.common.ChangeTracking;
+import com.infra.gummadibuilt.masterdata.common.model.dto.TypeOfEstablishmentDto;
 import com.infra.gummadibuilt.tender.model.TenderInfo;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -22,7 +23,7 @@ public class TenderDetailsDto implements Serializable {
 
     @NotBlank
     @Size(max = 255)
-    private String typeOfWork;
+    private TypeOfEstablishmentDto typeOfWork;
 
     @NotBlank
     @Size(max = 50)
@@ -65,7 +66,7 @@ public class TenderDetailsDto implements Serializable {
     public static TenderDetailsDto valueOf(TenderInfo tenderInfo) {
         TenderDetailsDto result = new TenderDetailsDto();
         result.setTenderId(tenderInfo.getId());
-        result.setTypeOfWork(tenderInfo.getTypeOfWork());
+        result.setTypeOfWork(TypeOfEstablishmentDto.valueOf(tenderInfo.getTypeOfEstablishment()));
         result.setWorkDescription(tenderInfo.getWorkDescription());
         result.setProjectLocation(tenderInfo.getProjectLocation());
         result.setTypeOfContract(TypeOfContractDto.valueOf(tenderInfo.getTypeOfContract()));

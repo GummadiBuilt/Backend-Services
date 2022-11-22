@@ -10,6 +10,8 @@ import com.infra.gummadibuilt.common.file.AmazonFileService;
 import com.infra.gummadibuilt.common.file.FileDownloadDto;
 import com.infra.gummadibuilt.common.util.FileUtils;
 import com.infra.gummadibuilt.common.util.SaveEntityConstraintHelper;
+import com.infra.gummadibuilt.masterdata.common.TypeOfEstablishmentDao;
+import com.infra.gummadibuilt.masterdata.common.model.TypeOfEstablishment;
 import com.infra.gummadibuilt.tender.model.TenderInfo;
 import com.infra.gummadibuilt.tender.model.TypeOfContract;
 import com.infra.gummadibuilt.tender.model.WorkflowStep;
@@ -44,6 +46,8 @@ public class TenderInfoService {
 
     private final TypeOfContractDao typeOfContractDao;
 
+    private final TypeOfEstablishmentDao typeOfEstablishmentDao;
+
     private final TenderInfoDao tenderInfoDao;
 
     private final AmazonFileService amazonFileService;
@@ -55,13 +59,15 @@ public class TenderInfoService {
                              TypeOfContractDao typeOfContractDao,
                              TenderInfoDao tenderInfoDao,
                              AmazonFileService amazonFileService,
-                             ApplicationUserDao applicationUserDao) {
+                             ApplicationUserDao applicationUserDao,
+                             TypeOfEstablishmentDao typeOfEstablishmentDao) {
         this.mapper = mapper;
         this.validator = validator;
         this.typeOfContractDao = typeOfContractDao;
         this.tenderInfoDao = tenderInfoDao;
         this.amazonFileService = amazonFileService;
         this.applicationUserDao = applicationUserDao;
+        this.typeOfEstablishmentDao = typeOfEstablishmentDao;
     }
 
     @Transactional
@@ -79,6 +85,10 @@ public class TenderInfoService {
         TypeOfContract typeOfContract =
                 getById(typeOfContractDao, tenderInfoDto.getTypeOfContract(), TYPE_OF_CONTRACT_NOT_FOUND);
         tenderInfo.setTypeOfContract(typeOfContract);
+
+        TypeOfEstablishment typeOfEstablishment =
+                getById(typeOfEstablishmentDao, tenderInfoDto.getTypeOfWork(), TYPE_OF_WORK_NOT_FOUND);
+        tenderInfo.setTypeOfEstablishment(typeOfEstablishment);
         tenderInfo.setTenderDocumentName(tenderDocument.getOriginalFilename());
         tenderInfo.setTenderDocumentSize(tenderDocument.getSize());
 
@@ -153,8 +163,9 @@ public class TenderInfoService {
 
         } else if (request.isUserInRole("contractor")) {
             List<String> typeOfWorks = applicationUser.getTypeOfEstablishment();
+            List<TypeOfEstablishment> typeOfEstablishments = typeOfEstablishmentDao.findAllByEstablishmentDescriptionIn(typeOfWorks);
             List<WorkflowStep> workflowSteps = List.of(WorkflowStep.PUBLISHED);
-            tenderDetailsDtos = tenderInfoDao.findAllByWorkflowStepInAndTypeOfWorkIn(workflowSteps, typeOfWorks)
+            tenderDetailsDtos = tenderInfoDao.findAllByWorkflowStepInAndTypeOfEstablishmentIn(workflowSteps, typeOfEstablishments)
                     .stream()
                     .map(TenderDetailsDto::valueOf)
                     .collect(Collectors.toList());
@@ -192,7 +203,6 @@ public class TenderInfoService {
     private void createTenderInfo(TenderInfo tenderInfo, CreateTenderInfoDto createTenderInfoDto) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_PATTERN);
         LocalDate localDate = LocalDate.parse(createTenderInfoDto.getLastDateOfSubmission(), formatter);
-        tenderInfo.setTypeOfWork(createTenderInfoDto.getTypeOfWork());
         tenderInfo.setWorkDescription(createTenderInfoDto.getWorkDescription());
         tenderInfo.setProjectLocation(createTenderInfoDto.getProjectLocation());
         tenderInfo.setContractDuration(createTenderInfoDto.getContractDuration());

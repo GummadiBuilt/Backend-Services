@@ -28,7 +28,7 @@ public class TypeOfEstablishment {
 
     @Id
     @NotBlank
-    @Size(max = 25)
+    @Size(max = 255)
     private String establishmentDescription;
 
     private boolean isActive;
