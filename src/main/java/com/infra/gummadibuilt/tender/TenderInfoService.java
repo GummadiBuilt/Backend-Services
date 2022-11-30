@@ -6,6 +6,7 @@ import com.infra.gummadibuilt.common.ChangeTracking;
 import com.infra.gummadibuilt.common.LoggedInUser;
 import com.infra.gummadibuilt.common.exception.EntityFieldNotNullException;
 import com.infra.gummadibuilt.common.exception.EntityFieldSizeLimitException;
+import com.infra.gummadibuilt.common.exception.InvalidActionException;
 import com.infra.gummadibuilt.common.file.AmazonFileService;
 import com.infra.gummadibuilt.common.file.FileDownloadDto;
 import com.infra.gummadibuilt.common.util.FileUtils;
@@ -94,6 +95,7 @@ public class TenderInfoService {
 
         createTenderInfo(tenderInfo, tenderInfoDto);
         tenderInfo.setId(this.tenderIdGenerator(tenderInfo));
+        tenderInfo.setWorkflowStep(tenderInfoDto.getWorkflowStep());
         ApplicationUser applicationUser = getById(applicationUserDao, loggedInUser.getUserId(), USER_NOT_FOUND);
         tenderInfo.setApplicationUser(applicationUser);
         tenderInfo.setChangeTracking(new ChangeTracking(loggedInUser.toString()));
@@ -118,7 +120,7 @@ public class TenderInfoService {
         TenderInfo tenderInfo = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
         CreateTenderInfoDto tenderInfoDto = mapper.readValue(tenderInformation, CreateTenderInfoDto.class);
         validateTenderInfo(tenderInfoDto);
-
+        validateOnUpdate(tenderInfo, request);
         if (!tenderDocument.isEmpty()) {
             FileUtils.checkFileValidOrNot(tenderDocument);
             amazonFileService.deleteFile(tenderInfo.getId(), tenderInfo.getTenderDocumentName());
@@ -134,6 +136,11 @@ public class TenderInfoService {
         createTenderInfo(tenderInfo, tenderInfoDto);
         tenderInfo.getChangeTracking().update(loggedInUser.toString());
 
+        if (request.isUserInRole("admin")) {
+            tenderInfo.setWorkflowStep(tenderInfo.getWorkflowStep());
+        } else {
+            tenderInfo.setWorkflowStep(tenderInfoDto.getWorkflowStep());
+        }
         SaveEntityConstraintHelper.save(tenderInfoDao, tenderInfo, null);
         logger.info(String.format("User %s updated Tender %s", loggedInUser, tenderInfo.getId()));
         return TenderDetailsDto.valueOf(tenderInfo);
@@ -209,7 +216,6 @@ public class TenderInfoService {
         tenderInfo.setDurationCounter(createTenderInfoDto.getDurationCounter());
         tenderInfo.setEstimatedBudget(createTenderInfoDto.getEstimatedBudget());
         tenderInfo.setLastDateOfSubmission(localDate);
-        tenderInfo.setWorkflowStep(createTenderInfoDto.getWorkflowStep());
         tenderInfo.setTenderFinanceInfo(createTenderInfoDto.getTenderFinanceInfo());
     }
 
@@ -240,5 +246,27 @@ public class TenderInfoService {
         metaData.put("TypeOfContract", tenderInfo.getTypeOfContract().getTypeOfContract());
 
         return metaData;
+    }
+
+    private void validateOnUpdate(TenderInfo tenderInfo, HttpServletRequest request) {
+        if (tenderInfo.getWorkflowStep().equals(WorkflowStep.YET_TO_BE_PUBLISHED) && request.isUserInRole("client")) {
+            throw new InvalidActionException(
+                    String.format("Client user cannot modify when its in step %s",
+                            WorkflowStep.YET_TO_BE_PUBLISHED.getText()
+                    )
+            );
+        }
+
+        if (tenderInfo.getWorkflowStep() != (WorkflowStep.YET_TO_BE_PUBLISHED) && request.isUserInRole("admin")) {
+            throw new InvalidActionException(
+                    String.format("Admin user cannot modify when its in step %s",
+                            WorkflowStep.SAVE.getText()
+                    )
+            );
+        }
+
+        if (tenderInfo.getWorkflowStep() != WorkflowStep.SAVE || tenderInfo.getWorkflowStep() != WorkflowStep.YET_TO_BE_PUBLISHED) {
+            throw new InvalidActionException(String.format("Cannot modify a tender once %s", WorkflowStep.PUBLISHED.getText()));
+        }
     }
 }
