@@ -249,13 +249,6 @@ public class TenderInfoService {
     }
 
     private void validateOnUpdate(TenderInfo tenderInfo, HttpServletRequest request) {
-        if (tenderInfo.getWorkflowStep().equals(WorkflowStep.YET_TO_BE_PUBLISHED) && request.isUserInRole("client")) {
-            throw new InvalidActionException(
-                    String.format("Client user cannot modify when its in step %s",
-                            WorkflowStep.YET_TO_BE_PUBLISHED.getText()
-                    )
-            );
-        }
 
         if (tenderInfo.getWorkflowStep() != (WorkflowStep.YET_TO_BE_PUBLISHED) && request.isUserInRole("admin")) {
             throw new InvalidActionException(
@@ -265,8 +258,12 @@ public class TenderInfoService {
             );
         }
 
-        if (tenderInfo.getWorkflowStep() != WorkflowStep.SAVE || tenderInfo.getWorkflowStep() != WorkflowStep.YET_TO_BE_PUBLISHED) {
-            throw new InvalidActionException(String.format("Cannot modify a tender once %s", WorkflowStep.PUBLISHED.getText()));
+        if (tenderInfo.getWorkflowStep().equals(WorkflowStep.YET_TO_BE_PUBLISHED) && request.isUserInRole("client")) {
+            throw new InvalidActionException(
+                    String.format("Client user cannot modify when its in step %s",
+                            WorkflowStep.YET_TO_BE_PUBLISHED.getText()
+                    )
+            );
         }
     }
 }
