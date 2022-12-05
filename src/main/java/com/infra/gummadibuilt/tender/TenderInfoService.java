@@ -136,8 +136,10 @@ public class TenderInfoService {
         createTenderInfo(tenderInfo, tenderInfoDto);
         tenderInfo.getChangeTracking().update(loggedInUser.toString());
 
-        if (request.isUserInRole("admin")) {
-            tenderInfo.setWorkflowStep(tenderInfo.getWorkflowStep());
+        if (request.isUserInRole("admin") & tenderInfoDto.getWorkflowStep() == WorkflowStep.PUBLISHED) {
+            tenderInfo.setWorkflowStep(WorkflowStep.PUBLISHED);
+        } else if (request.isUserInRole("admin")) {
+            tenderInfo.setWorkflowStep(WorkflowStep.YET_TO_BE_PUBLISHED);
         } else {
             tenderInfo.setWorkflowStep(tenderInfoDto.getWorkflowStep());
         }
@@ -258,10 +260,10 @@ public class TenderInfoService {
             );
         }
 
-        if (tenderInfo.getWorkflowStep().equals(WorkflowStep.YET_TO_BE_PUBLISHED) && request.isUserInRole("client")) {
+        if (tenderInfo.getWorkflowStep() != WorkflowStep.SAVE && request.isUserInRole("client")) {
             throw new InvalidActionException(
                     String.format("Client user cannot modify when its in step %s",
-                            WorkflowStep.YET_TO_BE_PUBLISHED.getText()
+                            tenderInfo.getWorkflowStep().getText()
                     )
             );
         }
