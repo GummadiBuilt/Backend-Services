@@ -55,13 +55,7 @@ public class TenderInfoService {
 
     private final ApplicationUserDao applicationUserDao;
 
-    public TenderInfoService(ObjectMapper mapper,
-                             Validator validator,
-                             TypeOfContractDao typeOfContractDao,
-                             TenderInfoDao tenderInfoDao,
-                             AmazonFileService amazonFileService,
-                             ApplicationUserDao applicationUserDao,
-                             TypeOfEstablishmentDao typeOfEstablishmentDao) {
+    public TenderInfoService(ObjectMapper mapper, Validator validator, TypeOfContractDao typeOfContractDao, TenderInfoDao tenderInfoDao, AmazonFileService amazonFileService, ApplicationUserDao applicationUserDao, TypeOfEstablishmentDao typeOfEstablishmentDao) {
         this.mapper = mapper;
         this.validator = validator;
         this.typeOfContractDao = typeOfContractDao;
@@ -83,12 +77,10 @@ public class TenderInfoService {
         validateTenderInfo(tenderInfoDto);
 
         TenderInfo tenderInfo = new TenderInfo();
-        TypeOfContract typeOfContract =
-                getById(typeOfContractDao, tenderInfoDto.getTypeOfContract(), TYPE_OF_CONTRACT_NOT_FOUND);
+        TypeOfContract typeOfContract = getById(typeOfContractDao, tenderInfoDto.getTypeOfContract(), TYPE_OF_CONTRACT_NOT_FOUND);
         tenderInfo.setTypeOfContract(typeOfContract);
 
-        TypeOfEstablishment typeOfEstablishment =
-                getById(typeOfEstablishmentDao, tenderInfoDto.getTypeOfWork(), TYPE_OF_WORK_NOT_FOUND);
+        TypeOfEstablishment typeOfEstablishment = getById(typeOfEstablishmentDao, tenderInfoDto.getTypeOfWork(), TYPE_OF_WORK_NOT_FOUND);
         tenderInfo.setTypeOfEstablishment(typeOfEstablishment);
         tenderInfo.setTenderDocumentName(tenderDocument.getOriginalFilename());
         tenderInfo.setTenderDocumentSize(tenderDocument.getSize());
@@ -105,15 +97,12 @@ public class TenderInfoService {
         String response = amazonFileService.uploadFile(tenderInfo.getId(), metaData(tenderInfo), tenderDocument);
         logger.info(String.format("File upload success, generated ETAG %s", response));
 
-        return TenderDetailsDto.valueOf(tenderInfo);
+        return TenderDetailsDto.valueOf(tenderInfo, true);
     }
 
 
     @Transactional
-    public TenderDetailsDto updateTender(HttpServletRequest request,
-                                         String tenderId,
-                                         MultipartFile tenderDocument,
-                                         String tenderInformation) throws JsonProcessingException {
+    public TenderDetailsDto updateTender(HttpServletRequest request, String tenderId, MultipartFile tenderDocument, String tenderInformation) throws JsonProcessingException {
         LoggedInUser loggedInUser = loggedInUserInfo(request);
 
         logger.info(String.format("User %s initiated tender update process", loggedInUser));
@@ -130,8 +119,7 @@ public class TenderInfoService {
             tenderInfo.setTenderDocumentSize(tenderDocument.getSize());
         }
 
-        TypeOfContract typeOfContract =
-                getById(typeOfContractDao, tenderInfoDto.getTypeOfContract(), TYPE_OF_CONTRACT_NOT_FOUND);
+        TypeOfContract typeOfContract = getById(typeOfContractDao, tenderInfoDto.getTypeOfContract(), TYPE_OF_CONTRACT_NOT_FOUND);
         tenderInfo.setTypeOfContract(typeOfContract);
         createTenderInfo(tenderInfo, tenderInfoDto);
         tenderInfo.getChangeTracking().update(loggedInUser.toString());
@@ -145,7 +133,7 @@ public class TenderInfoService {
         }
         SaveEntityConstraintHelper.save(tenderInfoDao, tenderInfo, null);
         logger.info(String.format("User %s updated Tender %s", loggedInUser, tenderInfo.getId()));
-        return TenderDetailsDto.valueOf(tenderInfo);
+        return TenderDetailsDto.valueOf(tenderInfo, true);
     }
 
     public List<TenderDetailsDto> getAllTenders(HttpServletRequest request) {
@@ -154,21 +142,12 @@ public class TenderInfoService {
         ApplicationUser applicationUser = getById(applicationUserDao, loggedInUser.getUserId(), USER_NOT_FOUND);
 
         if (request.isUserInRole("admin")) {
-            List<WorkflowStep> workflowSteps = Arrays.asList(
-                    WorkflowStep.ARCHIVED,
-                    WorkflowStep.UNDER_PROCESS,
-                    WorkflowStep.SUSPENDED,
-                    WorkflowStep.PUBLISHED,
-                    WorkflowStep.YET_TO_BE_PUBLISHED
-            );
-            tenderDetailsDtos = tenderInfoDao.findAllByWorkflowStepIn(workflowSteps)
-                    .stream()
-                    .map(TenderDetailsDto::valueOf)
-                    .collect(Collectors.toList());
+            List<WorkflowStep> workflowSteps = Arrays.asList(WorkflowStep.ARCHIVED, WorkflowStep.UNDER_PROCESS, WorkflowStep.SUSPENDED, WorkflowStep.PUBLISHED, WorkflowStep.YET_TO_BE_PUBLISHED);
+            tenderDetailsDtos = tenderInfoDao.findAllByWorkflowStepIn(workflowSteps).stream().map(item -> TenderDetailsDto.valueOf(item, true)).collect(Collectors.toList());
 
         } else if (request.isUserInRole("client")) {
 
-            tenderDetailsDtos = applicationUser.getTenderInfo().stream().map(TenderDetailsDto::valueOf).collect(Collectors.toList());
+            tenderDetailsDtos = applicationUser.getTenderInfo().stream().map(item -> TenderDetailsDto.valueOf(item, true)).collect(Collectors.toList());
 
         } else if (request.isUserInRole("contractor")) {
             List<String> typeOfWorks = applicationUser.getTypeOfEstablishment();
@@ -176,7 +155,7 @@ public class TenderInfoService {
             List<WorkflowStep> workflowSteps = List.of(WorkflowStep.PUBLISHED);
             tenderDetailsDtos = tenderInfoDao.findAllByWorkflowStepInAndTypeOfEstablishmentIn(workflowSteps, typeOfEstablishments)
                     .stream()
-                    .map(TenderDetailsDto::valueOf)
+                    .map(item -> TenderDetailsDto.valueOf(item, false))
                     .collect(Collectors.toList());
         } else {
             throw new RuntimeException("Token didnt match to any roles");
@@ -194,11 +173,11 @@ public class TenderInfoService {
         TenderDetailsDto tenderDetailsDto = new TenderDetailsDto();
 
         if (request.isUserInRole("contractor") && (tenderInfo.getWorkflowStep() == WorkflowStep.PUBLISHED)) {
-            return TenderDetailsDto.valueOf(tenderInfo);
+            return TenderDetailsDto.valueOf(tenderInfo, false);
         } else if (request.isUserInRole("client") && Objects.equals(tenderInfo.getApplicationUser().getId(), loggedInUser.getUserId())) {
-            return TenderDetailsDto.valueOf(tenderInfo);
+            return TenderDetailsDto.valueOf(tenderInfo, true);
         } else if (request.isUserInRole("admin") && (tenderInfo.getWorkflowStep() != WorkflowStep.SAVE)) {
-            return TenderDetailsDto.valueOf(tenderInfo);
+            return TenderDetailsDto.valueOf(tenderInfo, true);
         }
 
         return tenderDetailsDto;
@@ -253,19 +232,11 @@ public class TenderInfoService {
     private void validateOnUpdate(TenderInfo tenderInfo, HttpServletRequest request) {
 
         if (tenderInfo.getWorkflowStep() != (WorkflowStep.YET_TO_BE_PUBLISHED) && request.isUserInRole("admin")) {
-            throw new InvalidActionException(
-                    String.format("Admin user cannot modify when its in step %s",
-                            WorkflowStep.SAVE.getText()
-                    )
-            );
+            throw new InvalidActionException(String.format("Admin user cannot modify when its in step %s", WorkflowStep.SAVE.getText()));
         }
 
         if (tenderInfo.getWorkflowStep() != WorkflowStep.SAVE && request.isUserInRole("client")) {
-            throw new InvalidActionException(
-                    String.format("Client user cannot modify when its in step %s",
-                            tenderInfo.getWorkflowStep().getText()
-                    )
-            );
+            throw new InvalidActionException(String.format("Client user cannot modify when its in step %s", tenderInfo.getWorkflowStep().getText()));
         }
     }
 }

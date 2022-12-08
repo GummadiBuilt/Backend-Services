@@ -1,6 +1,7 @@
 package com.infra.gummadibuilt.tender.model.dto;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.infra.gummadibuilt.common.ChangeTracking;
 import com.infra.gummadibuilt.masterdata.common.model.dto.TypeOfEstablishmentDto;
 import com.infra.gummadibuilt.tender.model.TenderInfo;
@@ -20,6 +21,8 @@ public class TenderDetailsDto implements Serializable {
     @Schema(name = "Tender ID", defaultValue = "123")
     @NotBlank
     private String tenderId;
+
+    private String clientInformation;
 
     @NotBlank
     @Size(max = 255)
@@ -63,7 +66,7 @@ public class TenderDetailsDto implements Serializable {
 
     private ChangeTracking changeTracking;
 
-    public static TenderDetailsDto valueOf(TenderInfo tenderInfo) {
+    public static TenderDetailsDto valueOf(TenderInfo tenderInfo, boolean showBidInfo) {
         TenderDetailsDto result = new TenderDetailsDto();
         result.setTenderId(tenderInfo.getId());
         result.setTypeOfWork(TypeOfEstablishmentDto.valueOf(tenderInfo.getTypeOfEstablishment()));
@@ -77,9 +80,19 @@ public class TenderDetailsDto implements Serializable {
         );
         result.setEstimatedBudget(tenderInfo.getEstimatedBudget());
         result.setWorkflowStep(tenderInfo.getWorkflowStep().getText());
-        result.setTenderDocumentName(tenderInfo.getTenderDocumentName());
-        result.setTenderDocumentSize(tenderInfo.getTenderDocumentSize());
-        result.setTenderFinanceInfo(tenderInfo.getTenderFinanceInfo());
+
+        result.setClientInformation(tenderInfo.getApplicationUser().getCompanyName());
+        if (showBidInfo) {
+            result.setTenderDocumentName(tenderInfo.getTenderDocumentName());
+            result.setTenderDocumentSize(tenderInfo.getTenderDocumentSize());
+            result.setTenderFinanceInfo(tenderInfo.getTenderFinanceInfo());
+        } else {
+            result.setTenderDocumentName("-");
+            result.setTenderDocumentSize(0);
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode financeInfo = mapper.createObjectNode();
+            result.setTenderFinanceInfo(financeInfo);
+        }
         result.setChangeTracking(tenderInfo.getChangeTracking());
 
         return result;

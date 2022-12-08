@@ -1,11 +1,14 @@
-package com.infra.gummadibuilt.pqform;
+package com.infra.gummadibuilt.pqform.model;
 
+import com.infra.gummadibuilt.common.ChangeTracking;
 import com.infra.gummadibuilt.tender.model.DurationCounter;
+import com.infra.gummadibuilt.tender.model.TenderInfo;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
+import javax.validation.Valid;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -43,9 +46,22 @@ public class PqFormHeader {
 
     private LocalDate pqDocumentIssueDate;
 
+    @NotNull
     private LocalDate pqLastDateOfSubmission;
 
+    @NotNull
     private LocalDate tentativeDateOfAward;
 
+    @NotNull
     private LocalDate scheduledCompletion;
+
+    @NotNull
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "tender_info_id")
+    private TenderInfo tenderInfo;
+
+    @Embedded
+    @NotNull
+    @Valid
+    private ChangeTracking changeTracking;
 }
