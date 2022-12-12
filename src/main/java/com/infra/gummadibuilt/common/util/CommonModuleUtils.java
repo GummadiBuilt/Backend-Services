@@ -22,6 +22,7 @@ public class CommonModuleUtils {
     public static final String TYPE_OF_CONTRACT_NOT_FOUND = "Couldn't find a contract for the given id %d";
     public static final String TYPE_OF_WORK_NOT_FOUND = "Couldn't find a work that matches %s";
     public static final String TENDER_NOT_FOUND = "Couldn't find a tender with id %d";
+    public static final String PQ_FORM_NOT_FOUND = "Couldn't find a pq-form with id %d";
     public static final String USER_NOT_FOUND = "Couldn't find user with id %s";
 
     public static <T> T getById(JpaRepository<T, Integer> repository, int id, String exceptionMessage) {

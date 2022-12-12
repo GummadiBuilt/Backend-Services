@@ -1,11 +1,8 @@
 package com.infra.gummadibuilt.pqform.model.dto;
 
-import com.infra.gummadibuilt.common.ChangeTracking;
-import com.infra.gummadibuilt.tender.model.DurationCounter;
+import com.infra.gummadibuilt.tender.model.WorkflowStep;
 import lombok.Data;
 
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -34,4 +31,6 @@ public class PqFormHeaderCreateDto {
 
     @NotNull
     private LocalDate scheduledCompletion;
+
+    private WorkflowStep workflowStep;
 }

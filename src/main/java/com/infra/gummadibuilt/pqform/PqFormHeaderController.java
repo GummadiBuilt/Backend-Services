@@ -15,6 +15,7 @@ import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
 @RestController
 @RequestMapping("/tender/{tenderId}/pq-form")
@@ -58,5 +59,22 @@ public class PqFormHeaderController {
                                         @PathVariable("tenderId") @NotBlank String tenderId,
                                         @RequestBody PqFormHeaderCreateDto pqForm) {
         return pqFormHeaderService.createPqForm(request, tenderId, pqForm);
+    }
+
+    @Operation(summary = "Update PQ form in the application")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success, when PQ form is created for given tender",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(implementation = PqFormHeaderDto.class))
+                    }),
+            @ApiResponse(responseCode = "404", description = "The resource you were trying to reach is not found")
+    })
+    @RolesAllowed("admin")
+    @PostMapping("/update/{pqFormId}")
+    public PqFormHeaderDto updatePqForm(@Valid HttpServletRequest request,
+                                        @PathVariable("tenderId") @NotBlank String tenderId,
+                                        @PathVariable("pqFormId") @NotNull int pqFormId,
+                                        @RequestBody PqFormHeaderCreateDto pqForm) {
+        return pqFormHeaderService.updatePqForm(request, tenderId, pqFormId, pqForm);
     }
 }
