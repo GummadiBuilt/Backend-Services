@@ -8,5 +8,5 @@ import java.util.Optional;
 
 public interface PqFormHeaderDao extends JpaRepository<PqFormHeader, Integer> {
 
-    Optional<PqFormHeader> findByTenderInfoId(TenderInfo tenderInfo);
+    Optional<PqFormHeader> findByTenderInfo(TenderInfo tenderInfo);
 }

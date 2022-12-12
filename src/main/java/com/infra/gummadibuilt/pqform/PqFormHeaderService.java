@@ -37,7 +37,7 @@ public class PqFormHeaderService {
         TenderInfo tenderInfo = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
         validateFetch(request, tenderInfo);
 
-        Optional<PqFormHeader> pqFormHeader = pqFormHeaderDao.findByTenderInfoId(tenderInfo);
+        Optional<PqFormHeader> pqFormHeader = pqFormHeaderDao.findByTenderInfo(tenderInfo);
 
         if (pqFormHeader.isPresent()) {
             return PqFormHeaderDto.valueOf(pqFormHeader.get());
