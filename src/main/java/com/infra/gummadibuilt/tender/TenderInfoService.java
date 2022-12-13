@@ -17,6 +17,7 @@ import com.infra.gummadibuilt.tender.model.TenderInfo;
 import com.infra.gummadibuilt.tender.model.TypeOfContract;
 import com.infra.gummadibuilt.tender.model.WorkflowStep;
 import com.infra.gummadibuilt.tender.model.dto.CreateTenderInfoDto;
+import com.infra.gummadibuilt.tender.model.dto.TenderDashboardProjection;
 import com.infra.gummadibuilt.tender.model.dto.TenderDetailsDto;
 import com.infra.gummadibuilt.userandrole.ApplicationUserDao;
 import com.infra.gummadibuilt.userandrole.model.ApplicationUser;
@@ -32,7 +33,6 @@ import javax.validation.Validator;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.infra.gummadibuilt.common.util.CommonModuleUtils.*;
 import static com.infra.gummadibuilt.common.util.UserInfo.loggedInUserInfo;
@@ -136,27 +136,18 @@ public class TenderInfoService {
         return TenderDetailsDto.valueOf(tenderInfo, true);
     }
 
-    public List<TenderDetailsDto> getAllTenders(HttpServletRequest request) {
-        List<TenderDetailsDto> tenderDetailsDtos;
+    public List<TenderDashboardProjection> getAllTenders(HttpServletRequest request) {
+        List<TenderDashboardProjection> tenderDetailsDtos;
         LoggedInUser loggedInUser = loggedInUserInfo(request);
-        ApplicationUser applicationUser = getById(applicationUserDao, loggedInUser.getUserId(), USER_NOT_FOUND);
 
         if (request.isUserInRole("admin")) {
-            List<WorkflowStep> workflowSteps = Arrays.asList(WorkflowStep.ARCHIVED, WorkflowStep.UNDER_PROCESS, WorkflowStep.SUSPENDED, WorkflowStep.PUBLISHED, WorkflowStep.YET_TO_BE_PUBLISHED);
-            tenderDetailsDtos = tenderInfoDao.findAllByWorkflowStepIn(workflowSteps).stream().map(item -> TenderDetailsDto.valueOf(item, true)).collect(Collectors.toList());
-
+            tenderDetailsDtos = tenderInfoDao.getAdminDashboard();
         } else if (request.isUserInRole("client")) {
-
-            tenderDetailsDtos = applicationUser.getTenderInfo().stream().map(item -> TenderDetailsDto.valueOf(item, true)).collect(Collectors.toList());
-
+            tenderDetailsDtos = tenderInfoDao.getClientDashboard(loggedInUser.getUserId());
         } else if (request.isUserInRole("contractor")) {
-            List<String> typeOfWorks = applicationUser.getTypeOfEstablishment();
-            List<TypeOfEstablishment> typeOfEstablishments = typeOfEstablishmentDao.findAllByEstablishmentDescriptionIn(typeOfWorks);
-            List<WorkflowStep> workflowSteps = List.of(WorkflowStep.PUBLISHED);
-            tenderDetailsDtos = tenderInfoDao.findAllByWorkflowStepInAndTypeOfEstablishmentIn(workflowSteps, typeOfEstablishments)
-                    .stream()
-                    .map(item -> TenderDetailsDto.valueOf(item, false))
-                    .collect(Collectors.toList());
+            ApplicationUser applicationUser = getById(applicationUserDao, loggedInUser.getUserId(), USER_NOT_FOUND);
+            String typeOfEstablishment = String.join(",", applicationUser.getTypeOfEstablishment());
+            tenderDetailsDtos = tenderInfoDao.getContractorDashboard(typeOfEstablishment);
         } else {
             throw new RuntimeException("Token didnt match to any roles");
         }

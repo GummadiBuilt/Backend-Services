@@ -2,6 +2,7 @@ package com.infra.gummadibuilt.tender;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.infra.gummadibuilt.common.file.FileDownloadDto;
+import com.infra.gummadibuilt.tender.model.dto.TenderDashboardProjection;
 import com.infra.gummadibuilt.tender.model.dto.TenderDetailsDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -84,7 +85,7 @@ public class TenderInfoController {
     @RolesAllowed({"client", "contractor", "admin"})
     @GetMapping("/getAll")
     @Transactional(readOnly = true)
-    public List<TenderDetailsDto> getAll(HttpServletRequest request) {
+    public List<TenderDashboardProjection> getAll(HttpServletRequest request) {
         return tenderInfoService.getAllTenders(request);
     }
 
