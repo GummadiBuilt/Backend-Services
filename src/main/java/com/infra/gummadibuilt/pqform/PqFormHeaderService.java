@@ -59,6 +59,8 @@ public class PqFormHeaderService {
     }
 
     public PqFormHeaderDto createPqForm(HttpServletRequest request, String tenderId, PqFormHeaderCreateDto pqFormHeaderCreateDto) {
+
+        this.validateWorkflowStep(pqFormHeaderCreateDto);
         LoggedInUser loggedInUser = loggedInUserInfo(request);
         TenderInfo tenderInfo = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
 
@@ -73,6 +75,7 @@ public class PqFormHeaderService {
     }
 
     public PqFormHeaderDto updatePqForm(HttpServletRequest request, String tenderId, int pqFormId, PqFormHeaderCreateDto pqFormHeaderCreateDto) {
+        this.validateWorkflowStep(pqFormHeaderCreateDto);
         LoggedInUser loggedInUser = loggedInUserInfo(request);
         TenderInfo tenderInfo = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
         PqFormHeader formHeader = getById(pqFormHeaderDao, pqFormId, PQ_FORM_NOT_FOUND);
@@ -127,6 +130,13 @@ public class PqFormHeaderService {
             throw new InvalidActionException(
                     String.format("Cannot access PQ form when tender is in %s", tenderInfo.getWorkflowStep().getText())
             );
+        }
+    }
+
+    private void validateWorkflowStep(PqFormHeaderCreateDto pqFormHeaderCreateDto) {
+        if ((pqFormHeaderCreateDto.getWorkflowStep() != WorkflowStep.YET_TO_BE_PUBLISHED)
+                & (pqFormHeaderCreateDto.getWorkflowStep() != WorkflowStep.PUBLISHED)) {
+            throw new InvalidActionException("PQ Form action can only be Yet to be published or Published");
         }
     }
 
