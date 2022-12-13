@@ -1,5 +1,6 @@
 package com.infra.gummadibuilt.pqform;
 
+import com.google.common.collect.ImmutableMap;
 import com.infra.gummadibuilt.common.ChangeTracking;
 import com.infra.gummadibuilt.common.LoggedInUser;
 import com.infra.gummadibuilt.common.exception.InvalidActionException;
@@ -15,13 +16,19 @@ import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDate;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import static com.infra.gummadibuilt.common.util.CommonModuleUtils.*;
 import static com.infra.gummadibuilt.common.util.UserInfo.loggedInUserInfo;
 
 @Service
 public class PqFormHeaderService {
+
+    private static final Map<String, Supplier<? extends RuntimeException>> CONSTRAINT_MAPPING = ImmutableMap
+            .of(PqFormHeader.UNQ_NAME_CONSTRAINT, PqFormAlreadyExistsException::new);
+
 
     private final PqFormHeaderDao pqFormHeaderDao;
     private final TenderInfoDao tenderInfoDao;
@@ -86,7 +93,11 @@ public class PqFormHeaderService {
         tenderInfo.setWorkflowStep(pqFormHeaderCreateDto.getWorkflowStep());
         tenderInfo.getChangeTracking().update(loggedInUser.toString());
 
-        SaveEntityConstraintHelper.save(pqFormHeaderDao, formHeader, null);
+        formHeader.setPqLastDateOfSubmission(tenderInfo.getLastDateOfSubmission());
+        formHeader.setDurationCounter(tenderInfo.getDurationCounter());
+        formHeader.setContractDuration(tenderInfo.getContractDuration());
+
+        SaveEntityConstraintHelper.save(pqFormHeaderDao, formHeader, CONSTRAINT_MAPPING);
         SaveEntityConstraintHelper.save(tenderInfoDao, tenderInfo, null);
     }
 

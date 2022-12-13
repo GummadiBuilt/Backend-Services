@@ -16,3 +16,6 @@ CREATE TABLE pq_form_header (
   modified_date                     TIMESTAMP    NOT NULL,
   PRIMARY KEY (id)
 );
+
+-- Disallow duplicate state names (case insensitive)
+CREATE UNIQUE INDEX pq_form_header_unq_name ON pq_form_header (Lower(tender_info_id));

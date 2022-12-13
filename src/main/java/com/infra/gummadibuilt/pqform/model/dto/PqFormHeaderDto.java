@@ -9,7 +9,9 @@ import javax.persistence.Enumerated;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
+import static com.infra.gummadibuilt.common.util.CommonModuleUtils.DATE_PATTERN;
 
 @Data
 public class PqFormHeaderDto {
@@ -33,16 +35,16 @@ public class PqFormHeaderDto {
     @Enumerated(EnumType.STRING)
     private DurationCounter durationCounter;
 
-    private LocalDate pqDocumentIssueDate;
+    private String pqDocumentIssueDate;
 
     @NotNull
-    private LocalDate pqLastDateOfSubmission;
+    private String pqLastDateOfSubmission;
 
     @NotNull
-    private LocalDate tentativeDateOfAward;
+    private String tentativeDateOfAward;
 
     @NotNull
-    private LocalDate scheduledCompletion;
+    private String scheduledCompletion;
 
     public static PqFormHeaderDto valueOf(PqFormHeader pqFormHeader) {
         PqFormHeaderDto result = new PqFormHeaderDto();
@@ -52,10 +54,12 @@ public class PqFormHeaderDto {
         result.setTypeOfStructure(pqFormHeader.getTypeOfStructure());
         result.setContractDuration(pqFormHeader.getContractDuration());
         result.setDurationCounter(pqFormHeader.getDurationCounter());
-        result.setPqDocumentIssueDate(pqFormHeader.getPqDocumentIssueDate());
-        result.setPqLastDateOfSubmission(pqFormHeader.getPqLastDateOfSubmission());
-        result.setTentativeDateOfAward(pqFormHeader.getTentativeDateOfAward());
-        result.setScheduledCompletion(pqFormHeader.getScheduledCompletion());
+        if (pqFormHeader.getPqDocumentIssueDate() != null) {
+            result.setPqDocumentIssueDate(pqFormHeader.getPqDocumentIssueDate().format(DateTimeFormatter.ofPattern(DATE_PATTERN)));
+        }
+        result.setPqLastDateOfSubmission(pqFormHeader.getPqLastDateOfSubmission().format(DateTimeFormatter.ofPattern(DATE_PATTERN)));
+        result.setTentativeDateOfAward(pqFormHeader.getTentativeDateOfAward().format(DateTimeFormatter.ofPattern(DATE_PATTERN)));
+        result.setScheduledCompletion(pqFormHeader.getScheduledCompletion().format(DateTimeFormatter.ofPattern(DATE_PATTERN)));
 
         return result;
     }
