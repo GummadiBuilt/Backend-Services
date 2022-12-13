@@ -6,31 +6,27 @@ import lombok.Data;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import java.time.LocalDate;
+import java.io.Serializable;
 
 @Data
-public class PqFormHeaderCreateDto {
+public class PqFormHeaderCreateDto implements Serializable {
 
     @Size(max = 255)
     @NotBlank
     private String projectName;
-
-    @NotBlank
-    @Size(max = 50)
-    private String workPackage;
 
     @Size(max = 255)
     @NotBlank
     private String typeOfStructure;
 
     @NotNull
-    private LocalDate pqLastDateOfSubmission;
+    private String pqLastDateOfSubmission;
 
     @NotNull
-    private LocalDate tentativeDateOfAward;
+    private String tentativeDateOfAward;
 
     @NotNull
-    private LocalDate scheduledCompletion;
+    private String scheduledCompletion;
 
     private WorkflowStep workflowStep;
 }

@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -93,7 +94,7 @@ public class PqFormHeaderService {
         tenderInfo.setWorkflowStep(pqFormHeaderCreateDto.getWorkflowStep());
         tenderInfo.getChangeTracking().update(loggedInUser.toString());
 
-        formHeader.setPqLastDateOfSubmission(tenderInfo.getLastDateOfSubmission());
+        formHeader.setWorkPackage(tenderInfo.getWorkDescription());
         formHeader.setDurationCounter(tenderInfo.getDurationCounter());
         formHeader.setContractDuration(tenderInfo.getContractDuration());
 
@@ -102,11 +103,16 @@ public class PqFormHeaderService {
     }
 
     private void createPqForm(PqFormHeaderCreateDto pqFormHeaderCreateDto, PqFormHeader formHeader) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_PATTERN);
+        LocalDate tentativeAwardDate = LocalDate.parse(pqFormHeaderCreateDto.getTentativeDateOfAward(), formatter);
+        LocalDate scheduledCompletion = LocalDate.parse(pqFormHeaderCreateDto.getScheduledCompletion(), formatter);
+        LocalDate lastDateOfSubmission = LocalDate.parse(pqFormHeaderCreateDto.getPqLastDateOfSubmission(), formatter);
+
         formHeader.setProjectName(pqFormHeaderCreateDto.getProjectName());
-        formHeader.setWorkPackage(pqFormHeaderCreateDto.getWorkPackage());
         formHeader.setTypeOfStructure(pqFormHeaderCreateDto.getTypeOfStructure());
-        formHeader.setTentativeDateOfAward(pqFormHeaderCreateDto.getTentativeDateOfAward());
-        formHeader.setScheduledCompletion(pqFormHeaderCreateDto.getScheduledCompletion());
+        formHeader.setTentativeDateOfAward(tentativeAwardDate);
+        formHeader.setPqLastDateOfSubmission(lastDateOfSubmission);
+        formHeader.setScheduledCompletion(scheduledCompletion);
     }
 
     private void validateFetch(HttpServletRequest request, TenderInfo tenderInfo) {
