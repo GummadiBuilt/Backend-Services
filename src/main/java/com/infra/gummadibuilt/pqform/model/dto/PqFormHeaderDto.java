@@ -46,21 +46,24 @@ public class PqFormHeaderDto {
     @NotNull
     private String scheduledCompletion;
 
-    public static PqFormHeaderDto valueOf(PqFormHeader pqFormHeader) {
+    public static PqFormHeaderDto valueOf(PqFormHeader pqFormHeader, boolean pqExist) {
         PqFormHeaderDto result = new PqFormHeaderDto();
-        result.setId(pqFormHeader.getId());
-        result.setProjectName(pqFormHeader.getProjectName());
+        if(pqExist){
+            result.setId(pqFormHeader.getId());
+            result.setProjectName(pqFormHeader.getProjectName());
+            result.setTypeOfStructure(pqFormHeader.getTypeOfStructure());
+
+            if (pqFormHeader.getPqDocumentIssueDate() != null) {
+                result.setPqDocumentIssueDate(pqFormHeader.getPqDocumentIssueDate().format(DateTimeFormatter.ofPattern(DATE_PATTERN)));
+            }
+            result.setPqLastDateOfSubmission(pqFormHeader.getPqLastDateOfSubmission().format(DateTimeFormatter.ofPattern(DATE_PATTERN)));
+            result.setTentativeDateOfAward(pqFormHeader.getTentativeDateOfAward().format(DateTimeFormatter.ofPattern(DATE_PATTERN)));
+            result.setScheduledCompletion(pqFormHeader.getScheduledCompletion().format(DateTimeFormatter.ofPattern(DATE_PATTERN)));
+        }
+
         result.setWorkPackage(pqFormHeader.getWorkPackage());
-        result.setTypeOfStructure(pqFormHeader.getTypeOfStructure());
         result.setContractDuration(pqFormHeader.getContractDuration());
         result.setDurationCounter(pqFormHeader.getDurationCounter());
-        if (pqFormHeader.getPqDocumentIssueDate() != null) {
-            result.setPqDocumentIssueDate(pqFormHeader.getPqDocumentIssueDate().format(DateTimeFormatter.ofPattern(DATE_PATTERN)));
-        }
-        result.setPqLastDateOfSubmission(pqFormHeader.getPqLastDateOfSubmission().format(DateTimeFormatter.ofPattern(DATE_PATTERN)));
-        result.setTentativeDateOfAward(pqFormHeader.getTentativeDateOfAward().format(DateTimeFormatter.ofPattern(DATE_PATTERN)));
-        result.setScheduledCompletion(pqFormHeader.getScheduledCompletion().format(DateTimeFormatter.ofPattern(DATE_PATTERN)));
-
         return result;
     }
 }

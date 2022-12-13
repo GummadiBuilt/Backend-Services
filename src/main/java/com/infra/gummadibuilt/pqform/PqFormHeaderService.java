@@ -47,13 +47,13 @@ public class PqFormHeaderService {
         Optional<PqFormHeader> pqFormHeader = pqFormHeaderDao.findByTenderInfo(tenderInfo);
 
         if (pqFormHeader.isPresent()) {
-            return PqFormHeaderDto.valueOf(pqFormHeader.get());
+            return PqFormHeaderDto.valueOf(pqFormHeader.get(), true);
         } else {
             PqFormHeader result = new PqFormHeader();
             result.setWorkPackage(tenderInfo.getWorkDescription());
             result.setContractDuration(tenderInfo.getContractDuration());
             result.setDurationCounter(tenderInfo.getDurationCounter());
-            return PqFormHeaderDto.valueOf(result);
+            return PqFormHeaderDto.valueOf(result, false);
         }
     }
 
@@ -68,7 +68,7 @@ public class PqFormHeaderService {
         formHeader.setPqDocumentIssueDate(null);
         this.saveInfo(tenderInfo, formHeader, pqFormHeaderCreateDto, loggedInUser);
 
-        return PqFormHeaderDto.valueOf(formHeader);
+        return PqFormHeaderDto.valueOf(formHeader, true);
     }
 
     public PqFormHeaderDto updatePqForm(HttpServletRequest request, String tenderId, int pqFormId, PqFormHeaderCreateDto pqFormHeaderCreateDto) {
@@ -86,7 +86,7 @@ public class PqFormHeaderService {
         formHeader.getChangeTracking().update(loggedInUser.toString());
         this.saveInfo(tenderInfo, formHeader, pqFormHeaderCreateDto, loggedInUser);
 
-        return PqFormHeaderDto.valueOf(formHeader);
+        return PqFormHeaderDto.valueOf(formHeader, true);
     }
 
     private void saveInfo(TenderInfo tenderInfo, PqFormHeader formHeader, PqFormHeaderCreateDto pqFormHeaderCreateDto, LoggedInUser loggedInUser) {
