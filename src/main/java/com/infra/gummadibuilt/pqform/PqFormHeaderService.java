@@ -15,10 +15,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.transaction.Transactional;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Supplier;
 
 import static com.infra.gummadibuilt.common.util.CommonModuleUtils.*;
@@ -40,26 +40,18 @@ public class PqFormHeaderService {
         this.tenderInfoDao = tenderInfoDao;
     }
 
-    public PqFormHeaderDto get(String tenderId, HttpServletRequest request) {
-
+    public PqFormHeaderDto get(String tenderId, int pqFormId, HttpServletRequest request) {
         TenderInfo tenderInfo = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
         validateFetch(request, tenderInfo);
-
-        Optional<PqFormHeader> pqFormHeader = pqFormHeaderDao.findByTenderInfo(tenderInfo);
-
-        if (pqFormHeader.isPresent()) {
-            return PqFormHeaderDto.valueOf(pqFormHeader.get(), true);
-        } else {
-            PqFormHeader result = new PqFormHeader();
-            result.setWorkPackage(tenderInfo.getWorkDescription());
-            result.setContractDuration(tenderInfo.getContractDuration());
-            result.setDurationCounter(tenderInfo.getDurationCounter());
-            return PqFormHeaderDto.valueOf(result, false);
-        }
+        PqFormHeader formHeader = getById(pqFormHeaderDao, pqFormId, PQ_FORM_NOT_FOUND);
+        formHeader.setWorkPackage(tenderInfo.getWorkDescription());
+        formHeader.setDurationCounter(tenderInfo.getDurationCounter());
+        formHeader.setContractDuration(tenderInfo.getContractDuration());
+        return PqFormHeaderDto.valueOf(formHeader);
     }
 
+    @Transactional
     public PqFormHeaderDto createPqForm(HttpServletRequest request, String tenderId, PqFormHeaderCreateDto pqFormHeaderCreateDto) {
-
         this.validateWorkflowStep(pqFormHeaderCreateDto);
         LoggedInUser loggedInUser = loggedInUserInfo(request);
         TenderInfo tenderInfo = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
@@ -71,9 +63,10 @@ public class PqFormHeaderService {
         formHeader.setPqDocumentIssueDate(null);
         this.saveInfo(tenderInfo, formHeader, pqFormHeaderCreateDto, loggedInUser);
 
-        return PqFormHeaderDto.valueOf(formHeader, true);
+        return PqFormHeaderDto.valueOf(formHeader);
     }
 
+    @Transactional
     public PqFormHeaderDto updatePqForm(HttpServletRequest request, String tenderId, int pqFormId, PqFormHeaderCreateDto pqFormHeaderCreateDto) {
         this.validateWorkflowStep(pqFormHeaderCreateDto);
         LoggedInUser loggedInUser = loggedInUserInfo(request);
@@ -90,7 +83,7 @@ public class PqFormHeaderService {
         formHeader.getChangeTracking().update(loggedInUser.toString());
         this.saveInfo(tenderInfo, formHeader, pqFormHeaderCreateDto, loggedInUser);
 
-        return PqFormHeaderDto.valueOf(formHeader, true);
+        return PqFormHeaderDto.valueOf(formHeader);
     }
 
     private void saveInfo(TenderInfo tenderInfo, PqFormHeader formHeader, PqFormHeaderCreateDto pqFormHeaderCreateDto, LoggedInUser loggedInUser) {
