@@ -40,8 +40,7 @@ public class ApplicationFormService {
     public ApplicationFormDto apply(HttpServletRequest request, ApplicationFormCreateDto createDto, String tenderId) {
 
         TenderInfo tenderInfo = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
-
-
+        PqFormHeader formHeader = this.validatePqForm(tenderInfo);
         LoggedInUser loggedInUser = loggedInUserInfo(request);
         ApplicantForm form = new ApplicantForm();
 
