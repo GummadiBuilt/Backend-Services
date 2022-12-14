@@ -1,9 +1,9 @@
-package com.infra.gummadibuilt.tenderapplicants.model;
+package com.infra.gummadibuilt.tenderapplicationform.model;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.infra.gummadibuilt.common.ChangeTracking;
 import com.infra.gummadibuilt.tender.model.TenderInfo;
-import com.infra.gummadibuilt.tenderapplicants.model.dto.ActionTaken;
+import com.infra.gummadibuilt.tenderapplicationform.model.dto.ActionTaken;
 import com.infra.gummadibuilt.userandrole.model.ApplicationUser;
 import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import lombok.Getter;
@@ -28,7 +28,7 @@ import javax.validation.constraints.Size;
 @TypeDefs({
         @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class)
 })
-public class PqApplicantInformation {
+public class ApplicantForm {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

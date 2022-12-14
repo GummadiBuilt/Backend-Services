@@ -1,4 +1,4 @@
-package com.infra.gummadibuilt.tenderapplicants.model;
+package com.infra.gummadibuilt.tenderapplicationform.model;
 
 import com.infra.gummadibuilt.common.ChangeTracking;
 import com.infra.gummadibuilt.tender.model.TenderInfo;
@@ -17,7 +17,7 @@ import javax.validation.constraints.NotNull;
 @Setter
 @ToString
 @NoArgsConstructor
-public class TenderApplicantInfo {
+public class TenderApplicants {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -38,8 +38,8 @@ public class TenderApplicantInfo {
 
     @OneToOne
     @NotNull
-    @JoinColumn(name = "pq_application_id")
-    private PqApplicantInformation pqApplicationInformation;
+    @JoinColumn(name = "applicant_form_id")
+    private ApplicantForm applicantForm;
 
     @Embedded
     @NotNull

@@ -1,4 +1,4 @@
-package com.infra.gummadibuilt.tenderapplicants.model.dto;
+package com.infra.gummadibuilt.tenderapplicationform.model.dto;
 
 import com.infra.gummadibuilt.common.options.CommonOptionsEnum;
 

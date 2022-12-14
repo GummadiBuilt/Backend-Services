@@ -64,6 +64,8 @@ public class TenderDetailsDto implements Serializable {
     @NotBlank
     private long tenderDocumentSize;
 
+    private int pqFormId;
+
     private ChangeTracking changeTracking;
 
     public static TenderDetailsDto valueOf(TenderInfo tenderInfo, boolean showBidInfo) {
@@ -94,6 +96,10 @@ public class TenderDetailsDto implements Serializable {
             result.setTenderFinanceInfo(financeInfo);
         }
         result.setChangeTracking(tenderInfo.getChangeTracking());
+
+        if (tenderInfo.getFormHeader() != null) {
+            result.setPqFormId(tenderInfo.getFormHeader().getId());
+        }
 
         return result;
     }
