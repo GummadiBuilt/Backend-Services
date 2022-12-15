@@ -46,6 +46,8 @@ public class PqFormHeaderDto {
     @NotNull
     private String scheduledCompletion;
 
+    private String tenderId;
+
     public static PqFormHeaderDto valueOf(PqFormHeader pqFormHeader) {
         PqFormHeaderDto result = new PqFormHeaderDto();
         result.setId(pqFormHeader.getId());
@@ -60,6 +62,7 @@ public class PqFormHeaderDto {
         result.setWorkPackage(pqFormHeader.getWorkPackage());
         result.setContractDuration(pqFormHeader.getContractDuration());
         result.setDurationCounter(pqFormHeader.getDurationCounter());
+        result.setTenderId(pqFormHeader.getTenderInfo().getId());
         return result;
     }
 }
