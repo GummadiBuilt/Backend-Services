@@ -28,10 +28,12 @@ import javax.validation.constraints.Size;
 @TypeDefs({
         @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class)
 })
-public class ApplicantForm {
+public class ApplicationForm {
+
+    public static final String UNQ_NAME_CONSTRAINT = "application_form_unq_name";
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
     /*Company Information*/
@@ -147,7 +149,7 @@ public class ApplicantForm {
 
     @OneToOne
     @NotNull
-    @JoinColumn(name = "type_of_contract_id")
+    @JoinColumn(name = "tender_info_id")
     private TenderInfo tenderInfo;
 
     @NotNull

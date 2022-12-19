@@ -1,12 +1,9 @@
 package com.infra.gummadibuilt.pqform;
 
 import com.infra.gummadibuilt.pqform.model.PqFormHeader;
-import com.infra.gummadibuilt.tender.model.TenderInfo;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
-
+@Repository
 public interface PqFormHeaderDao extends JpaRepository<PqFormHeader, Integer> {
-
-    Optional<PqFormHeader> findByTenderInfo(TenderInfo tenderInfo);
 }

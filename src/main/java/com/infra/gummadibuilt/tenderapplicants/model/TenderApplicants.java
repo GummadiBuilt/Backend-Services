@@ -1,7 +1,8 @@
-package com.infra.gummadibuilt.tenderapplicationform.model;
+package com.infra.gummadibuilt.tenderapplicants.model;
 
 import com.infra.gummadibuilt.common.ChangeTracking;
 import com.infra.gummadibuilt.tender.model.TenderInfo;
+import com.infra.gummadibuilt.tenderapplicationform.model.ApplicationForm;
 import com.infra.gummadibuilt.userandrole.model.ApplicationUser;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -39,7 +40,7 @@ public class TenderApplicants {
     @OneToOne
     @NotNull
     @JoinColumn(name = "applicant_form_id")
-    private ApplicantForm applicantForm;
+    private ApplicationForm applicationForm;
 
     @Embedded
     @NotNull

@@ -9,26 +9,19 @@ import javax.persistence.Enumerated;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.io.Serializable;
 import java.time.format.DateTimeFormatter;
 
 import static com.infra.gummadibuilt.common.util.CommonModuleUtils.DATE_PATTERN;
 
 @Data
-public class PqFormHeaderDto {
+public class PqFormHeaderDto extends PqFormHeaderCreateDto implements Serializable {
 
     private int id;
-
-    @Size(max = 255)
-    @NotBlank
-    private String projectName;
 
     @NotBlank
     @Size(max = 50)
     private String workPackage;
-
-    @Size(max = 255)
-    @NotBlank
-    private String typeOfStructure;
 
     private int contractDuration;
 
@@ -36,15 +29,6 @@ public class PqFormHeaderDto {
     private DurationCounter durationCounter;
 
     private String pqDocumentIssueDate;
-
-    @NotNull
-    private String pqLastDateOfSubmission;
-
-    @NotNull
-    private String tentativeDateOfAward;
-
-    @NotNull
-    private String scheduledCompletion;
 
     private String tenderId;
 
@@ -63,6 +47,7 @@ public class PqFormHeaderDto {
         result.setContractDuration(pqFormHeader.getContractDuration());
         result.setDurationCounter(pqFormHeader.getDurationCounter());
         result.setTenderId(pqFormHeader.getTenderInfo().getId());
+        result.setWorkflowStep(pqFormHeader.getTenderInfo().getWorkflowStep());
         return result;
     }
 }
