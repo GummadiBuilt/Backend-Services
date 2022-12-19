@@ -25,6 +25,16 @@ public class AppFormController {
     @Autowired
     private AppFormService appFormService;
 
+    @Operation(summary = "Get an applicant form by tender id")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200", description = "Success, when application of an applicant is retrieved",
+                    content = {
+                            @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationFormDto.class))
+                    }
+            ),
+            @ApiResponse(responseCode = "404", description = "The resource you were trying to reach is not found")
+    })
     @GetMapping("/{applicationId}")
     @RolesAllowed({"contractor", "client", "admin"})
     public ApplicationFormDto get(HttpServletRequest request,
@@ -50,12 +60,20 @@ public class AppFormController {
         return appFormService.applyTender(request, createDto, tenderId);
     }
 
+    @Operation(summary = "Update tender application form")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success, when user is able to update their application form",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ApplicationFormDto.class))
+                    }),
+            @ApiResponse(responseCode = "404", description = "The resource you were trying to reach is not found")
+    })
     @PutMapping("/{applicationId}/update")
     @RolesAllowed("contractor")
     public ApplicationFormDto update(HttpServletRequest request,
-                         @RequestBody ApplicationFormCreateDto createDto,
-                         @PathVariable("tenderId") String tenderId,
-                         @PathVariable("applicationId") String applicationId) {
-        return appFormService.update(request,createDto,tenderId,applicationId);
+                                     @RequestBody ApplicationFormCreateDto createDto,
+                                     @PathVariable("tenderId") String tenderId,
+                                     @PathVariable("applicationId") String applicationId) {
+        return appFormService.update(request, createDto, tenderId, applicationId);
     }
 }
