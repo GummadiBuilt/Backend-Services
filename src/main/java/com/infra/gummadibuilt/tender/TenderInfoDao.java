@@ -50,6 +50,6 @@ public interface TenderInfoDao extends JpaRepository<TenderInfo, String> {
             "from tender_info ti left join pq_form_header pfh on ti.id = pfh.tender_info_id left join type_of_contract " +
             "toc on ti.type_of_contract_id  = toc.id left join application_user au  on ti.application_user_id = au.id " +
             "left join type_of_establishment toe on ti.type_of_establishment_desc = toe.establishment_description " +
-            "where ti.type_of_establishment_desc in (?1) and ti.workflow_step in ('PUBLISHED')", nativeQuery = true)
-    List<TenderDashboardProjection> getContractorDashboard(String typeOfEstablishment);
+            "where ti.type_of_establishment_desc in (:typeOfEstablishment) and ti.workflow_step in ('PUBLISHED')", nativeQuery = true)
+    List<TenderDashboardProjection> getContractorDashboard(List<String> typeOfEstablishment);
 }

@@ -146,8 +146,7 @@ public class TenderInfoService {
             tenderDetailsDtos = tenderInfoDao.getClientDashboard(loggedInUser.getUserId());
         } else if (request.isUserInRole("contractor")) {
             ApplicationUser applicationUser = getById(applicationUserDao, loggedInUser.getUserId(), USER_NOT_FOUND);
-            String typeOfEstablishment = String.join(",", applicationUser.getTypeOfEstablishment());
-            tenderDetailsDtos = tenderInfoDao.getContractorDashboard(typeOfEstablishment);
+            tenderDetailsDtos = tenderInfoDao.getContractorDashboard(applicationUser.getTypeOfEstablishment());
         } else {
             throw new RuntimeException("Token didnt match to any roles");
         }
