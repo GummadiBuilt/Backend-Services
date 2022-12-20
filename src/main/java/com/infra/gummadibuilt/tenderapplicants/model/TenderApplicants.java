@@ -12,6 +12,7 @@ import lombok.ToString;
 import javax.persistence.*;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 @Entity
 @Getter
@@ -25,7 +26,10 @@ public class TenderApplicants {
     private int id;
 
     @NotNull
-    private int rank;
+    private int applicant_rank;
+
+    @Size(max = 2500)
+    private String justificationNote;
 
     @NotNull
     @ManyToOne
