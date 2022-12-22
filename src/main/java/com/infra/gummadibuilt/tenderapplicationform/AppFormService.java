@@ -139,7 +139,7 @@ public class AppFormService {
     private void validateAccess(ApplicationUser applicationUser, LoggedInUser loggedInUser) {
         if (!Objects.equals(applicationUser.getId(), loggedInUser.getUserId())) {
             throw new AccessDeniedException(
-                    "Cannot access applications that are not created by you. This actions will be reported"
+                    "Cannot access applications that are not created by you. This action will be reported"
             );
         }
     }
