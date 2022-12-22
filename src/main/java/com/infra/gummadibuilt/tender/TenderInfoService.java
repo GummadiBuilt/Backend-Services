@@ -179,6 +179,7 @@ public class TenderInfoService {
     }
 
     private void createTenderInfo(TenderInfo tenderInfo, CreateTenderInfoDto createTenderInfoDto) {
+        tenderInfo.setProjectName(createTenderInfoDto.getProjectName());
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_PATTERN);
         LocalDate localDate = LocalDate.parse(createTenderInfoDto.getLastDateOfSubmission(), formatter);
         tenderInfo.setWorkDescription(createTenderInfoDto.getWorkDescription());

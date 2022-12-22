@@ -44,9 +44,6 @@ public class PqFormHeaderService {
         TenderInfo tenderInfo = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
         validateFetch(request, tenderInfo);
         PqFormHeader formHeader = getById(pqFormHeaderDao, pqFormId, PQ_FORM_NOT_FOUND);
-        formHeader.setWorkPackage(tenderInfo.getWorkDescription());
-        formHeader.setDurationCounter(tenderInfo.getDurationCounter());
-        formHeader.setContractDuration(tenderInfo.getContractDuration());
         return PqFormHeaderDto.valueOf(formHeader);
     }
 
@@ -55,12 +52,9 @@ public class PqFormHeaderService {
         this.validateWorkflowStep(pqFormHeaderCreateDto);
         LoggedInUser loggedInUser = loggedInUserInfo(request);
         TenderInfo tenderInfo = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
-
         PqFormHeader formHeader = new PqFormHeader();
         this.createPqForm(pqFormHeaderCreateDto, formHeader);
-        formHeader.setTenderInfo(tenderInfo);
         formHeader.setChangeTracking(new ChangeTracking(loggedInUser.toString()));
-        formHeader.setPqDocumentIssueDate(null);
         this.saveInfo(tenderInfo, formHeader, pqFormHeaderCreateDto, loggedInUser);
 
         return PqFormHeaderDto.valueOf(formHeader);
@@ -73,13 +67,6 @@ public class PqFormHeaderService {
         TenderInfo tenderInfo = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
         PqFormHeader formHeader = getById(pqFormHeaderDao, pqFormId, PQ_FORM_NOT_FOUND);
         this.createPqForm(pqFormHeaderCreateDto, formHeader);
-        formHeader.setTenderInfo(tenderInfo);
-        formHeader.setChangeTracking(new ChangeTracking(loggedInUser.toString()));
-        if (pqFormHeaderCreateDto.getWorkflowStep().getText().equals(WorkflowStep.PUBLISHED.getText())) {
-            formHeader.setPqDocumentIssueDate(LocalDate.now());
-        } else {
-            formHeader.setPqDocumentIssueDate(null);
-        }
         formHeader.getChangeTracking().update(loggedInUser.toString());
         this.saveInfo(tenderInfo, formHeader, pqFormHeaderCreateDto, loggedInUser);
 
@@ -87,13 +74,14 @@ public class PqFormHeaderService {
     }
 
     private void saveInfo(TenderInfo tenderInfo, PqFormHeader formHeader, PqFormHeaderCreateDto pqFormHeaderCreateDto, LoggedInUser loggedInUser) {
-        tenderInfo.setWorkflowStep(pqFormHeaderCreateDto.getWorkflowStep());
+        if (pqFormHeaderCreateDto.getWorkflowStep().getText().equals(WorkflowStep.PUBLISHED.getText())) {
+            formHeader.setPqDocumentIssueDate(LocalDate.now());
+            tenderInfo.setWorkflowStep(pqFormHeaderCreateDto.getWorkflowStep());
+        } else {
+            formHeader.setPqDocumentIssueDate(null);
+        }
+        formHeader.setTenderInfo(tenderInfo);
         tenderInfo.getChangeTracking().update(loggedInUser.toString());
-
-        formHeader.setWorkPackage(tenderInfo.getWorkDescription());
-        formHeader.setDurationCounter(tenderInfo.getDurationCounter());
-        formHeader.setContractDuration(tenderInfo.getContractDuration());
-
         SaveEntityConstraintHelper.save(pqFormHeaderDao, formHeader, CONSTRAINT_MAPPING);
         SaveEntityConstraintHelper.save(tenderInfoDao, tenderInfo, null);
     }
@@ -103,9 +91,6 @@ public class PqFormHeaderService {
         LocalDate tentativeAwardDate = LocalDate.parse(pqFormHeaderCreateDto.getTentativeDateOfAward(), formatter);
         LocalDate scheduledCompletion = LocalDate.parse(pqFormHeaderCreateDto.getScheduledCompletion(), formatter);
         LocalDate lastDateOfSubmission = LocalDate.parse(pqFormHeaderCreateDto.getPqLastDateOfSubmission(), formatter);
-
-        formHeader.setProjectName(pqFormHeaderCreateDto.getProjectName());
-        formHeader.setTypeOfStructure(pqFormHeaderCreateDto.getTypeOfStructure());
         formHeader.setTentativeDateOfAward(tentativeAwardDate);
         formHeader.setPqLastDateOfSubmission(lastDateOfSubmission);
         formHeader.setScheduledCompletion(scheduledCompletion);

@@ -2,6 +2,8 @@ package com.infra.gummadibuilt.tender.model.dto;
 
 public interface TenderDashboardProjection {
 
+    String getProject_name();
+
     String getTender_id();
 
     String getPq_id();

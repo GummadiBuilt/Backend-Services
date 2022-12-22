@@ -1,21 +1,18 @@
 package com.infra.gummadibuilt.pqform.model;
 
 import com.infra.gummadibuilt.common.ChangeTracking;
-import com.infra.gummadibuilt.tender.model.DurationCounter;
 import com.infra.gummadibuilt.tender.model.TenderInfo;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import javax.persistence.*;
 import javax.validation.Valid;
-import javax.validation.constraints.Max;
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 import java.time.LocalDate;
-import java.util.Objects;
 
 @Entity
 @Getter
@@ -30,25 +27,6 @@ public class PqFormHeader {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
-
-    @Size(max = 255)
-    @NotBlank
-    private String projectName;
-
-    @NotBlank
-    @Size(max = 50)
-    private String workPackage;
-
-    @Size(max = 255)
-    @NotBlank
-    private String typeOfStructure;
-
-    @NotNull
-    @Max(99999)
-    private int contractDuration;
-
-    @Enumerated(EnumType.STRING)
-    private DurationCounter durationCounter;
 
     private LocalDate pqDocumentIssueDate;
 
@@ -71,17 +49,19 @@ public class PqFormHeader {
     @Valid
     private ChangeTracking changeTracking;
 
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
+
         if (!(o instanceof PqFormHeader)) return false;
+
         PqFormHeader that = (PqFormHeader) o;
-        return getId() == that.getId() && getContractDuration() == that.getContractDuration() && Objects.equals(getProjectName(), that.getProjectName()) && Objects.equals(getWorkPackage(), that.getWorkPackage()) && Objects.equals(getTypeOfStructure(), that.getTypeOfStructure()) && getDurationCounter() == that.getDurationCounter() && Objects.equals(getPqDocumentIssueDate(), that.getPqDocumentIssueDate()) && Objects.equals(getPqLastDateOfSubmission(), that.getPqLastDateOfSubmission()) && Objects.equals(getTentativeDateOfAward(), that.getTentativeDateOfAward()) && Objects.equals(getScheduledCompletion(), that.getScheduledCompletion()) && Objects.equals(getTenderInfo(), that.getTenderInfo()) && Objects.equals(getChangeTracking(), that.getChangeTracking());
+
+        return new EqualsBuilder().append(getId(), that.getId()).append(getPqDocumentIssueDate(), that.getPqDocumentIssueDate()).append(getPqLastDateOfSubmission(), that.getPqLastDateOfSubmission()).append(getTentativeDateOfAward(), that.getTentativeDateOfAward()).append(getScheduledCompletion(), that.getScheduledCompletion()).append(getTenderInfo(), that.getTenderInfo()).append(getChangeTracking(), that.getChangeTracking()).isEquals();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getProjectName(), getWorkPackage(), getTypeOfStructure(), getContractDuration(), getDurationCounter(), getPqDocumentIssueDate(), getPqLastDateOfSubmission(), getTentativeDateOfAward(), getScheduledCompletion(), getTenderInfo(), getChangeTracking());
+        return new HashCodeBuilder(17, 37).append(getId()).append(getPqDocumentIssueDate()).append(getPqLastDateOfSubmission()).append(getTentativeDateOfAward()).append(getScheduledCompletion()).append(getTenderInfo()).append(getChangeTracking()).toHashCode();
     }
 }

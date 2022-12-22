@@ -34,14 +34,18 @@ public class TenderInfo {
     @Size(max = 50)
     private String id;
 
+    @NotBlank
+    @Size(max = 50)
+    private String projectName;
+
+    @NotBlank
+    @Size(max = 2500)
+    private String workDescription;
+
     @OneToOne
     @NotNull
     @JoinColumn(name = "type_of_establishment_desc")
     private TypeOfEstablishment typeOfEstablishment;
-
-    @NotBlank
-    @Size(max = 50)
-    private String workDescription;
 
     @NotBlank
     @Size(max = 50)

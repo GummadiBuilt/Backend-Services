@@ -25,6 +25,10 @@ public class CreateTenderInfoDto implements Serializable {
 
     @NotBlank
     @Size(max = 50)
+    private String projectName;
+
+    @NotBlank
+    @Size(max = 2500)
     private String workDescription;
 
     @NotBlank

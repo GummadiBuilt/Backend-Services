@@ -22,6 +22,10 @@ public class TenderDetailsDto implements Serializable {
     @NotBlank
     private String tenderId;
 
+    @NotBlank
+    @Size(max = 50)
+    private String projectName;
+
     private String clientInformation;
 
     @NotBlank
@@ -71,6 +75,7 @@ public class TenderDetailsDto implements Serializable {
     public static TenderDetailsDto valueOf(TenderInfo tenderInfo, boolean showBidInfo) {
         TenderDetailsDto result = new TenderDetailsDto();
         result.setTenderId(tenderInfo.getId());
+        result.setProjectName(tenderInfo.getProjectName());
         result.setTypeOfWork(TypeOfEstablishmentDto.valueOf(tenderInfo.getTypeOfEstablishment()));
         result.setWorkDescription(tenderInfo.getWorkDescription());
         result.setProjectLocation(tenderInfo.getProjectLocation());
