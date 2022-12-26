@@ -49,15 +49,13 @@ public class UserProfileService {
     }
 
     public UserDetailsViewDto updateProfile(HttpServletRequest request, UserDetailsUpdateDto userDetails) {
-        KeycloakAuthenticationToken principal = (KeycloakAuthenticationToken) request.getUserPrincipal();
-        String userId = principal.getAccount().getKeycloakSecurityContext().getToken().getSubject();
-        ApplicationUser applicationUser = getById(applicationUserDao, userId, USER_NOT_FOUND);
+        LoggedInUser loggedInUser = loggedInUserInfo(request);
 
+        ApplicationUser applicationUser = getById(applicationUserDao, loggedInUser.getUserId(), USER_NOT_FOUND);
         Country country = getById(countryDao, userDetails.getCountryIsoCode(), COUNTRY_ID_NOT_FOUND);
         State state = getById(stateDao, userDetails.getStateIsoCode(), STATE_ID_NOT_FOUND);
         City city = getById(cityDao, userDetails.getCityId(), CITY_ID_NOT_FOUND);
 
-        LoggedInUser loggedInUser = loggedInUserInfo(request);
 
 
         if (request.isUserInRole("contractor") && userDetails.getTypeOfEstablishment().size() == 0) {

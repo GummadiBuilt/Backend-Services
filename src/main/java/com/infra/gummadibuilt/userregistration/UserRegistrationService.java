@@ -213,7 +213,6 @@ public class UserRegistrationService {
         applicationUser.setCity(userRegistration.getCity());
         applicationUser.setContactFirstName(userRegistration.getContactFirstName());
         applicationUser.setContactLastName(userRegistration.getContactLastName());
-        applicationUser.setContactLastName(userRegistration.getContactEmailAddress());
         applicationUser.setContactDesignation(userRegistration.getContactDesignation());
         applicationUser.setContactPhoneNumber(userRegistration.getContactPhoneNumber());
         applicationUser.setContactEmailAddress(userRegistration.getContactEmailAddress());

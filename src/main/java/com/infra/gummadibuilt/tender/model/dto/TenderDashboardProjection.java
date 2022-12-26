@@ -6,6 +6,8 @@ public interface TenderDashboardProjection {
 
     String getTender_id();
 
+    String getApplication_form_id();
+
     String getPq_id();
 
     String getCompany_name();

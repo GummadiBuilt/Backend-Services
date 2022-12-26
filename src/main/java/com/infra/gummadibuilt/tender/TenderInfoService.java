@@ -146,14 +146,22 @@ public class TenderInfoService {
             tenderDetailsDtos = tenderInfoDao.getClientDashboard(loggedInUser.getUserId());
         } else if (request.isUserInRole("contractor")) {
             ApplicationUser applicationUser = getById(applicationUserDao, loggedInUser.getUserId(), USER_NOT_FOUND);
-            tenderDetailsDtos = tenderInfoDao.getContractorDashboard(applicationUser.getTypeOfEstablishment());
+            tenderDetailsDtos = tenderInfoDao.getContractorDashboard(
+                    applicationUser.getTypeOfEstablishment(),
+                    loggedInUser.getUserId()
+            );
         } else {
-            throw new RuntimeException("Token didnt match to any roles");
+            throw new RuntimeException("Token didn't match to any roles");
         }
 
         return tenderDetailsDtos;
     }
 
+    public List<TenderDashboardProjection> getMyTenders(HttpServletRequest request) {
+        LoggedInUser loggedInUser = loggedInUserInfo(request);
+        getById(applicationUserDao, loggedInUser.getUserId(), USER_NOT_FOUND);
+        return tenderInfoDao.getAppliedTenders(loggedInUser.getUserId());
+    }
 
     public TenderDetailsDto getTenderInfo(HttpServletRequest request, String tenderId) {
         LoggedInUser loggedInUser = loggedInUserInfo(request);

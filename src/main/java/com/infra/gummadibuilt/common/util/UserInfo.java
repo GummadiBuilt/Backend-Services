@@ -29,4 +29,5 @@ public class UserInfo {
         String userId = convertedObject.get("sub").getAsString();
         return new LoggedInUser(firstName, lastName, email, userId);
     }
+
 }

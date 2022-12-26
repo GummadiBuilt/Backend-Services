@@ -79,7 +79,7 @@ public class TenderInfoController {
     @Operation(summary = "Get all tenders")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success, when it retrieves a list of Tenders based on user-role",
-                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = TenderDetailsDto.class)))),
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = TenderDashboardProjection.class)))),
             @ApiResponse(responseCode = "404", description = "The resource you were trying to reach is not found")
     })
     @RolesAllowed({"client", "contractor", "admin"})
@@ -88,6 +88,20 @@ public class TenderInfoController {
     public List<TenderDashboardProjection> getAll(HttpServletRequest request) {
         return tenderInfoService.getAllTenders(request);
     }
+
+    @Operation(summary = "Get applied tenders")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success, when applied tenders are retrieved",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = TenderDashboardProjection.class)))),
+            @ApiResponse(responseCode = "404", description = "The resource you were trying to reach is not found")
+    })
+    @RolesAllowed("contractor")
+    @GetMapping("/applied-tenders")
+    @Transactional(readOnly = true)
+    public List<TenderDashboardProjection> getMyTenders(HttpServletRequest request) {
+        return tenderInfoService.getMyTenders(request);
+    }
+
 
     @Operation(summary = "Get tender by id")
     @ApiResponses(value = {
