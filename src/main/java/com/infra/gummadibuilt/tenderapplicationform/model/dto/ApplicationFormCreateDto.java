@@ -101,6 +101,18 @@ public class ApplicationFormCreateDto implements Serializable {
 
     private boolean underTaking;
 
+    private String yearOne;
+
+    private Integer yearOneRevenue;
+
+    private String yearTwo;
+
+    private Integer yearTwoRevenue;
+
+    private String yearThree;
+
+    private Integer yearThreeRevenue;
+
     private ActionTaken actionTaken;
 
 }

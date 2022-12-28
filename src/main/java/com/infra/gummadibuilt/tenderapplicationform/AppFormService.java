@@ -4,6 +4,8 @@ import com.google.common.collect.ImmutableMap;
 import com.infra.gummadibuilt.common.ChangeTracking;
 import com.infra.gummadibuilt.common.LoggedInUser;
 import com.infra.gummadibuilt.common.exception.InvalidActionException;
+import com.infra.gummadibuilt.common.file.AmazonFileService;
+import com.infra.gummadibuilt.common.util.FileUtils;
 import com.infra.gummadibuilt.common.util.SaveEntityConstraintHelper;
 import com.infra.gummadibuilt.tender.TenderInfoDao;
 import com.infra.gummadibuilt.tender.model.TenderInfo;
@@ -12,15 +14,18 @@ import com.infra.gummadibuilt.tenderapplicationform.model.ApplicationForm;
 import com.infra.gummadibuilt.tenderapplicationform.model.dto.ActionTaken;
 import com.infra.gummadibuilt.tenderapplicationform.model.dto.ApplicationFormCreateDto;
 import com.infra.gummadibuilt.tenderapplicationform.model.dto.ApplicationFormDto;
+import com.infra.gummadibuilt.tenderapplicationform.model.dto.FinancialYearDocument;
 import com.infra.gummadibuilt.userandrole.ApplicationUserDao;
 import com.infra.gummadibuilt.userandrole.model.ApplicationUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.transaction.Transactional;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -39,13 +44,17 @@ public class AppFormService {
 
     private final ApplicationUserDao applicationUserDao;
 
+    private final AmazonFileService amazonFileService;
+
     @Autowired
     public AppFormService(TenderInfoDao tenderInfoDao,
                           ApplicationFormDao applicationFormDao,
-                          ApplicationUserDao applicationUserDao) {
+                          ApplicationUserDao applicationUserDao,
+                          AmazonFileService amazonFileService) {
         this.tenderInfoDao = tenderInfoDao;
         this.applicationFormDao = applicationFormDao;
         this.applicationUserDao = applicationUserDao;
+        this.amazonFileService = amazonFileService;
     }
 
     public ApplicationFormDto get(HttpServletRequest request, String tenderId, int applicationId) {
@@ -78,9 +87,9 @@ public class AppFormService {
 
     @Transactional
     public ApplicationFormDto update(HttpServletRequest request,
-                         ApplicationFormCreateDto createDto,
-                         String tenderId,
-                         String applicationId) {
+                                     ApplicationFormCreateDto createDto,
+                                     String tenderId,
+                                     String applicationId) {
         LoggedInUser loggedInUser = loggedInUserInfo(request);
         ApplicationUser applicationUser = getById(applicationUserDao, loggedInUser.getUserId(), USER_NOT_FOUND);
         int appId = Integer.parseInt(applicationId);
@@ -101,6 +110,55 @@ public class AppFormService {
         return ApplicationFormDto.valueOf(form);
     }
 
+    @Transactional
+    public boolean uploadDocument(HttpServletRequest request,
+                                  MultipartFile yearDocument,
+                                  String tenderId,
+                                  FinancialYearDocument fileYear,
+                                  String applicationId) {
+        LoggedInUser loggedInUser = loggedInUserInfo(request);
+        ApplicationUser applicationUser = getById(applicationUserDao, loggedInUser.getUserId(), USER_NOT_FOUND);
+        int appId = Integer.parseInt(applicationId);
+        ApplicationForm applicationForm = getById(applicationFormDao, appId, APPLICATION_FORM_NOT_FOUND);
+        TenderInfo tenderInfo = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
+        this.validateTypeOfEstablishment(applicationUser, tenderInfo);
+        this.validatePqForm(tenderInfo);
+        this.validateTenderAndStatus(applicationForm, tenderId);
+        this.validateAccess(applicationUser, loggedInUser);
+        FileUtils.checkFileValidOrNot(yearDocument);
+        String filePath = String.format("%s/%s", tenderId, loggedInUser.getUserId());
+        switch (fileYear.getText()) {
+            case "YEAR_ONE":
+                applicationForm.setYearOneFileName(yearDocument.getOriginalFilename());
+                applicationForm.setYearOneFileSize((int) yearDocument.getSize());
+                filePath = String.format("%s/%s", filePath, FinancialYearDocument.YEAR_ONE.getText());
+                break;
+            case "YEAR_TWO":
+                applicationForm.setYearTwoFileName(yearDocument.getOriginalFilename());
+                applicationForm.setYearTwoFileSize((int) yearDocument.getSize());
+                filePath = String.format("%s/%s", filePath, FinancialYearDocument.YEAR_TWO.getText());
+                break;
+            case "YEAR_THREE":
+                applicationForm.setYearThreeFileName(yearDocument.getOriginalFilename());
+                applicationForm.setYearThreeFileSize((int) yearDocument.getSize());
+                filePath = String.format("%s/%s", filePath, FinancialYearDocument.YEAR_THREE.getText());
+                break;
+            default:
+                throw new RuntimeException(String.format("Given year format %s is invalid", fileYear));
+        }
+
+        amazonFileService.uploadFile(filePath, metaData(applicationForm), yearDocument);
+        SaveEntityConstraintHelper.save(applicationFormDao, applicationForm, null);
+        return true;
+    }
+
+    private Map<String, String> metaData(ApplicationForm applicationForm) {
+        Map<String, String> metaData = new HashMap<>();
+        metaData.put("ApplicationFormId", String.valueOf(applicationForm.getId()));
+        metaData.put("TenderId", applicationForm.getTenderInfo().getId());
+        metaData.put("ApplicationUserId", applicationForm.getApplicationUser().getId());
+        return metaData;
+    }
 
     private void createApplication(ApplicationForm form, ApplicationFormCreateDto createDto) {
         form.setCompanyName(createDto.getCompanyName());
@@ -134,6 +192,12 @@ public class AppFormService {
         form.setCompanyAuditors(createDto.getCompanyAuditors());
         form.setUnderTaking(createDto.isUnderTaking());
         form.setActionTaken(createDto.getActionTaken());
+        form.setYearOne(createDto.getYearOne());
+        form.setYearOneRevenue(createDto.getYearOneRevenue());
+        form.setYearTwo(createDto.getYearTwo());
+        form.setYearTwoRevenue(createDto.getYearTwoRevenue());
+        form.setYearThree(createDto.getYearThree());
+        form.setYearThreeRevenue(createDto.getYearThreeRevenue());
     }
 
     private void validateAccess(ApplicationUser applicationUser, LoggedInUser loggedInUser) {

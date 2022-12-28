@@ -144,6 +144,36 @@ public class ApplicationForm {
 
     private boolean underTaking;
 
+    @Size(max = 4)
+    private String yearOne;
+
+    private Integer yearOneRevenue;
+
+    @Size(max = 50)
+    private String yearOneFileName;
+
+    private Integer yearOneFileSize;
+
+    @Size(max = 4)
+    private String yearTwo;
+
+    private Integer yearTwoRevenue;
+
+    @Size(max = 50)
+    private String yearTwoFileName;
+
+    private Integer yearTwoFileSize;
+
+    @Size(max = 4)
+    private String yearThree;
+
+    private Integer yearThreeRevenue;
+
+    @Size(max = 50)
+    private String yearThreeFileName;
+
+    private Integer yearThreeFileSize;
+
     @Enumerated(EnumType.STRING)
     private ActionTaken actionTaken;
 

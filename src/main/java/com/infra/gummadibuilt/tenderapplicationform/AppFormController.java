@@ -2,6 +2,7 @@ package com.infra.gummadibuilt.tenderapplicationform;
 
 import com.infra.gummadibuilt.tenderapplicationform.model.dto.ApplicationFormCreateDto;
 import com.infra.gummadibuilt.tenderapplicationform.model.dto.ApplicationFormDto;
+import com.infra.gummadibuilt.tenderapplicationform.model.dto.FinancialYearDocument;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -11,9 +12,11 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.constraints.NotNull;
 
 @RestController
 @RequestMapping("/tender/{tenderId}/application")
@@ -75,5 +78,23 @@ public class AppFormController {
                                      @PathVariable("tenderId") String tenderId,
                                      @PathVariable("applicationId") String applicationId) {
         return appFormService.update(request, createDto, tenderId, applicationId);
+    }
+
+    @Operation(summary = "Update tender application form")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success, when given file is uploaded",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Boolean.class))
+                    }),
+            @ApiResponse(responseCode = "404", description = "The resource you were trying to reach is not found")
+    })
+    @PutMapping("/{applicationId}/upload/{fileYear}")
+    @RolesAllowed("contractor")
+    public boolean uploadDocument(HttpServletRequest request,
+                                  @RequestPart("yearDocument") @NotNull MultipartFile yearDocument,
+                                  @PathVariable("tenderId") String tenderId,
+                                  @PathVariable("fileYear") FinancialYearDocument fileYear,
+                                  @PathVariable("applicationId") String applicationId) {
+        return appFormService.uploadDocument(request, yearDocument, tenderId, fileYear, applicationId);
     }
 }

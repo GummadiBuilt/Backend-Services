@@ -17,6 +17,18 @@ public class ApplicationFormDto extends ApplicationFormCreateDto implements Seri
 
     private String lastDateOfSubmission;
 
+    private String yearOneFileName;
+
+    private Integer yearOneFileSize;
+
+    private String yearTwoFileName;
+
+    private Integer yearTwoFileSize;
+
+    private String yearThreeFileName;
+
+    private Integer yearThreeFileSize;
+
     public static ApplicationFormDto valueOf(ApplicationForm applicationForm) {
         ApplicationFormDto result = new ApplicationFormDto();
         result.setApplicationId(applicationForm.getId());
@@ -52,12 +64,24 @@ public class ApplicationFormDto extends ApplicationFormCreateDto implements Seri
         result.setCapitalEquipment(applicationForm.getCapitalEquipment());
         result.setPpeToStaff(applicationForm.getPpeToStaff());
         result.setPpeToWorkMen(applicationForm.getPpeToWorkMen());
+        result.setSafetyPolicyManual(applicationForm.getSafetyPolicyManual());
         result.setSafetyOfficeAvailability(applicationForm.getSafetyOfficeAvailability());
         result.setFinancialInformation(applicationForm.getFinancialInformation());
         result.setCompanyBankers(applicationForm.getCompanyBankers());
         result.setCompanyAuditors(applicationForm.getCompanyAuditors());
         result.setUnderTaking(applicationForm.isUnderTaking());
         result.setActionTaken(applicationForm.getActionTaken());
+        result.setYearOne(applicationForm.getYearOne());
+        result.setYearOneFileName(applicationForm.getYearOneFileName());
+        result.setYearOneFileSize(applicationForm.getYearOneFileSize());
+        result.setYearTwo(applicationForm.getYearTwo());
+        result.setYearTwoRevenue(applicationForm.getYearTwoRevenue());
+        result.setYearTwoFileName(applicationForm.getYearTwoFileName());
+        result.setYearTwoFileSize(applicationForm.getYearTwoFileSize());
+        result.setYearThree(applicationForm.getYearThree());
+        result.setYearThreeRevenue(applicationForm.getYearThreeRevenue());
+        result.setYearThreeFileName(applicationForm.getYearThreeFileName());
+        result.setYearThreeFileSize(applicationForm.getYearThreeFileSize());
 
         return result;
     }

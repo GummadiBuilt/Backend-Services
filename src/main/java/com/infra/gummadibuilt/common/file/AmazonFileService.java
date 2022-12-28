@@ -38,11 +38,11 @@ public class AmazonFileService {
     }
 
 
-    public String uploadFile(String tenderId, Map<String, String> metaData, MultipartFile file) {
+    public String uploadFile(String pathToUpload, Map<String, String> metaData, MultipartFile file) {
 
-        String pathToUpload = String.format("%s/", tenderId);
-        logger.info(String.format("Uploading file to path %s", tenderId));
-        return putS3Object(pathToUpload, metaData, this.buildConnection(), amazonConfiguration.getBucketName(), file);
+        String filePath = String.format("%s/", pathToUpload);
+        logger.info(String.format("Uploading file to path %s", filePath));
+        return putS3Object(filePath, metaData, this.buildConnection(), amazonConfiguration.getBucketName(), file);
     }
 
     public FileDownloadDto downloadFile(String tenderId, String fileName) {
