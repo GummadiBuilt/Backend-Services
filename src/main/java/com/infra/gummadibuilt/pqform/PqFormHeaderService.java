@@ -11,6 +11,10 @@ import com.infra.gummadibuilt.pqform.model.dto.PqFormHeaderDto;
 import com.infra.gummadibuilt.tender.TenderInfoDao;
 import com.infra.gummadibuilt.tender.model.TenderInfo;
 import com.infra.gummadibuilt.tender.model.WorkflowStep;
+import com.infra.gummadibuilt.tenderapplicationform.ApplicationFormDao;
+import com.infra.gummadibuilt.tenderapplicationform.model.ApplicationForm;
+import com.infra.gummadibuilt.userandrole.ApplicationUserDao;
+import com.infra.gummadibuilt.userandrole.model.ApplicationUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +23,7 @@ import javax.transaction.Transactional;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import static com.infra.gummadibuilt.common.util.CommonModuleUtils.*;
@@ -34,9 +39,17 @@ public class PqFormHeaderService {
     private final PqFormHeaderDao pqFormHeaderDao;
     private final TenderInfoDao tenderInfoDao;
 
+    private final ApplicationFormDao applicationFormDao;
+    private final ApplicationUserDao applicationUserDao;
+
     @Autowired
-    public PqFormHeaderService(PqFormHeaderDao pqFormHeaderDao, TenderInfoDao tenderInfoDao) {
+    public PqFormHeaderService(PqFormHeaderDao pqFormHeaderDao,
+                               ApplicationFormDao applicationFormDao,
+                               ApplicationUserDao applicationUserDao,
+                               TenderInfoDao tenderInfoDao) {
         this.pqFormHeaderDao = pqFormHeaderDao;
+        this.applicationFormDao = applicationFormDao;
+        this.applicationUserDao = applicationUserDao;
         this.tenderInfoDao = tenderInfoDao;
     }
 
@@ -44,7 +57,14 @@ public class PqFormHeaderService {
         TenderInfo tenderInfo = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
         validateFetch(request, tenderInfo);
         PqFormHeader formHeader = getById(pqFormHeaderDao, pqFormId, PQ_FORM_NOT_FOUND);
-        return PqFormHeaderDto.valueOf(formHeader);
+        PqFormHeaderDto pqFormHeaderDto = PqFormHeaderDto.valueOf(formHeader);
+        if (request.isUserInRole("contractor")) {
+            LoggedInUser loggedInUser = loggedInUserInfo(request);
+            ApplicationUser applicationUser = getById(applicationUserDao, loggedInUser.getUserId(), USER_NOT_FOUND);
+            Optional<ApplicationForm> applicationForm = applicationFormDao.findByTenderInfoAndApplicationUser(tenderInfo, applicationUser);
+            applicationForm.ifPresent(form -> pqFormHeaderDto.setApplicationFormId(form.getId()));
+        }
+        return pqFormHeaderDto;
     }
 
     @Transactional

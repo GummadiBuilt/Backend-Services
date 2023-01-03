@@ -54,7 +54,8 @@ public interface TenderInfoDao extends JpaRepository<TenderInfo, String> {
             "where ti.type_of_establishment_desc in (:typeOfEstablishment) and ti.workflow_step in ('PUBLISHED')", nativeQuery = true)
     List<TenderDashboardProjection> getContractorDashboard(List<String> typeOfEstablishment, String userId);
 
-    @Query(value = "select ti.id as tender_id, pfh.id as pq_form_id, af.application_user_id , au.company_name, " +
+    @Query(value = "select ti.id as tender_id, pfh.id as pq_id, af.application_user_id , " +
+            "af.id as application_form_id, au.company_name, " +
             "toe.establishment_description, ti.work_description, ti.project_location, toc.type_of_contract, " +
             "ti.contract_duration, ti.duration_counter, " +
             "TO_CHAR(ti.last_date_of_submission\\:\\:date, 'dd/mm/yyyy') as last_date_of_submission, " +

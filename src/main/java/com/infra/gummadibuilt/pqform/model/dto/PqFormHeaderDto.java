@@ -17,6 +17,8 @@ public class PqFormHeaderDto extends PqFormHeaderCreateDto implements Serializab
 
     private String tenderId;
 
+    private int applicationFormId;
+
     public static PqFormHeaderDto valueOf(PqFormHeader pqFormHeader) {
         PqFormHeaderDto result = new PqFormHeaderDto();
         result.setId(pqFormHeader.getId());
