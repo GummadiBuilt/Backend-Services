@@ -19,6 +19,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.util.List;
 
 @Entity
 @Getter
@@ -144,35 +145,9 @@ public class ApplicationForm {
 
     private boolean underTaking;
 
-    @Size(max = 4)
-    private String yearOne;
-
-    private Integer yearOneRevenue;
-
-    @Size(max = 50)
-    private String yearOneFileName;
-
-    private Integer yearOneFileSize;
-
-    @Size(max = 4)
-    private String yearTwo;
-
-    private Integer yearTwoRevenue;
-
-    @Size(max = 50)
-    private String yearTwoFileName;
-
-    private Integer yearTwoFileSize;
-
-    @Size(max = 4)
-    private String yearThree;
-
-    private Integer yearThreeRevenue;
-
-    @Size(max = 50)
-    private String yearThreeFileName;
-
-    private Integer yearThreeFileSize;
+    @Type(type = "jsonb")
+    @Column(columnDefinition = "jsonb")
+    private List<JsonNode> turnOverDetails;
 
     @Enumerated(EnumType.STRING)
     private ActionTaken actionTaken;

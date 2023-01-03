@@ -57,9 +57,9 @@ public interface TenderInfoDao extends JpaRepository<TenderInfo, String> {
     @Query(value = "select ti.id as tender_id, pfh.id as pq_form_id, af.application_user_id , au.company_name, " +
             "toe.establishment_description, ti.work_description, ti.project_location, toc.type_of_contract, " +
             "ti.contract_duration, ti.duration_counter, " +
-            "TO_CHAR(ti.last_date_of_submission::date, 'dd/mm/yyyy') as last_date_of_submission, " +
+            "TO_CHAR(ti.last_date_of_submission\\:\\:date, 'dd/mm/yyyy') as last_date_of_submission, " +
             "coalesce(ti.estimated_budget,0) as estimated_budget, ti.workflow_step, '' as tender_document_name ," +
-            " ti.tender_document_size, ti.created_by, au.type_of_establishment from tender_info ti" +
+            " ti.tender_document_size, ti.created_by from tender_info ti" +
             " left join pq_form_header pfh on ti.id = pfh.tender_info_id " +
             "left join type_of_contract toc on ti.type_of_contract_id = toc.id " +
             "left join application_user au on ti.application_user_id = au.id " +

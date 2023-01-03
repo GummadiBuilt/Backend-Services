@@ -1,5 +1,7 @@
 package com.infra.gummadibuilt.tenderapplicationform;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
 import com.infra.gummadibuilt.common.ChangeTracking;
 import com.infra.gummadibuilt.common.LoggedInUser;
@@ -26,9 +28,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.transaction.Transactional;
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import static com.infra.gummadibuilt.common.util.CommonModuleUtils.*;
 import static com.infra.gummadibuilt.common.util.UserInfo.loggedInUserInfo;
@@ -111,11 +115,11 @@ public class AppFormService {
     }
 
     @Transactional
-    public boolean uploadDocument(HttpServletRequest request,
-                                  MultipartFile yearDocument,
-                                  String tenderId,
-                                  FinancialYearDocument fileYear,
-                                  String applicationId) {
+    public ApplicationFormDto uploadDocument(HttpServletRequest request,
+                                             MultipartFile yearDocument,
+                                             String tenderId,
+                                             FinancialYearDocument fileYear,
+                                             String applicationId) {
         LoggedInUser loggedInUser = loggedInUserInfo(request);
         ApplicationUser applicationUser = getById(applicationUserDao, loggedInUser.getUserId(), USER_NOT_FOUND);
         int appId = Integer.parseInt(applicationId);
@@ -127,20 +131,19 @@ public class AppFormService {
         this.validateAccess(applicationUser, loggedInUser);
         FileUtils.checkFileValidOrNot(yearDocument);
         String filePath = String.format("%s/%s", tenderId, loggedInUser.getUserId());
+        List<JsonNode> turnOverInfoNodes;
+        List<JsonNode> turnOverDetails = applicationForm.getTurnOverDetails();
         switch (fileYear.getText()) {
             case "YEAR_ONE":
-                applicationForm.setYearOneFileName(yearDocument.getOriginalFilename());
-                applicationForm.setYearOneFileSize((int) yearDocument.getSize());
+                turnOverInfoNodes = this.modifyTurnOverInfo(turnOverDetails, yearDocument, FinancialYearDocument.YEAR_ONE.getText());
                 filePath = String.format("%s/%s", filePath, FinancialYearDocument.YEAR_ONE.getText());
                 break;
             case "YEAR_TWO":
-                applicationForm.setYearTwoFileName(yearDocument.getOriginalFilename());
-                applicationForm.setYearTwoFileSize((int) yearDocument.getSize());
+                turnOverInfoNodes = this.modifyTurnOverInfo(turnOverDetails, yearDocument, FinancialYearDocument.YEAR_TWO.getText());
                 filePath = String.format("%s/%s", filePath, FinancialYearDocument.YEAR_TWO.getText());
                 break;
             case "YEAR_THREE":
-                applicationForm.setYearThreeFileName(yearDocument.getOriginalFilename());
-                applicationForm.setYearThreeFileSize((int) yearDocument.getSize());
+                turnOverInfoNodes = this.modifyTurnOverInfo(turnOverDetails, yearDocument, FinancialYearDocument.YEAR_THREE.getText());
                 filePath = String.format("%s/%s", filePath, FinancialYearDocument.YEAR_THREE.getText());
                 break;
             default:
@@ -148,8 +151,9 @@ public class AppFormService {
         }
 
         amazonFileService.uploadFile(filePath, metaData(applicationForm), yearDocument);
+        applicationForm.setTurnOverDetails(turnOverInfoNodes);
         SaveEntityConstraintHelper.save(applicationFormDao, applicationForm, null);
-        return true;
+        return ApplicationFormDto.valueOf(applicationForm);
     }
 
     private Map<String, String> metaData(ApplicationForm applicationForm) {
@@ -158,6 +162,23 @@ public class AppFormService {
         metaData.put("TenderId", applicationForm.getTenderInfo().getId());
         metaData.put("ApplicationUserId", applicationForm.getApplicationUser().getId());
         return metaData;
+    }
+
+    private List<JsonNode> modifyTurnOverInfo(List<JsonNode> turnOverInfo,
+                                              MultipartFile yearDocument,
+                                              String yearInfo) {
+        return turnOverInfo.stream()
+                .map(item -> {
+                    if(item.has("row")){
+                        if (item.get("row").asText().equals(yearInfo)) {
+                            ((ObjectNode) item).put("fileName", yearDocument.getOriginalFilename());
+                            ((ObjectNode) item).put("fileSize", yearDocument.getSize());
+                            return item;
+                        }
+                    }
+                    return item;
+                })
+                .collect(Collectors.toList());
     }
 
     private void createApplication(ApplicationForm form, ApplicationFormCreateDto createDto) {
@@ -192,12 +213,7 @@ public class AppFormService {
         form.setCompanyAuditors(createDto.getCompanyAuditors());
         form.setUnderTaking(createDto.isUnderTaking());
         form.setActionTaken(createDto.getActionTaken());
-        form.setYearOne(createDto.getYearOne());
-        form.setYearOneRevenue(createDto.getYearOneRevenue());
-        form.setYearTwo(createDto.getYearTwo());
-        form.setYearTwoRevenue(createDto.getYearTwoRevenue());
-        form.setYearThree(createDto.getYearThree());
-        form.setYearThreeRevenue(createDto.getYearThreeRevenue());
+        form.setTurnOverDetails(createDto.getTurnOverDetails());
     }
 
     private void validateAccess(ApplicationUser applicationUser, LoggedInUser loggedInUser) {

@@ -6,6 +6,7 @@ import lombok.Data;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
+import java.util.List;
 
 @Data
 public class ApplicationFormCreateDto implements Serializable {
@@ -101,17 +102,7 @@ public class ApplicationFormCreateDto implements Serializable {
 
     private boolean underTaking;
 
-    private String yearOne;
-
-    private Integer yearOneRevenue;
-
-    private String yearTwo;
-
-    private Integer yearTwoRevenue;
-
-    private String yearThree;
-
-    private Integer yearThreeRevenue;
+    private List<JsonNode> turnOverDetails;
 
     private ActionTaken actionTaken;
 

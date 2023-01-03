@@ -90,7 +90,7 @@ public class AppFormController {
     })
     @PutMapping("/{applicationId}/upload/{fileYear}")
     @RolesAllowed("contractor")
-    public boolean uploadDocument(HttpServletRequest request,
+    public ApplicationFormDto uploadDocument(HttpServletRequest request,
                                   @RequestPart("yearDocument") @NotNull MultipartFile yearDocument,
                                   @PathVariable("tenderId") String tenderId,
                                   @PathVariable("fileYear") FinancialYearDocument fileYear,
