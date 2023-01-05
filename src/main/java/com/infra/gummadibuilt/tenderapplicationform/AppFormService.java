@@ -7,6 +7,7 @@ import com.infra.gummadibuilt.common.ChangeTracking;
 import com.infra.gummadibuilt.common.LoggedInUser;
 import com.infra.gummadibuilt.common.exception.InvalidActionException;
 import com.infra.gummadibuilt.common.file.AmazonFileService;
+import com.infra.gummadibuilt.common.file.FileDownloadDto;
 import com.infra.gummadibuilt.common.util.FileUtils;
 import com.infra.gummadibuilt.common.util.SaveEntityConstraintHelper;
 import com.infra.gummadibuilt.tender.TenderInfoDao;
@@ -156,6 +157,44 @@ public class AppFormService {
         return ApplicationFormDto.valueOf(applicationForm);
     }
 
+    public FileDownloadDto downloadDocument(HttpServletRequest request,
+                                            String tenderId,
+                                            FinancialYearDocument fileYear,
+                                            String applicationId) {
+
+        LoggedInUser loggedInUser = loggedInUserInfo(request);
+        ApplicationUser applicationUser = getById(applicationUserDao, loggedInUser.getUserId(), USER_NOT_FOUND);
+        int appId = Integer.parseInt(applicationId);
+        ApplicationForm applicationForm = getById(applicationFormDao, appId, APPLICATION_FORM_NOT_FOUND);
+        TenderInfo tenderInfo = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
+        this.validateTenderAndStatus(applicationForm, tenderId);
+        if (request.isUserInRole("contractor")) {
+            this.validateAccess(applicationUser, loggedInUser);
+        }
+
+        String filePath = String.format("%s/%s", tenderId, loggedInUser.getUserId());
+        String fileName = applicationForm.getTurnOverDetails().stream()
+                .filter(item -> item.get("row").asText().equals("YEAR_ONE"))
+                .map(item -> item.get("fileName").asText())
+                .collect(Collectors.joining(","));
+
+        switch (fileYear.getText()) {
+            case "YEAR_ONE":
+                filePath = String.format("%s/%s", filePath, FinancialYearDocument.YEAR_ONE.getText());
+                break;
+            case "YEAR_TWO":
+                filePath = String.format("%s/%s", filePath, FinancialYearDocument.YEAR_TWO.getText());
+                break;
+            case "YEAR_THREE":
+                filePath = String.format("%s/%s", filePath, FinancialYearDocument.YEAR_THREE.getText());
+                break;
+            default:
+                throw new RuntimeException(String.format("Given year format %s is invalid", fileYear));
+        }
+
+        return amazonFileService.downloadFile(filePath, fileName);
+    }
+
     private Map<String, String> metaData(ApplicationForm applicationForm) {
         Map<String, String> metaData = new HashMap<>();
         metaData.put("ApplicationFormId", String.valueOf(applicationForm.getId()));
@@ -169,7 +208,7 @@ public class AppFormService {
                                               String yearInfo) {
         return turnOverInfo.stream()
                 .map(item -> {
-                    if(item.has("row")){
+                    if (item.has("row")) {
                         if (item.get("row").asText().equals(yearInfo)) {
                             ((ObjectNode) item).put("fileName", yearDocument.getOriginalFilename());
                             ((ObjectNode) item).put("fileSize", yearDocument.getSize());

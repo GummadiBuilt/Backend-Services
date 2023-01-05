@@ -1,5 +1,6 @@
 package com.infra.gummadibuilt.tenderapplicationform;
 
+import com.infra.gummadibuilt.common.file.FileDownloadDto;
 import com.infra.gummadibuilt.tenderapplicationform.model.dto.ApplicationFormCreateDto;
 import com.infra.gummadibuilt.tenderapplicationform.model.dto.ApplicationFormDto;
 import com.infra.gummadibuilt.tenderapplicationform.model.dto.FinancialYearDocument;
@@ -80,11 +81,11 @@ public class AppFormController {
         return appFormService.update(request, createDto, tenderId, applicationId);
     }
 
-    @Operation(summary = "Update tender application form")
+    @Operation(summary = "Upload file to a financial year")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success, when given file is uploaded",
                     content = {@Content(mediaType = "application/json",
-                            schema = @Schema(implementation = Boolean.class))
+                            schema = @Schema(implementation = ApplicationFormDto.class))
                     }),
             @ApiResponse(responseCode = "404", description = "The resource you were trying to reach is not found")
     })
@@ -96,5 +97,22 @@ public class AppFormController {
                                   @PathVariable("fileYear") FinancialYearDocument fileYear,
                                   @PathVariable("applicationId") String applicationId) {
         return appFormService.uploadDocument(request, yearDocument, tenderId, fileYear, applicationId);
+    }
+
+    @Operation(summary = "Download file for the given application id & financial year")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success, when given file is downloaded",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(implementation = FileDownloadDto.class))
+                    }),
+            @ApiResponse(responseCode = "404", description = "The resource you were trying to reach is not found")
+    })
+    @GetMapping("/{applicationId}/download/{fileYear}")
+    @RolesAllowed("contractor")
+    public FileDownloadDto downloadDocument(HttpServletRequest request,
+                                             @PathVariable("tenderId") String tenderId,
+                                             @PathVariable("fileYear") FinancialYearDocument fileYear,
+                                             @PathVariable("applicationId") String applicationId) {
+        return appFormService.downloadDocument(request, tenderId, fileYear, applicationId);
     }
 }

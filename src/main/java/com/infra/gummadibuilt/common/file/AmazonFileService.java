@@ -45,9 +45,9 @@ public class AmazonFileService {
         return putS3Object(filePath, metaData, this.buildConnection(), amazonConfiguration.getBucketName(), file);
     }
 
-    public FileDownloadDto downloadFile(String tenderId, String fileName) {
+    public FileDownloadDto downloadFile(String fileLocation, String fileName) {
 
-        String path = String.format("%s/%s", tenderId, fileName);
+        String path = String.format("%s/%s", fileLocation, fileName);
         Map<String, String> response = getObjectBytes(this.buildConnection(), amazonConfiguration.getBucketName(), path);
         FileDownloadDto fileDownloadDto = new FileDownloadDto();
         fileDownloadDto.setEncodedResponse(response.get("data"));
