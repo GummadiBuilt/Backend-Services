@@ -13,6 +13,9 @@ import com.infra.gummadibuilt.common.util.SaveEntityConstraintHelper;
 import com.infra.gummadibuilt.tender.TenderInfoDao;
 import com.infra.gummadibuilt.tender.model.TenderInfo;
 import com.infra.gummadibuilt.tender.model.WorkflowStep;
+import com.infra.gummadibuilt.tenderapplicants.TenderApplicantsDao;
+import com.infra.gummadibuilt.tenderapplicants.model.TenderApplicants;
+import com.infra.gummadibuilt.tenderapplicants.model.dto.ApplicationStatus;
 import com.infra.gummadibuilt.tenderapplicationform.model.ApplicationForm;
 import com.infra.gummadibuilt.tenderapplicationform.model.dto.ActionTaken;
 import com.infra.gummadibuilt.tenderapplicationform.model.dto.ApplicationFormCreateDto;
@@ -51,15 +54,19 @@ public class AppFormService {
 
     private final AmazonFileService amazonFileService;
 
+    private final TenderApplicantsDao tenderApplicantsDao;
+
     @Autowired
     public AppFormService(TenderInfoDao tenderInfoDao,
                           ApplicationFormDao applicationFormDao,
                           ApplicationUserDao applicationUserDao,
-                          AmazonFileService amazonFileService) {
+                          AmazonFileService amazonFileService,
+                          TenderApplicantsDao tenderApplicantsDao) {
         this.tenderInfoDao = tenderInfoDao;
         this.applicationFormDao = applicationFormDao;
         this.applicationUserDao = applicationUserDao;
         this.amazonFileService = amazonFileService;
+        this.tenderApplicantsDao = tenderApplicantsDao;
     }
 
     public ApplicationFormDto get(HttpServletRequest request, String tenderId, int applicationId) {
@@ -112,6 +119,18 @@ public class AppFormService {
         form.setTenderInfo(tenderInfo);
         form.setApplicationUser(applicationUser);
         SaveEntityConstraintHelper.save(applicationFormDao, form, null);
+        if (createDto.getActionTaken().equals(ActionTaken.SUBMIT)) {
+            TenderApplicants applicants = new TenderApplicants();
+            int currentApplicant = tenderApplicantsDao.countByTenderInfo(tenderInfo);
+            applicants.setApplicantRank(currentApplicant+1);
+            applicants.setApplicationForm(form);
+            applicants.setApplicationUser(applicationUser);
+            applicants.setTenderInfo(tenderInfo);
+            applicants.setApplicationStatus(ApplicationStatus.UNDER_PROCESS);
+            applicants.setChangeTracking(new ChangeTracking(loggedInUser.toString()));
+
+            SaveEntityConstraintHelper.save(tenderApplicantsDao, applicants, null);
+        }
         return ApplicationFormDto.valueOf(form);
     }
 

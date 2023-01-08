@@ -170,7 +170,10 @@ public class TenderInfoService {
 
         TenderDetailsDto tenderDetailsDto = new TenderDetailsDto();
 
-        if (request.isUserInRole("contractor") && (tenderInfo.getWorkflowStep() == WorkflowStep.PUBLISHED)) {
+        if (request.isUserInRole("contractor")
+                && (tenderInfo.getWorkflowStep() != WorkflowStep.SAVE
+                && tenderInfo.getWorkflowStep() != WorkflowStep.YET_TO_BE_PUBLISHED)
+        ) {
             return TenderDetailsDto.valueOf(tenderInfo, false);
         } else if (request.isUserInRole("client") && Objects.equals(tenderInfo.getApplicationUser().getId(), loggedInUser.getUserId())) {
             return TenderDetailsDto.valueOf(tenderInfo, true);

@@ -2,6 +2,7 @@ package com.infra.gummadibuilt.tenderapplicants.model;
 
 import com.infra.gummadibuilt.common.ChangeTracking;
 import com.infra.gummadibuilt.tender.model.TenderInfo;
+import com.infra.gummadibuilt.tenderapplicants.model.dto.ApplicationStatus;
 import com.infra.gummadibuilt.tenderapplicationform.model.ApplicationForm;
 import com.infra.gummadibuilt.userandrole.model.ApplicationUser;
 import lombok.Getter;
@@ -22,14 +23,17 @@ import javax.validation.constraints.Size;
 public class TenderApplicants {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
     @NotNull
-    private int applicant_rank;
+    private int applicantRank;
 
     @Size(max = 2500)
     private String justificationNote;
+
+    @Enumerated(value = EnumType.STRING)
+    private ApplicationStatus applicationStatus;
 
     @NotNull
     @ManyToOne

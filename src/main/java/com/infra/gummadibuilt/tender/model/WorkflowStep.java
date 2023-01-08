@@ -8,6 +8,8 @@ public enum WorkflowStep implements CommonOptionsEnum {
     YET_TO_BE_PUBLISHED("Yet to be published"),
     PUBLISHED("Published"),
     UNDER_PROCESS("Under Process"),
+    SHORTLISTED("SHORTLISTED"),
+    NOT_SHORTLISTED("Not Shortlisted"),
     RECOMMENDED("Recommended"),
     ARCHIVED("Archived"),
     SUSPENDED("Suspended");
