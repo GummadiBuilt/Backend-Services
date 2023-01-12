@@ -64,6 +64,8 @@ public class PqFormHeaderService {
             Optional<ApplicationForm> applicationForm = applicationFormDao.findByTenderInfoAndApplicationUser(tenderInfo, applicationUser);
             applicationForm.ifPresent(form -> pqFormHeaderDto.setApplicationFormId(form.getId()));
         }
+        
+        pqFormHeaderDto.setTenderSubmissionDate(tenderInfo.getLastDateOfSubmission().format(DateTimeFormatter.ofPattern(DATE_PATTERN)));
         return pqFormHeaderDto;
     }
 
@@ -77,7 +79,10 @@ public class PqFormHeaderService {
         formHeader.setChangeTracking(new ChangeTracking(loggedInUser.toString()));
         this.saveInfo(tenderInfo, formHeader, pqFormHeaderCreateDto, loggedInUser);
 
-        return PqFormHeaderDto.valueOf(formHeader);
+        PqFormHeaderDto headerDto = PqFormHeaderDto.valueOf(formHeader);
+        headerDto.setTenderSubmissionDate(tenderInfo.getLastDateOfSubmission().format(DateTimeFormatter.ofPattern(DATE_PATTERN)));
+
+        return headerDto;
     }
 
     @Transactional
@@ -90,7 +95,10 @@ public class PqFormHeaderService {
         formHeader.getChangeTracking().update(loggedInUser.toString());
         this.saveInfo(tenderInfo, formHeader, pqFormHeaderCreateDto, loggedInUser);
 
-        return PqFormHeaderDto.valueOf(formHeader);
+        PqFormHeaderDto headerDto = PqFormHeaderDto.valueOf(formHeader);
+        headerDto.setTenderSubmissionDate(tenderInfo.getLastDateOfSubmission().format(DateTimeFormatter.ofPattern(DATE_PATTERN)));
+
+        return headerDto;
     }
 
     private void saveInfo(TenderInfo tenderInfo, PqFormHeader formHeader, PqFormHeaderCreateDto pqFormHeaderCreateDto, LoggedInUser loggedInUser) {
@@ -117,7 +125,7 @@ public class PqFormHeaderService {
     }
 
     private void validateFetch(HttpServletRequest request, TenderInfo tenderInfo) {
-        if (request.isUserInRole("contractor") & tenderInfo.getWorkflowStep() != WorkflowStep.PUBLISHED) {
+        if (request.isUserInRole("contractor") & (tenderInfo.getWorkflowStep() == WorkflowStep.SAVE || tenderInfo.getWorkflowStep() == WorkflowStep.YET_TO_BE_PUBLISHED)) {
             throw new InvalidActionException(
                     String.format("Cannot access PQ form when tender is in %s", tenderInfo.getWorkflowStep().getText())
             );

@@ -15,6 +15,8 @@ public class PqFormHeaderDto extends PqFormHeaderCreateDto implements Serializab
 
     private String pqDocumentIssueDate;
 
+    private String tenderSubmissionDate;
+
     private String tenderId;
 
     private int applicationFormId;
