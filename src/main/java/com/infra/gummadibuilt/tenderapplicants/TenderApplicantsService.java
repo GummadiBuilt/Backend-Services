@@ -10,6 +10,7 @@ import com.infra.gummadibuilt.tenderapplicants.model.dto.TenderApplicantsDashboa
 import com.infra.gummadibuilt.tenderapplicants.model.dto.TenderApplicantsDto;
 import com.infra.gummadibuilt.tenderapplicationform.ApplicationFormDao;
 import com.infra.gummadibuilt.tenderapplicationform.model.ApplicationForm;
+import com.infra.gummadibuilt.tenderapplicationform.model.dto.ApplicationFormDto;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -61,6 +62,15 @@ public class TenderApplicantsService {
         SaveEntityConstraintHelper.saveAll(tenderApplicantsDao, updatedInfo, null);
         return this.get(tenderId);
 
+    }
+
+    public List<ApplicationFormDto> compareApplicants(String tenderId, List<String> applicantId) {
+        TenderInfo tenderInfo = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
+        this.validate(tenderInfo);
+        List<Integer> applicantIds = applicantId.stream().map(Integer::parseInt).collect(Collectors.toList());
+        List<ApplicationForm> applicationForms = applicationFormDao.findAllById(applicantIds);
+
+        return applicationForms.stream().map(ApplicationFormDto::valueOf).collect(Collectors.toList());
     }
 
     public void validateApplicationAndApplicant(TenderApplicants applicants, ApplicationForm applicationForm) {

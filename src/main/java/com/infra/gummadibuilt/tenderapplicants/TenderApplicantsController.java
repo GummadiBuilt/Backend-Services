@@ -2,6 +2,7 @@ package com.infra.gummadibuilt.tenderapplicants;
 
 import com.infra.gummadibuilt.tenderapplicants.model.dto.TenderApplicantsDashboardDto;
 import com.infra.gummadibuilt.tenderapplicants.model.dto.TenderApplicantsDto;
+import com.infra.gummadibuilt.tenderapplicationform.model.dto.ApplicationFormDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -54,6 +55,19 @@ public class TenderApplicantsController {
     public List<TenderApplicantsDto> updateRanking(@PathVariable @NotBlank String tenderId,
                                                    @RequestBody List<TenderApplicantsDto> tenderApplicantsDto) {
         return tenderApplicantsService.updateRanking(tenderId, tenderApplicantsDto);
+    }
+
+    @Operation(summary = "Compare tender applicants for a given tender")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success, when list of tender applicants are retrieved",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = TenderApplicantsDashboardDto.class)))),
+            @ApiResponse(responseCode = "404", description = "The resource you were trying to reach is not found")
+    })
+    @GetMapping("/{tenderId}/compare/{applicantId}")
+    @RolesAllowed({"admin", "client"})
+    public List<ApplicationFormDto> compareApplicants(@PathVariable @NotBlank String tenderId,
+                                                      @PathVariable List<String> applicantId) {
+        return tenderApplicantsService.compareApplicants(tenderId, applicantId);
     }
 
 }

@@ -12,4 +12,5 @@ import java.util.Optional;
 public interface ApplicationFormDao extends JpaRepository<ApplicationForm, Integer> {
 
     Optional<ApplicationForm> findByTenderInfoAndApplicationUser(TenderInfo tenderInfo, ApplicationUser applicationUser);
+
 }
