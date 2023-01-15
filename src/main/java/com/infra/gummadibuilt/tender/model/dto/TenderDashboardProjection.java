@@ -34,6 +34,8 @@ public interface TenderDashboardProjection {
 
     long getTender_document_size();
 
+    String getApp_form_status();
+
     String getCreated_by();
 
 

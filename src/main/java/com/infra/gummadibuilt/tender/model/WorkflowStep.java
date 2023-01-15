@@ -4,7 +4,7 @@ import com.infra.gummadibuilt.common.options.CommonOptionsEnum;
 
 public enum WorkflowStep implements CommonOptionsEnum {
 
-    SAVE("SAVE"),
+    DRAFT("Draft"),
     YET_TO_BE_PUBLISHED("Yet to be published"),
     PUBLISHED("Published"),
     UNDER_PROCESS("Under Process"),

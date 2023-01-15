@@ -1,0 +1,1 @@
+update tender_info set workflow_step = 'DRAFT' where workflow_step='SAVE';

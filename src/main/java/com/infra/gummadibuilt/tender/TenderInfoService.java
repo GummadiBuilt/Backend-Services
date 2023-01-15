@@ -171,13 +171,13 @@ public class TenderInfoService {
         TenderDetailsDto tenderDetailsDto = new TenderDetailsDto();
 
         if (request.isUserInRole("contractor")
-                && (tenderInfo.getWorkflowStep() != WorkflowStep.SAVE
+                && (tenderInfo.getWorkflowStep() != WorkflowStep.DRAFT
                 && tenderInfo.getWorkflowStep() != WorkflowStep.YET_TO_BE_PUBLISHED)
         ) {
             return TenderDetailsDto.valueOf(tenderInfo, false);
         } else if (request.isUserInRole("client") && Objects.equals(tenderInfo.getApplicationUser().getId(), loggedInUser.getUserId())) {
             return TenderDetailsDto.valueOf(tenderInfo, true);
-        } else if (request.isUserInRole("admin") && (tenderInfo.getWorkflowStep() != WorkflowStep.SAVE)) {
+        } else if (request.isUserInRole("admin") && (tenderInfo.getWorkflowStep() != WorkflowStep.DRAFT)) {
             return TenderDetailsDto.valueOf(tenderInfo, true);
         }
 
@@ -234,10 +234,10 @@ public class TenderInfoService {
     private void validateOnUpdate(TenderInfo tenderInfo, HttpServletRequest request) {
 
         if (tenderInfo.getWorkflowStep() != (WorkflowStep.YET_TO_BE_PUBLISHED) && request.isUserInRole("admin")) {
-            throw new InvalidActionException(String.format("Admin user cannot modify when its in step %s", WorkflowStep.SAVE.getText()));
+            throw new InvalidActionException(String.format("Admin user cannot modify when its in step %s", WorkflowStep.DRAFT.getText()));
         }
 
-        if (tenderInfo.getWorkflowStep() != WorkflowStep.SAVE && request.isUserInRole("client")) {
+        if (tenderInfo.getWorkflowStep() != WorkflowStep.DRAFT && request.isUserInRole("client")) {
             throw new InvalidActionException(String.format("Client user cannot modify when its in step %s", tenderInfo.getWorkflowStep().getText()));
         }
     }

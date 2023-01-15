@@ -125,14 +125,14 @@ public class PqFormHeaderService {
     }
 
     private void validateFetch(HttpServletRequest request, TenderInfo tenderInfo) {
-        if (request.isUserInRole("contractor") & (tenderInfo.getWorkflowStep() == WorkflowStep.SAVE || tenderInfo.getWorkflowStep() == WorkflowStep.YET_TO_BE_PUBLISHED)) {
+        if (request.isUserInRole("contractor") & (tenderInfo.getWorkflowStep() == WorkflowStep.DRAFT || tenderInfo.getWorkflowStep() == WorkflowStep.YET_TO_BE_PUBLISHED)) {
             throw new InvalidActionException(
                     String.format("Cannot access PQ form when tender is in %s", tenderInfo.getWorkflowStep().getText())
             );
         }
 
         if ((request.isUserInRole("client") || request.isUserInRole("admin"))
-                & tenderInfo.getWorkflowStep() == WorkflowStep.SAVE) {
+                & tenderInfo.getWorkflowStep() == WorkflowStep.DRAFT) {
             throw new InvalidActionException(
                     String.format("Cannot access PQ form when tender is in %s", tenderInfo.getWorkflowStep().getText())
             );
