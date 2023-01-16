@@ -29,7 +29,9 @@ public class TenderApplicantsDto {
 
     private String companyName;
 
-    public static TenderApplicantsDto valueOf(TenderApplicantsDashboardDto dashboardDto){
+    private String tenderId;
+
+    public static TenderApplicantsDto valueOf(TenderApplicantsDashboardDto dashboardDto) {
         TenderApplicantsDto tenderApplicantsDto = new TenderApplicantsDto();
 
         tenderApplicantsDto.setId(dashboardDto.getId());
@@ -39,6 +41,7 @@ public class TenderApplicantsDto {
         tenderApplicantsDto.setApplicationFormId(dashboardDto.getApplicant_form_id());
         tenderApplicantsDto.setApplicationUserId(dashboardDto.getApplication_user_id());
         tenderApplicantsDto.setCompanyName(dashboardDto.getCompany_name());
+        tenderApplicantsDto.setTenderId(dashboardDto.getTender_info_id());
 
         return tenderApplicantsDto;
 

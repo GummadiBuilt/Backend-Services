@@ -4,7 +4,7 @@ import com.infra.gummadibuilt.common.options.CommonOptionsEnum;
 
 public enum ActionTaken implements CommonOptionsEnum {
 
-    SAVE("Save"),
+    DRAFT("Draft"),
     SUBMIT("Submit");
 
     private final String text;

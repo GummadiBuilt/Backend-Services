@@ -1,0 +1,1 @@
+update application_form set action_taken = 'DRAFT' where action_taken='SAVE';
