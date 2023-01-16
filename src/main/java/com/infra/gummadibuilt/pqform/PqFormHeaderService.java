@@ -62,7 +62,10 @@ public class PqFormHeaderService {
             LoggedInUser loggedInUser = loggedInUserInfo(request);
             ApplicationUser applicationUser = getById(applicationUserDao, loggedInUser.getUserId(), USER_NOT_FOUND);
             Optional<ApplicationForm> applicationForm = applicationFormDao.findByTenderInfoAndApplicationUser(tenderInfo, applicationUser);
-            applicationForm.ifPresent(form -> pqFormHeaderDto.setApplicationFormId(form.getId()));
+            applicationForm.ifPresent(form -> {
+                pqFormHeaderDto.setApplicationFormId(form.getId());
+                pqFormHeaderDto.setApplicationFormStatus(form.getActionTaken());
+            });
         }
         
         pqFormHeaderDto.setTenderSubmissionDate(tenderInfo.getLastDateOfSubmission().format(DateTimeFormatter.ofPattern(DATE_PATTERN)));

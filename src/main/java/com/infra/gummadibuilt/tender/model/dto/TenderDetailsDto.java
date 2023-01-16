@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.infra.gummadibuilt.common.ChangeTracking;
 import com.infra.gummadibuilt.masterdata.common.model.dto.TypeOfEstablishmentDto;
 import com.infra.gummadibuilt.tender.model.TenderInfo;
+import com.infra.gummadibuilt.tenderapplicationform.model.dto.ActionTaken;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -69,6 +70,10 @@ public class TenderDetailsDto implements Serializable {
     private long tenderDocumentSize;
 
     private int pqFormId;
+
+    private int applicationFormId;
+
+    private ActionTaken applicationFormStatus;
 
     private ChangeTracking changeTracking;
 

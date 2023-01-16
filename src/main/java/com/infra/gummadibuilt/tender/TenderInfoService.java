@@ -19,6 +19,8 @@ import com.infra.gummadibuilt.tender.model.WorkflowStep;
 import com.infra.gummadibuilt.tender.model.dto.CreateTenderInfoDto;
 import com.infra.gummadibuilt.tender.model.dto.TenderDashboardProjection;
 import com.infra.gummadibuilt.tender.model.dto.TenderDetailsDto;
+import com.infra.gummadibuilt.tenderapplicationform.ApplicationFormDao;
+import com.infra.gummadibuilt.tenderapplicationform.model.ApplicationForm;
 import com.infra.gummadibuilt.userandrole.ApplicationUserDao;
 import com.infra.gummadibuilt.userandrole.model.ApplicationUser;
 import org.slf4j.Logger;
@@ -55,7 +57,16 @@ public class TenderInfoService {
 
     private final ApplicationUserDao applicationUserDao;
 
-    public TenderInfoService(ObjectMapper mapper, Validator validator, TypeOfContractDao typeOfContractDao, TenderInfoDao tenderInfoDao, AmazonFileService amazonFileService, ApplicationUserDao applicationUserDao, TypeOfEstablishmentDao typeOfEstablishmentDao) {
+    private final ApplicationFormDao applicationFormDao;
+
+    public TenderInfoService(ObjectMapper mapper,
+                             Validator validator,
+                             TypeOfContractDao typeOfContractDao,
+                             TenderInfoDao tenderInfoDao,
+                             AmazonFileService amazonFileService,
+                             ApplicationUserDao applicationUserDao,
+                             TypeOfEstablishmentDao typeOfEstablishmentDao,
+                             ApplicationFormDao applicationFormDao) {
         this.mapper = mapper;
         this.validator = validator;
         this.typeOfContractDao = typeOfContractDao;
@@ -63,6 +74,7 @@ public class TenderInfoService {
         this.amazonFileService = amazonFileService;
         this.applicationUserDao = applicationUserDao;
         this.typeOfEstablishmentDao = typeOfEstablishmentDao;
+        this.applicationFormDao = applicationFormDao;
     }
 
     @Transactional
@@ -165,7 +177,7 @@ public class TenderInfoService {
 
     public TenderDetailsDto getTenderInfo(HttpServletRequest request, String tenderId) {
         LoggedInUser loggedInUser = loggedInUserInfo(request);
-
+        ApplicationUser applicationUser = getById(applicationUserDao, loggedInUser.getUserId(), USER_NOT_FOUND);
         TenderInfo tenderInfo = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
 
         TenderDetailsDto tenderDetailsDto = new TenderDetailsDto();
@@ -174,7 +186,13 @@ public class TenderInfoService {
                 && (tenderInfo.getWorkflowStep() != WorkflowStep.DRAFT
                 && tenderInfo.getWorkflowStep() != WorkflowStep.YET_TO_BE_PUBLISHED)
         ) {
-            return TenderDetailsDto.valueOf(tenderInfo, false);
+            TenderDetailsDto dto = TenderDetailsDto.valueOf(tenderInfo, false);
+            Optional<ApplicationForm> applicationForm = applicationFormDao.findByTenderInfoAndApplicationUser(tenderInfo, applicationUser);
+            applicationForm.ifPresent(form -> {
+                dto.setApplicationFormId(form.getId());
+                dto.setApplicationFormStatus(form.getActionTaken());
+            });
+            return dto;
         } else if (request.isUserInRole("client") && Objects.equals(tenderInfo.getApplicationUser().getId(), loggedInUser.getUserId())) {
             return TenderDetailsDto.valueOf(tenderInfo, true);
         } else if (request.isUserInRole("admin") && (tenderInfo.getWorkflowStep() != WorkflowStep.DRAFT)) {

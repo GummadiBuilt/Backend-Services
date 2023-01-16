@@ -1,6 +1,7 @@
 package com.infra.gummadibuilt.pqform.model.dto;
 
 import com.infra.gummadibuilt.pqform.model.PqFormHeader;
+import com.infra.gummadibuilt.tenderapplicationform.model.dto.ActionTaken;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -20,6 +21,8 @@ public class PqFormHeaderDto extends PqFormHeaderCreateDto implements Serializab
     private String tenderId;
 
     private int applicationFormId;
+
+    private ActionTaken applicationFormStatus;
 
     public static PqFormHeaderDto valueOf(PqFormHeader pqFormHeader) {
         PqFormHeaderDto result = new PqFormHeaderDto();
