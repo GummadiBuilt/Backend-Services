@@ -2,6 +2,7 @@ package com.infra.gummadibuilt.tenderapplicants;
 
 import com.infra.gummadibuilt.tenderapplicants.model.dto.TenderApplicantsDashboardDto;
 import com.infra.gummadibuilt.tenderapplicants.model.dto.TenderApplicantsDto;
+import com.infra.gummadibuilt.tenderapplicationform.model.dto.ActionTaken;
 import com.infra.gummadibuilt.tenderapplicationform.model.dto.ApplicationFormDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -11,11 +12,15 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.apache.http.protocol.HTTP;
+import org.keycloak.authorization.client.util.Http;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.security.RolesAllowed;
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @RestController
@@ -50,11 +55,13 @@ public class TenderApplicantsController {
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = TenderApplicantsDashboardDto.class)))),
             @ApiResponse(responseCode = "404", description = "The resource you were trying to reach is not found")
     })
-    @PutMapping("/{tenderId}/update")
-    @RolesAllowed({"admin", "client"})
-    public List<TenderApplicantsDto> updateRanking(@PathVariable @NotBlank String tenderId,
+    @PutMapping("/{tenderId}/update/{actionTaken}")
+    @RolesAllowed({"admin"})
+    public List<TenderApplicantsDto> updateRanking(HttpServletRequest request,
+                                                   @PathVariable @NotBlank String tenderId,
+                                                   @PathVariable @NotNull ActionTaken actionTaken,
                                                    @RequestBody List<TenderApplicantsDto> tenderApplicantsDto) {
-        return tenderApplicantsService.updateRanking(tenderId, tenderApplicantsDto);
+        return tenderApplicantsService.updateRanking(request,tenderId, actionTaken, tenderApplicantsDto);
     }
 
     @Operation(summary = "Compare tender applicants for a given tender")

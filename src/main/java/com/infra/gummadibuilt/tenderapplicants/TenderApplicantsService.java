@@ -1,5 +1,6 @@
 package com.infra.gummadibuilt.tenderapplicants;
 
+import com.infra.gummadibuilt.common.LoggedInUser;
 import com.infra.gummadibuilt.common.exception.InvalidActionException;
 import com.infra.gummadibuilt.common.util.SaveEntityConstraintHelper;
 import com.infra.gummadibuilt.tender.TenderInfoDao;
@@ -10,15 +11,18 @@ import com.infra.gummadibuilt.tenderapplicants.model.dto.TenderApplicantsDashboa
 import com.infra.gummadibuilt.tenderapplicants.model.dto.TenderApplicantsDto;
 import com.infra.gummadibuilt.tenderapplicationform.ApplicationFormDao;
 import com.infra.gummadibuilt.tenderapplicationform.model.ApplicationForm;
+import com.infra.gummadibuilt.tenderapplicationform.model.dto.ActionTaken;
 import com.infra.gummadibuilt.tenderapplicationform.model.dto.ApplicationFormDto;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.infra.gummadibuilt.common.util.CommonModuleUtils.*;
+import static com.infra.gummadibuilt.common.util.UserInfo.loggedInUserInfo;
 
 @Service
 public class TenderApplicantsService {
@@ -44,7 +48,11 @@ public class TenderApplicantsService {
         return dashboardDtos.stream().map(TenderApplicantsDto::valueOf).collect(Collectors.toList());
     }
 
-    public List<TenderApplicantsDto> updateRanking(String tenderId, List<TenderApplicantsDto> tenderApplicantsDto) {
+    public List<TenderApplicantsDto> updateRanking(HttpServletRequest request,
+                                                   String tenderId,
+                                                   ActionTaken actionTaken,
+                                                   List<TenderApplicantsDto> tenderApplicantsDto) {
+        LoggedInUser loggedInUser = loggedInUserInfo(request);
         TenderInfo tenderInfo = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
         this.validate(tenderInfo);
         List<TenderApplicants> updatedInfo = new ArrayList<>();
@@ -60,8 +68,12 @@ public class TenderApplicantsService {
         });
 
         SaveEntityConstraintHelper.saveAll(tenderApplicantsDao, updatedInfo, null);
+        if (actionTaken.equals(ActionTaken.SUBMIT)) {
+            tenderInfo.setWorkflowStep(WorkflowStep.SHORTLISTED);
+            tenderInfo.getChangeTracking().update(loggedInUser.toString());
+            SaveEntityConstraintHelper.save(tenderInfoDao, tenderInfo, null);
+        }
         return this.get(tenderId);
-
     }
 
     public List<ApplicationFormDto> compareApplicants(String tenderId, List<String> applicantId) {
