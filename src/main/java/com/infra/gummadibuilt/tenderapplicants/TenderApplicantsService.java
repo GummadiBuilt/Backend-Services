@@ -64,6 +64,7 @@ public class TenderApplicantsService {
             this.validateApplicationAndApplicant(application, form);
             application.setApplicantRank(applicant.getApplicantRank());
             application.setJustificationNote(applicant.getJustificationNote());
+            application.setApplicationStatus(applicant.getApplicationStatus());
             updatedInfo.add(application);
         });
 
