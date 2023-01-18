@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.6](https://github.com/GummadiBuilt/Backend-Services/compare/v0.0.5...v0.0.6) (2023-01-18)
+
+
+### Features
+
+* **compare:** Compare applicants ([c433e38](https://github.com/GummadiBuilt/Backend-Services/commit/c433e382ada77249ec393ef275d052c66e146cb5))
+* **contractor:** Add application action for contractors ([12aa88e](https://github.com/GummadiBuilt/Backend-Services/commit/12aa88e41195986268a2ff637932fc6a1d9e9dbb))
+* **DownloadDoc:** Feature to download turnover details ([ce0e141](https://github.com/GummadiBuilt/Backend-Services/commit/ce0e14103da9969e2395e6ea379e1add178cc879))
+* **MyTender:** Contractor applied tenders ([156f134](https://github.com/GummadiBuilt/Backend-Services/commit/156f1348d938fad32b615c9d4f533665b62e8387))
+* **pqform:** Added tender submission date ([f5bf5f0](https://github.com/GummadiBuilt/Backend-Services/commit/f5bf5f0f927867d771fecd0245b757cb3bf89e78))
+* **Profile:** User profile ([d59b92c](https://github.com/GummadiBuilt/Backend-Services/commit/d59b92c1174095c38c3f63405a117cbcf682d205))
+* **TenderApplicants:** Financial Doc upload ([b4a0a22](https://github.com/GummadiBuilt/Backend-Services/commit/b4a0a221b8a441805de7f0a4202ab856f8dd7e82))
+* **TenderApplicants:** Get & Update rankings ([20414a6](https://github.com/GummadiBuilt/Backend-Services/commit/20414a68c30edb4df39f35da079c58c970dbe168))
+
+
+### Bug Fixes
+
+* **appform:** Modify app form value ([2e324b4](https://github.com/GummadiBuilt/Backend-Services/commit/2e324b4ac7e5d6973aefe117cad2be71c24568ae))
+* **applicants:** Added status on save ([a6a2247](https://github.com/GummadiBuilt/Backend-Services/commit/a6a2247f708e153be3f148645eda81040cf13a4b))
+* **ApplicationID:** Added application ID ([9222abb](https://github.com/GummadiBuilt/Backend-Services/commit/9222abbe4554adbcf336d2826bab7adccd26a439))
+* **contractor:** Contractor query fix ([3f81442](https://github.com/GummadiBuilt/Backend-Services/commit/3f8144269a9b21cf34b70c63f9ae9f8eca972b5f))
+* **MyTenders:** Fix on my tenders dashboard ([8cf6845](https://github.com/GummadiBuilt/Backend-Services/commit/8cf68452438f8fd5cd9bce206a9cd0bac15f23d7))
+* **PQForm:** Fixes an issue for contractors ([b1e1f84](https://github.com/GummadiBuilt/Backend-Services/commit/b1e1f8416f3886b0e841aaf0b3c081545738221d))
+* **Query:** Fixed Query ([3c5afb5](https://github.com/GummadiBuilt/Backend-Services/commit/3c5afb58dfffbd462167a40c83f2052e8e9e4a78))
+* **ranking:** Update rankings of contractors ([1fa98a9](https://github.com/GummadiBuilt/Backend-Services/commit/1fa98a9b2da791b5e281a4ecea5b1b9389042ccb))
+* **ranking:** Update rankings of contractors ([55fc75c](https://github.com/GummadiBuilt/Backend-Services/commit/55fc75cb6d7c6c63a29fdef281c884ba3e4be081))
+* **Tender:** Demo changes ([aa22ab5](https://github.com/GummadiBuilt/Backend-Services/commit/aa22ab51e3778fe4288016b1e1e234d00d9a8923))
+
 ### [0.0.5](https://github.com/GummadiBuilt/Backend-Services/compare/v0.0.4...v0.0.5) (2022-12-20)
 
 
