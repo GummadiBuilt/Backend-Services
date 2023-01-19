@@ -19,6 +19,9 @@ import com.infra.gummadibuilt.tender.model.WorkflowStep;
 import com.infra.gummadibuilt.tender.model.dto.CreateTenderInfoDto;
 import com.infra.gummadibuilt.tender.model.dto.TenderDashboardProjection;
 import com.infra.gummadibuilt.tender.model.dto.TenderDetailsDto;
+import com.infra.gummadibuilt.tenderapplicants.TenderApplicantsDao;
+import com.infra.gummadibuilt.tenderapplicants.model.TenderApplicants;
+import com.infra.gummadibuilt.tenderapplicants.model.dto.ApplicationStatus;
 import com.infra.gummadibuilt.tenderapplicationform.ApplicationFormDao;
 import com.infra.gummadibuilt.tenderapplicationform.model.ApplicationForm;
 import com.infra.gummadibuilt.userandrole.ApplicationUserDao;
@@ -58,6 +61,7 @@ public class TenderInfoService {
     private final ApplicationUserDao applicationUserDao;
 
     private final ApplicationFormDao applicationFormDao;
+    private final TenderApplicantsDao tenderApplicantsDao;
 
     public TenderInfoService(ObjectMapper mapper,
                              Validator validator,
@@ -66,7 +70,8 @@ public class TenderInfoService {
                              AmazonFileService amazonFileService,
                              ApplicationUserDao applicationUserDao,
                              TypeOfEstablishmentDao typeOfEstablishmentDao,
-                             ApplicationFormDao applicationFormDao) {
+                             ApplicationFormDao applicationFormDao,
+                             TenderApplicantsDao tenderApplicantsDao) {
         this.mapper = mapper;
         this.validator = validator;
         this.typeOfContractDao = typeOfContractDao;
@@ -75,6 +80,7 @@ public class TenderInfoService {
         this.applicationUserDao = applicationUserDao;
         this.typeOfEstablishmentDao = typeOfEstablishmentDao;
         this.applicationFormDao = applicationFormDao;
+        this.tenderApplicantsDao = tenderApplicantsDao;
     }
 
     @Transactional
@@ -186,7 +192,23 @@ public class TenderInfoService {
                 && (tenderInfo.getWorkflowStep() != WorkflowStep.DRAFT
                 && tenderInfo.getWorkflowStep() != WorkflowStep.YET_TO_BE_PUBLISHED)
         ) {
-            TenderDetailsDto dto = TenderDetailsDto.valueOf(tenderInfo, false);
+            List<String> workflowSteps = Arrays.asList(WorkflowStep.QUALIFIED.getText(), WorkflowStep.IN_REVIEW.getText());
+            String appStatus = "";
+            boolean showBidInfo = true;
+            if (workflowSteps.contains(tenderInfo.getWorkflowStep().getText())) {
+                Optional<TenderApplicants> tenderApplicants = tenderApplicantsDao.findByApplicationUserAndTenderInfo(applicationUser, tenderInfo);
+                if (tenderApplicants.isPresent()) {
+                    if (tenderApplicants.get().getApplicationStatus() == ApplicationStatus.NOT_QUALIFIED) {
+                        showBidInfo = false;
+                        appStatus = "NOT_QUALIFIED";
+                    }
+                }
+            }
+
+            TenderDetailsDto dto = TenderDetailsDto.valueOf(tenderInfo, showBidInfo);
+            if (appStatus.length() > 0) {
+                dto.setWorkflowStep(appStatus);
+            }
             Optional<ApplicationForm> applicationForm = applicationFormDao.findByTenderInfoAndApplicationUser(tenderInfo, applicationUser);
             applicationForm.ifPresent(form -> {
                 dto.setApplicationFormId(form.getId());

@@ -23,4 +23,6 @@ public interface TenderApplicantsDashboardDto {
     String getModified_by();
 
     String getModified_date();
+
+    String getWorkflow_step();
 }

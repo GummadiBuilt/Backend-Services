@@ -4,9 +4,9 @@ import com.infra.gummadibuilt.common.options.CommonOptionsEnum;
 
 public enum ApplicationStatus implements CommonOptionsEnum {
 
-    SHORTLISTED("Shortlisted"),
+    QUALIFIED("Qualified"),
     UNDER_PROCESS("Under process"),
-    NOT_SHORTLISTED("Not Shortlisted");
+    NOT_QUALIFIED("Not Qualified");
 
     private final String text;
 

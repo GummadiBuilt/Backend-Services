@@ -42,7 +42,6 @@ public class TenderApplicantsService {
 
     public List<TenderApplicantsDto> get(String tenderId) {
         TenderInfo tenderInfo = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
-        this.validate(tenderInfo);
         List<TenderApplicantsDashboardDto> dashboardDtos = tenderApplicantsDao.getTenderApplicants(tenderId);
 
         return dashboardDtos.stream().map(TenderApplicantsDto::valueOf).collect(Collectors.toList());
@@ -70,7 +69,7 @@ public class TenderApplicantsService {
 
         SaveEntityConstraintHelper.saveAll(tenderApplicantsDao, updatedInfo, null);
         if (actionTaken.equals(ActionTaken.SUBMIT)) {
-            tenderInfo.setWorkflowStep(WorkflowStep.SHORTLISTED);
+            tenderInfo.setWorkflowStep(WorkflowStep.QUALIFIED);
             tenderInfo.getChangeTracking().update(loggedInUser.toString());
             SaveEntityConstraintHelper.save(tenderInfoDao, tenderInfo, null);
         }

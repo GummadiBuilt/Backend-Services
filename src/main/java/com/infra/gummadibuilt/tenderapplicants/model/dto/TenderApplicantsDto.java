@@ -31,6 +31,8 @@ public class TenderApplicantsDto {
 
     private String tenderId;
 
+    private String tenderStatus;
+
     public static TenderApplicantsDto valueOf(TenderApplicantsDashboardDto dashboardDto) {
         TenderApplicantsDto tenderApplicantsDto = new TenderApplicantsDto();
 
@@ -42,6 +44,7 @@ public class TenderApplicantsDto {
         tenderApplicantsDto.setApplicationUserId(dashboardDto.getApplication_user_id());
         tenderApplicantsDto.setCompanyName(dashboardDto.getCompany_name());
         tenderApplicantsDto.setTenderId(dashboardDto.getTender_info_id());
+        tenderApplicantsDto.setTenderStatus(dashboardDto.getWorkflow_step());
 
         return tenderApplicantsDto;
 
