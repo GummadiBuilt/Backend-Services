@@ -41,7 +41,7 @@ public class TenderApplicantsService {
     }
 
     public List<TenderApplicantsDto> get(String tenderId) {
-        TenderInfo tenderInfo = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
+        getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
         List<TenderApplicantsDashboardDto> dashboardDtos = tenderApplicantsDao.getTenderApplicants(tenderId);
 
         return dashboardDtos.stream().map(TenderApplicantsDto::valueOf).collect(Collectors.toList());
@@ -77,8 +77,7 @@ public class TenderApplicantsService {
     }
 
     public List<ApplicationFormDto> compareApplicants(String tenderId, List<String> applicantId) {
-        TenderInfo tenderInfo = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
-        this.validate(tenderInfo);
+        getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
         List<Integer> applicantIds = applicantId.stream().map(Integer::parseInt).collect(Collectors.toList());
         List<ApplicationForm> applicationForms = applicationFormDao.findAllById(applicantIds);
 
