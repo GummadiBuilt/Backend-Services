@@ -43,31 +43,41 @@ public interface TenderInfoDao extends JpaRepository<TenderInfo, String> {
             "where ti.application_user_id = ?1", nativeQuery = true)
     List<TenderDashboardProjection> getClientDashboard(String userId);
 
-    @Query(value = "select ti.id as tender_id, pfh.id as pq_id, au.company_name, toe.establishment_description, " +
-            "ti.work_description, ti.project_location, toc.type_of_contract, ti.contract_duration, ti.duration_counter," +
-            "ti.project_name, TO_CHAR(ti.last_date_of_submission\\:\\:date, 'dd/mm/yyyy') as last_date_of_submission, " +
-            "coalesce(ti.estimated_budget,0) as estimated_budget, ti.workflow_step, '' as tender_document_name, 0 as tender_document_size, ti.created_by, " +
-            "(select af.id from application_form af  where af.application_user_id = :userId and af.tender_info_id =ti.id ) as application_form_id, "+
-            "(select af.action_taken  from application_form af  where af.application_user_id = :userId and af.tender_info_id =ti.id ) as app_form_status "+
-            "from tender_info ti left join pq_form_header pfh on ti.id = pfh.tender_info_id left join type_of_contract " +
-            "toc on ti.type_of_contract_id  = toc.id left join application_user au  on ti.application_user_id = au.id " +
-            "left join type_of_establishment toe on ti.type_of_establishment_desc = toe.establishment_description " +
-            "where ti.type_of_establishment_desc in (:typeOfEstablishment)" +
-            " and ti.workflow_step not in ('YET_TO_BE_PUBLISHED', 'DRAFT')", nativeQuery = true)
-    List<TenderDashboardProjection> getContractorDashboard(List<String> typeOfEstablishment, String userId);
-
-    @Query(value = "select ti.id as tender_id, pfh.id as pq_id, af.application_user_id , " +
-            "af.id as application_form_id, au.company_name, af.action_taken as app_form_status, " +
-            "toe.establishment_description, ti.work_description, ti.project_location, toc.type_of_contract, " +
-            "ti.contract_duration, ti.duration_counter, ti.project_name, " +
-            "TO_CHAR(ti.last_date_of_submission\\:\\:date, 'dd/mm/yyyy') as last_date_of_submission, " +
-            "coalesce(ti.estimated_budget,0) as estimated_budget, ti.workflow_step, '' as tender_document_name," +
-            " ti.tender_document_size, ti.created_by from tender_info ti " +
+    @Query(value = "with af as (select * from application_form af  where application_user_id= :userId)," +
+            "ta as (select * from tender_applicants where application_user_id= :userId) select ti.id as tender_id," +
+            "pfh.id as pq_id, au.company_name, toe.establishment_description, ti.work_description," +
+            "ti.project_location, toc.type_of_contract, ti.contract_duration, ti.duration_counter, ti.project_name," +
+            "CASE WHEN ti.workflow_step  ='QUALIFIED' THEN coalesce(ta.application_status, 'NOT_QUALIFIED') " +
+            "ELSE ti.workflow_step end as workflow_step," +
+            "TO_CHAR(ti.last_date_of_submission\\:\\:date, 'dd/mm/yyyy') as last_date_of_submission," +
+            "CASE WHEN ta.application_status ='QUALIFIED' THEN ti.tender_document_name ELSE '' end as tender_document_name," +
+            "CASE WHEN ta.application_status ='QUALIFIED' THEN ti.tender_document_size ELSE 0 end as tender_document_size," +
+            "coalesce(ti.estimated_budget, 0) as estimated_budget, ti.created_by, af.id as application_form_id," +
+            "af.action_taken as app_form_status from tender_info ti " +
             "left join pq_form_header pfh on ti.id = pfh.tender_info_id " +
             "left join type_of_contract toc on ti.type_of_contract_id = toc.id " +
             "left join application_user au on ti.application_user_id = au.id " +
             "left join type_of_establishment toe on ti.type_of_establishment_desc = toe.establishment_description " +
-            "left join application_form af on ti.id = af.tender_info_id " +
-            "where af.application_user_id = :userId",nativeQuery = true)
+            "left join af on ti.id = af.tender_info_id left join ta on ti.id = ta.tender_info_id " +
+            "where ti.type_of_establishment_desc in (:typeOfEstablishment) and " +
+            "ti.workflow_step not in ('YET_TO_BE_PUBLISHED', 'DRAFT')", nativeQuery = true)
+    List<TenderDashboardProjection> getContractorDashboard(List<String> typeOfEstablishment, String userId);
+
+    @Query(value = "with af as (select * from application_form af  where application_user_id= :userId), " +
+            "ta as (select * from tender_applicants where application_user_id= :userId) select ti.id as tender_id, " +
+            "CASE WHEN ti.workflow_step  ='QUALIFIED' THEN coalesce(ta.application_status, 'NOT_QUALIFIED') " +
+            "ELSE ti.workflow_step end as workflow_step, CASE WHEN ta.application_status ='QUALIFIED' " +
+            "THEN ti.tender_document_name ELSE '' end as tender_document_name," +
+            "CASE WHEN ta.application_status ='QUALIFIED' THEN ti.tender_document_size ELSE 0 end as tender_document_size," +
+            "ti.work_description,ti.project_location,ti.contract_duration,ti.duration_counter,ti.project_name," +
+            "ti.created_by,TO_CHAR(ti.last_date_of_submission\\:\\:date, 'dd/mm/yyyy') as last_date_of_submission," +
+            "coalesce(ti.estimated_budget, 0) as estimated_budget,ta.application_status,ta.tender_info_id," +
+            "pfh.id as pq_id,toc.type_of_contract,toe.establishment_description,au.company_name," +
+            "af.id as application_form_id,af.action_taken as app_form_status,af.application_user_id " +
+            "from tender_info ti left join pq_form_header pfh on ti.id = pfh.tender_info_id " +
+            "left join type_of_contract toc on ti.type_of_contract_id = toc.id " +
+            "left join application_user au on ti.application_user_id = au.id " +
+            "left join type_of_establishment toe on ti.type_of_establishment_desc = toe.establishment_description " +
+            "right join af  on ti.id = af.tender_info_id left join ta on ti.id = ta.tender_info_id", nativeQuery = true)
     List<TenderDashboardProjection> getAppliedTenders(String userId);
 }
