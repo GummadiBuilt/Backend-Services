@@ -26,4 +26,5 @@ public interface TenderApplicantsDao extends JpaRepository<TenderApplicants, Int
 
     Optional<TenderApplicants> findByApplicationUserAndTenderInfo(ApplicationUser applicationUser, TenderInfo tenderInfo);
 
+    List<TenderApplicants> findAllByIdAndTenderInfo(List<Integer> id, TenderInfo tenderInfo);
 }

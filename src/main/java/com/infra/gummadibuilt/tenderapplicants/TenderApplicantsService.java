@@ -1,6 +1,7 @@
 package com.infra.gummadibuilt.tenderapplicants;
 
 import com.infra.gummadibuilt.common.LoggedInUser;
+import com.infra.gummadibuilt.common.exception.EntityNotFoundException;
 import com.infra.gummadibuilt.common.exception.InvalidActionException;
 import com.infra.gummadibuilt.common.util.SaveEntityConstraintHelper;
 import com.infra.gummadibuilt.tender.TenderInfoDao;
@@ -19,6 +20,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.infra.gummadibuilt.common.util.CommonModuleUtils.*;
@@ -53,14 +55,38 @@ public class TenderApplicantsService {
                                                    List<TenderApplicantsDto> tenderApplicantsDto) {
         LoggedInUser loggedInUser = loggedInUserInfo(request);
         TenderInfo tenderInfo = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
+
         this.validate(tenderInfo);
+        List<Integer> applicationFormIds = tenderApplicantsDto
+                .stream()
+                .map(TenderApplicantsDto::getApplicationFormId)
+                .collect(Collectors.toList());
+        List<ApplicationForm> applicationForms = this.validateApplicationForm(applicationFormIds, tenderInfo);
+        List<TenderApplicants> tenderApplicants = this.validateTenderApplicants(tenderApplicantsDto, tenderInfo);
         List<TenderApplicants> updatedInfo = new ArrayList<>();
+
         tenderApplicantsDto.forEach(applicant -> {
-            int appFormId = applicant.getApplicationFormId();
-            int applicantId = applicant.getId();
-            TenderApplicants application = getById(tenderApplicantsDao, applicantId, APPLICANT_NOT_FOUND);
-            ApplicationForm form = getById(applicationFormDao, appFormId, APPLICATION_FORM_NOT_FOUND);
+            int applicationFormId = applicant.getApplicationFormId();
+            int tenderApplicantId = applicant.getId();
+
+            Optional<TenderApplicants> optionalTenderApplicants = tenderApplicants.stream().filter(item -> item.getId() == tenderApplicantId).findFirst();
+            TenderApplicants application;
+            if (optionalTenderApplicants.isPresent()) {
+                application = optionalTenderApplicants.get();
+            } else {
+                throw new EntityNotFoundException(String.format(APPLICANT_NOT_FOUND, tenderApplicantId));
+            }
+
+            Optional<ApplicationForm> optionalApplicationForm = applicationForms.stream().filter(item -> item.getId() == applicationFormId).findFirst();
+            ApplicationForm form;
+            if (optionalApplicationForm.isPresent()) {
+                form = optionalApplicationForm.get();
+            } else {
+                throw new EntityNotFoundException(String.format(APPLICATION_FORM_NOT_FOUND, applicationFormId));
+            }
+
             this.validateApplicationAndApplicant(application, form);
+
             application.setApplicantRank(applicant.getApplicantRank());
             application.setJustificationNote(applicant.getJustificationNote());
             application.setApplicationStatus(applicant.getApplicationStatus());
@@ -77,10 +103,12 @@ public class TenderApplicantsService {
     }
 
     public List<ApplicationFormDto> compareApplicants(String tenderId, List<String> applicantId) {
-        getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
+        if (applicantId.size() > 10) {
+            throw new InvalidActionException("A maximum of 10 applications can be compared at once");
+        }
+        TenderInfo tenderInfo = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
         List<Integer> applicantIds = applicantId.stream().map(Integer::parseInt).collect(Collectors.toList());
-        List<ApplicationForm> applicationForms = applicationFormDao.findAllById(applicantIds);
-
+        List<ApplicationForm> applicationForms = this.validateApplicationForm(applicantIds, tenderInfo);
         return applicationForms.stream().map(ApplicationFormDto::valueOf).collect(Collectors.toList());
     }
 
@@ -101,5 +129,43 @@ public class TenderApplicantsService {
                     String.format("Tender %s should be in step under process to get/update rankings", tenderId)
             );
         }
+
+    }
+
+    public List<TenderApplicants> validateTenderApplicants(List<TenderApplicantsDto> tenderApplicantsDto, TenderInfo tenderInfo) {
+        String tenderId = tenderInfo.getId();
+        List<Integer> tenderApplicantIds = tenderApplicantsDto
+                .stream()
+                .map(TenderApplicantsDto::getId)
+                .collect(Collectors.toList());
+
+
+        List<TenderApplicants> tenderApplicants = tenderApplicantsDao.findAllByIdAndTenderInfo(tenderApplicantIds, tenderInfo);
+
+        if (tenderApplicants.size() != tenderApplicantIds.size()) {
+            String tenderAppIds = tenderApplicants.stream()
+                    .map(TenderApplicants::getId)
+                    .filter(id -> !tenderApplicantIds.contains(id))
+                    .map(String::valueOf)
+                    .collect(Collectors.joining(", "));
+            throw new InvalidActionException(String.format("Tender applicants %s were not mapped to tender %s", tenderAppIds, tenderId));
+        }
+
+        return tenderApplicants;
+    }
+
+    public List<ApplicationForm> validateApplicationForm(List<Integer> applicationFormIds, TenderInfo tenderInfo) {
+        String tenderId = tenderInfo.getId();
+        List<ApplicationForm> applicationForms = applicationFormDao.findAllByIdAndTenderInfo(applicationFormIds, tenderInfo);
+        if (applicationForms.size() != applicationFormIds.size()) {
+            String appId = applicationForms.stream()
+                    .map(ApplicationForm::getId)
+                    .filter(id -> !applicationFormIds.contains(id))
+                    .map(String::valueOf)
+                    .collect(Collectors.joining(", "));
+            throw new InvalidActionException(String.format("Application forms %s were not mapped to tender %s", appId, tenderId));
+        }
+
+        return applicationForms;
     }
 }
