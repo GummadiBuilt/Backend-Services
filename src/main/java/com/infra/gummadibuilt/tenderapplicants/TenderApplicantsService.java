@@ -140,7 +140,7 @@ public class TenderApplicantsService {
                 .collect(Collectors.toList());
 
 
-        List<TenderApplicants> tenderApplicants = tenderApplicantsDao.findAllByIdAndTenderInfo(tenderApplicantIds, tenderInfo);
+        List<TenderApplicants> tenderApplicants = tenderApplicantsDao.findAllByTenderInfoAndIdIn(tenderInfo, tenderApplicantIds);
 
         if (tenderApplicants.size() != tenderApplicantIds.size()) {
             String tenderAppIds = tenderApplicants.stream()
@@ -156,7 +156,7 @@ public class TenderApplicantsService {
 
     public List<ApplicationForm> validateApplicationForm(List<Integer> applicationFormIds, TenderInfo tenderInfo) {
         String tenderId = tenderInfo.getId();
-        List<ApplicationForm> applicationForms = applicationFormDao.findAllByIdAndTenderInfo(applicationFormIds, tenderInfo);
+        List<ApplicationForm> applicationForms = applicationFormDao.findAllByTenderInfoAndIdIn(tenderInfo, applicationFormIds);
         if (applicationForms.size() != applicationFormIds.size()) {
             String appId = applicationForms.stream()
                     .map(ApplicationForm::getId)

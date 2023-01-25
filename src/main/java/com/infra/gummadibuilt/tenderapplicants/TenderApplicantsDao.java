@@ -6,12 +6,10 @@ import com.infra.gummadibuilt.tenderapplicants.model.dto.TenderApplicantsDashboa
 import com.infra.gummadibuilt.userandrole.model.ApplicationUser;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
-@Repository
 public interface TenderApplicantsDao extends JpaRepository<TenderApplicants, Integer> {
 
     @Query(value = "select ta.applicant_rank, ta.id, ta.application_status, ta.tender_info_id , ta.applicant_form_id, " +
@@ -26,5 +24,5 @@ public interface TenderApplicantsDao extends JpaRepository<TenderApplicants, Int
 
     Optional<TenderApplicants> findByApplicationUserAndTenderInfo(ApplicationUser applicationUser, TenderInfo tenderInfo);
 
-    List<TenderApplicants> findAllByIdAndTenderInfo(List<Integer> id, TenderInfo tenderInfo);
+    List<TenderApplicants> findAllByTenderInfoAndIdIn(TenderInfo tenderInfo, List<Integer> id);
 }
