@@ -31,6 +31,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.transaction.Transactional;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -82,109 +83,89 @@ public class TenderBidInfoService {
     @Transactional
     public TenderDetailsDto createTenderBidInfo(HttpServletRequest request,
                                                 String tenderId,
-                                                MultipartFile tenderDocument,
+                                                MultipartFile contractorDocument,
                                                 String financialBidInfo,
                                                 String actionTaken) throws JsonProcessingException {
         LoggedInUser loggedInUser = loggedInUserInfo(request);
         String userId = loggedInUser.getUserId();
         ApplicationUser applicationUser = getById(applicationUserDao, userId, USER_NOT_FOUND);
         TenderInfo tenderInfo = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
-        Optional<TenderApplicants> tenderApplicants = tenderApplicantsDao.findByApplicationUserAndTenderInfo(applicationUser, tenderInfo);
+        validateApplicantUserQualification(applicationUser, tenderInfo);
 
-        if (tenderApplicants.isPresent()) {
+        TenderBidInfo tenderBidInfo = new TenderBidInfo();
 
-            if (tenderApplicants.get().getApplicationStatus() == ApplicationStatus.QUALIFIED) {
-
-                TenderBidInfo tenderBidInfo = new TenderBidInfo();
-
-                JsonNode financialInfo = mapper.readTree(financialBidInfo);
+        JsonNode financialInfo = mapper.readTree(financialBidInfo);
 
 
-                FileUtils.checkFileValidOrNot(tenderDocument);
-                String filePath = getFilePath(tenderInfo, loggedInUser);
-                String response = amazonFileService.uploadFile(filePath, metaData(tenderInfo), tenderDocument);
-                logger.info(String.format("File upload success, generated ETAG %s", response));
+        FileUtils.checkFileValidOrNot(contractorDocument);
+        String filePath = getFilePath(tenderInfo, loggedInUser);
+        String response = amazonFileService.uploadFile(filePath, metaData(tenderInfo), contractorDocument);
+        logger.info(String.format("File upload success, generated ETAG %s", response));
 
-                ActionTaken taken = actionTaken.equals(ActionTaken.DRAFT.getText())? ActionTaken.DRAFT: ActionTaken.SUBMIT;
+        ActionTaken taken = actionTaken.equals(ActionTaken.DRAFT.getText()) ? ActionTaken.DRAFT : ActionTaken.SUBMIT;
 
-                tenderBidInfo.setApplicationUser(applicationUser);
-                tenderBidInfo.setTenderInfo(tenderInfo);
-                tenderBidInfo.setTenderFinanceInfo(financialInfo);
-                tenderBidInfo.setTenderDocumentName(tenderDocument.getOriginalFilename());
-                tenderBidInfo.setTenderDocumentSize(tenderDocument.getSize());
-                tenderBidInfo.setActionTaken(taken);
-                tenderBidInfo.setChangeTracking(new ChangeTracking(loggedInUser.toString()));
+        tenderBidInfo.setApplicationUser(applicationUser);
+        tenderBidInfo.setTenderInfo(tenderInfo);
+        tenderBidInfo.setTenderFinanceInfo(financialInfo);
+        tenderBidInfo.setTenderDocumentName(contractorDocument.getOriginalFilename());
+        tenderBidInfo.setTenderDocumentSize(contractorDocument.getSize());
+        tenderBidInfo.setActionTaken(taken);
+        tenderBidInfo.setChangeTracking(new ChangeTracking(loggedInUser.toString()));
 
-                SaveEntityConstraintHelper.save(tenderBidInfoDao, tenderBidInfo, CONSTRAINT_MAPPING);
+        SaveEntityConstraintHelper.save(tenderBidInfoDao, tenderBidInfo, CONSTRAINT_MAPPING);
 
-                TenderDetailsDto dto = TenderDetailsDto.valueOf(tenderInfo, true);
-                dto.setTenderDocumentName(tenderBidInfo.getTenderDocumentName());
-                dto.setTenderFinanceInfo(financialInfo);
-                return dto;
-            } else {
-                throw new InvalidActionException(String.format("You are not qualified to bid for this tender %s", tenderId));
-            }
-        } else {
-            throw new InvalidActionException(String.format("You cannot create tender bid for tender %s", tenderId));
-        }
+        TenderDetailsDto dto = TenderDetailsDto.valueOf(tenderInfo, true);
+        dto.setContractorDocumentName(tenderBidInfo.getTenderDocumentName());
+        dto.setTenderFinanceInfo(financialInfo);
+        dto.setContactorDocumentSize(tenderBidInfo.getTenderDocumentSize());
+        return dto;
+
     }
 
     @Transactional
     public TenderDetailsDto updateTenderBidInfo(HttpServletRequest request,
                                                 String tenderId,
                                                 String bidInfoId,
-                                                MultipartFile tenderDocument,
+                                                MultipartFile contractorDocument,
                                                 String financialBidInfo,
                                                 ActionTaken actionTaken) throws JsonProcessingException {
         LoggedInUser loggedInUser = loggedInUserInfo(request);
         int bidId = Integer.parseInt(bidInfoId);
         String userId = loggedInUser.getUserId();
         ApplicationUser applicationUser = getById(applicationUserDao, userId, USER_NOT_FOUND);
-
         TenderInfo tenderInfo = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
-        Optional<TenderApplicants> tenderApplicants = tenderApplicantsDao.findByApplicationUserAndTenderInfo(applicationUser, tenderInfo);
-
-        if (tenderApplicants.isPresent()) {
-
-            if (tenderApplicants.get().getApplicationStatus() == ApplicationStatus.QUALIFIED) {
-
-                TenderBidInfo bidInfo = getById(tenderBidInfoDao, bidId, TENDER_BID_NOT_FOUND);
-                if (bidInfo.getActionTaken() == ActionTaken.SUBMIT) {
-                    throw new InvalidActionException(
-                            String.format("Your bid for tender %s is already submitted", bidInfo.getTenderInfo().getId())
-                    );
-                }
-
-
-                JsonNode financialInfo = mapper.readTree(financialBidInfo);
-                bidInfo.setTenderFinanceInfo(financialInfo);
-                bidInfo.setChangeTracking(new ChangeTracking(loggedInUser.toString()));
-
-                if (!tenderDocument.isEmpty()) {
-                    FileUtils.checkFileValidOrNot(tenderDocument);
-                    String filePath = getFilePath(tenderInfo, loggedInUser);
-                    amazonFileService.deleteFile(filePath, bidInfo.getTenderDocumentName());
-                    String response = amazonFileService.uploadFile(filePath, metaData(tenderInfo), tenderDocument);
-                    logger.info(String.format("File upload success, generated ETAG %s", response));
-                    tenderInfo.setTenderDocumentName(tenderDocument.getOriginalFilename());
-                    tenderInfo.setTenderDocumentSize(tenderDocument.getSize());
-                    bidInfo.setTenderDocumentName(tenderDocument.getOriginalFilename());
-                    bidInfo.setTenderDocumentSize(tenderDocument.getSize());
-                }
-                bidInfo.setActionTaken(actionTaken);
-
-                SaveEntityConstraintHelper.save(tenderBidInfoDao, bidInfo, CONSTRAINT_MAPPING);
-
-                TenderDetailsDto dto = TenderDetailsDto.valueOf(tenderInfo, true);
-                dto.setTenderDocumentName(bidInfo.getTenderDocumentName());
-                dto.setTenderFinanceInfo(financialInfo);
-                return dto;
-            } else {
-                throw new InvalidActionException(String.format("You are not qualified to bid for this tender %s", tenderId));
-            }
-        } else {
-            throw new InvalidActionException(String.format("You cannot create tender bid for tender %s", tenderId));
+        validateApplicantUserQualification(applicationUser, tenderInfo);
+        TenderBidInfo bidInfo = getById(tenderBidInfoDao, bidId, TENDER_BID_NOT_FOUND);
+        if (bidInfo.getActionTaken() == ActionTaken.SUBMIT) {
+            throw new InvalidActionException(
+                    String.format("Your bid for tender %s is already submitted", bidInfo.getTenderInfo().getId())
+            );
         }
+        validateBidTender(tenderInfo, bidInfo);
+        validateBidUserAndLoggedInUser(bidInfo, loggedInUser);
+
+        JsonNode financialInfo = mapper.readTree(financialBidInfo);
+        bidInfo.setTenderFinanceInfo(financialInfo);
+        bidInfo.getChangeTracking().update(loggedInUser.toString());
+
+        if (!contractorDocument.isEmpty()) {
+            FileUtils.checkFileValidOrNot(contractorDocument);
+            String filePath = getFilePath(tenderInfo, loggedInUser);
+            amazonFileService.deleteFile(filePath, bidInfo.getTenderDocumentName());
+            String response = amazonFileService.uploadFile(filePath, metaData(tenderInfo), contractorDocument);
+            logger.info(String.format("File upload success, generated ETAG %s", response));
+            bidInfo.setTenderDocumentName(contractorDocument.getOriginalFilename());
+            bidInfo.setTenderDocumentSize(contractorDocument.getSize());
+        }
+        bidInfo.setActionTaken(actionTaken);
+
+        SaveEntityConstraintHelper.save(tenderBidInfoDao, bidInfo, CONSTRAINT_MAPPING);
+
+        TenderDetailsDto dto = TenderDetailsDto.valueOf(tenderInfo, true);
+        dto.setContractorDocumentName(bidInfo.getTenderDocumentName());
+        dto.setTenderFinanceInfo(financialInfo);
+        dto.setContactorDocumentSize(bidInfo.getTenderDocumentSize());
+        return dto;
     }
 
     private Map<String, String> metaData(TenderInfo tenderInfo) {
@@ -193,6 +174,38 @@ public class TenderBidInfoService {
         metaData.put("TypeOfContract", tenderInfo.getTypeOfContract().getTypeOfContract());
 
         return metaData;
+    }
+
+    private void validateApplicantUserQualification(ApplicationUser applicationUser, TenderInfo tenderInfo) {
+        String tenderId = tenderInfo.getId();
+        Optional<TenderApplicants> tenderApplicants = tenderApplicantsDao.findByApplicationUserAndTenderInfo(applicationUser, tenderInfo);
+        if (tenderApplicants.isPresent()) {
+            if (tenderApplicants.get().getApplicationStatus() != ApplicationStatus.QUALIFIED) {
+                throw new InvalidActionException(String.format("You are not qualified to bid for this tender %s", tenderId));
+            }
+        } else {
+            throw new InvalidActionException(String.format("You cannot create tender bid for tender %s", tenderId));
+        }
+    }
+
+    private void validateBidTender(TenderInfo tenderInfo, TenderBidInfo tenderBidInfo) {
+        String tenderBidId = tenderBidInfo.getTenderInfo().getId();
+        String tenderId = tenderInfo.getId();
+        if (!Objects.equals(tenderBidId, tenderId)) {
+            throw new InvalidActionException(
+                    String.format("Tender & Bid Doesnt have the same tender-id %s %s", tenderId, tenderBidId)
+            );
+        }
+    }
+
+    private void validateBidUserAndLoggedInUser(TenderBidInfo tenderBidInfo, LoggedInUser loggedInUser) {
+        String tenderBidUser = tenderBidInfo.getApplicationUser().getId();
+        String userId = loggedInUser.getUserId();
+        if (!Objects.equals(tenderBidUser, userId)) {
+            throw new InvalidActionException(
+                    String.format("You cannot access tender %s, as this doesnt belong to you", tenderBidInfo.getTenderInfo().getId())
+            );
+        }
     }
 
     private String getFilePath(TenderInfo tenderInfo, LoggedInUser loggedInUser) {

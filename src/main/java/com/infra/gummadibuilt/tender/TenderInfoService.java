@@ -24,6 +24,8 @@ import com.infra.gummadibuilt.tenderapplicants.model.TenderApplicants;
 import com.infra.gummadibuilt.tenderapplicants.model.dto.ApplicationStatus;
 import com.infra.gummadibuilt.tenderapplicationform.ApplicationFormDao;
 import com.infra.gummadibuilt.tenderapplicationform.model.ApplicationForm;
+import com.infra.gummadibuilt.tenderbidinfo.TenderBidInfoDao;
+import com.infra.gummadibuilt.tenderbidinfo.model.TenderBidInfo;
 import com.infra.gummadibuilt.userandrole.ApplicationUserDao;
 import com.infra.gummadibuilt.userandrole.model.ApplicationUser;
 import org.slf4j.Logger;
@@ -62,6 +64,7 @@ public class TenderInfoService {
 
     private final ApplicationFormDao applicationFormDao;
     private final TenderApplicantsDao tenderApplicantsDao;
+    private final TenderBidInfoDao tenderBidInfoDao;
 
     public TenderInfoService(ObjectMapper mapper,
                              Validator validator,
@@ -71,7 +74,8 @@ public class TenderInfoService {
                              ApplicationUserDao applicationUserDao,
                              TypeOfEstablishmentDao typeOfEstablishmentDao,
                              ApplicationFormDao applicationFormDao,
-                             TenderApplicantsDao tenderApplicantsDao) {
+                             TenderApplicantsDao tenderApplicantsDao,
+                             TenderBidInfoDao tenderBidInfoDao) {
         this.mapper = mapper;
         this.validator = validator;
         this.typeOfContractDao = typeOfContractDao;
@@ -81,6 +85,7 @@ public class TenderInfoService {
         this.typeOfEstablishmentDao = typeOfEstablishmentDao;
         this.applicationFormDao = applicationFormDao;
         this.tenderApplicantsDao = tenderApplicantsDao;
+        this.tenderBidInfoDao = tenderBidInfoDao;
     }
 
     @Transactional
@@ -215,6 +220,15 @@ public class TenderInfoService {
                 dto.setApplicationFormId(form.getId());
                 dto.setApplicationFormStatus(form.getActionTaken());
             });
+
+            if (showBidInfo) {
+                Optional<TenderBidInfo> tenderBidInfo = tenderBidInfoDao.findByTenderInfoAndApplicationUser(tenderInfo, applicationUser);
+                if (tenderBidInfo.isPresent()) {
+                    dto.setContactorDocumentSize(tenderBidInfo.get().getTenderDocumentSize());
+                    dto.setContractorDocumentName(tenderBidInfo.get().getTenderDocumentName());
+                    dto.setTenderFinanceInfo(tenderBidInfo.get().getTenderFinanceInfo());
+                }
+            }
             return dto;
         } else if (request.isUserInRole("client") && Objects.equals(tenderInfo.getApplicationUser().getId(), loggedInUser.getUserId())) {
             return TenderDetailsDto.valueOf(tenderInfo, true);

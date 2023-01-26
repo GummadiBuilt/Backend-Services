@@ -46,10 +46,10 @@ public class TenderBidInfoController {
     @PostMapping
     public TenderDetailsDto createTenderBidInfo(@Valid HttpServletRequest request,
                                                 @PathVariable("tenderId") @NotBlank String tenderId,
-                                                @RequestPart("tenderDocument") @NotNull MultipartFile tenderDocument,
+                                                @RequestPart("contractorDocument") @NotNull MultipartFile contractorDocument,
                                                 @RequestPart("financialBid") @NotBlank String financialBid,
                                                 @RequestPart("actionTaken") @NotNull String actionTaken) throws JsonProcessingException {
-        return tenderBidInfoService.createTenderBidInfo(request, tenderId, tenderDocument, financialBid, actionTaken);
+        return tenderBidInfoService.createTenderBidInfo(request, tenderId, contractorDocument, financialBid, actionTaken);
     }
 
     @ApiResponses(value = {
@@ -66,10 +66,10 @@ public class TenderBidInfoController {
     public TenderDetailsDto updateTenderBidInfo(@Valid HttpServletRequest request,
                                                 @PathVariable("tenderId") @NotBlank String tenderId,
                                                 @PathVariable("bidInfoId") @NotBlank String bidInfoId,
-                                                @RequestPart("tenderDocument") @NotNull MultipartFile tenderDocument,
+                                                @RequestPart("contractorDocument") @NotNull MultipartFile contractorDocument,
                                                 @RequestPart("financialBid") @NotBlank String financialBid,
                                                 @RequestPart @NotNull ActionTaken actionTaken) throws JsonProcessingException {
-        return tenderBidInfoService.updateTenderBidInfo(request, tenderId, bidInfoId, tenderDocument, financialBid, actionTaken);
+        return tenderBidInfoService.updateTenderBidInfo(request, tenderId, bidInfoId, contractorDocument, financialBid, actionTaken);
     }
 
 }

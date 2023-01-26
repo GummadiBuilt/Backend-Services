@@ -77,6 +77,10 @@ public class TenderDetailsDto implements Serializable {
 
     private ChangeTracking changeTracking;
 
+    private String contractorDocumentName;
+
+    private long contactorDocumentSize;
+
     public static TenderDetailsDto valueOf(TenderInfo tenderInfo, boolean showBidInfo) {
         TenderDetailsDto result = new TenderDetailsDto();
         result.setTenderId(tenderInfo.getId());
