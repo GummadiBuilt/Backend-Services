@@ -40,26 +40,31 @@ public class UpdateTenderStatus {
                 item -> {
                     String tenderId = item.getId();
                     logger.info(String.format("Processing tender %s", tenderId));
-                    logger.info(String.format("Tender %s has last date of submission %s", tenderId, item.getLastDateOfSubmission().toString()));
-                    if (item.getLastDateOfSubmission().isBefore(localDate)) {
-                        logger.info(String.format("Updated tender %s to in review status", tenderId));
-                        item.setWorkflowStep(WorkflowStep.IN_REVIEW);
-                    } else {
-                        logger.info(String.format("Skipping Tender %s", tenderId));
-                    }
 
-                    if (item.getFormHeader() != null && item.getWorkflowStep() != WorkflowStep.IN_REVIEW) {
-                        logger.info(String.format("Processing tender %s for PQ", tenderId));
-                        LocalDate pqSubmissionDate = item.getFormHeader().getPqLastDateOfSubmission();
-                        logger.info(String.format("Tender %s has PQ submission data as %s", tenderId, pqSubmissionDate.toString()));
-                        if (pqSubmissionDate.isBefore(localDate)) {
-                            logger.info(String.format("Updated tender %s to under process status", tenderId));
-                            item.setWorkflowStep(WorkflowStep.UNDER_PROCESS);
+                    if (item.getWorkflowStep() == WorkflowStep.QUALIFIED) {
+                        logger.info(String.format("Tender %s has last date of submission %s", tenderId, item.getLastDateOfSubmission().toString()));
+                        if (item.getLastDateOfSubmission().isBefore(localDate)) {
+                            logger.info(String.format("Updated tender %s to in review status", tenderId));
+                            item.setWorkflowStep(WorkflowStep.IN_REVIEW);
                         } else {
                             logger.info(String.format("Skipping Tender %s", tenderId));
                         }
-                    } else {
-                        logger.error(String.format("Tender %s has no PQ Form but with status published", tenderId));
+                    }
+
+                    if (item.getWorkflowStep() == WorkflowStep.PUBLISHED) {
+                        if (item.getFormHeader() != null) {
+                            logger.info(String.format("Processing tender %s for PQ", tenderId));
+                            LocalDate pqSubmissionDate = item.getFormHeader().getPqLastDateOfSubmission();
+                            logger.info(String.format("Tender %s has PQ submission data as %s", tenderId, pqSubmissionDate.toString()));
+                            if (pqSubmissionDate.isBefore(localDate)) {
+                                logger.info(String.format("Updated tender %s to under process status", tenderId));
+                                item.setWorkflowStep(WorkflowStep.UNDER_PROCESS);
+                            } else {
+                                logger.info(String.format("Skipping Tender %s", tenderId));
+                            }
+                        } else {
+                            logger.error(String.format("Tender %s has no PQ Form but with status published", tenderId));
+                        }
                     }
                 }
         ).collect(Collectors.toList());
