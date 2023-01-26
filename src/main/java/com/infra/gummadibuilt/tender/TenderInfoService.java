@@ -224,7 +224,7 @@ public class TenderInfoService {
             if (showBidInfo) {
                 Optional<TenderBidInfo> tenderBidInfo = tenderBidInfoDao.findByTenderInfoAndApplicationUser(tenderInfo, applicationUser);
                 if (tenderBidInfo.isPresent()) {
-                    dto.setContactorDocumentSize(tenderBidInfo.get().getTenderDocumentSize());
+                    dto.setContractorDocumentSize(tenderBidInfo.get().getTenderDocumentSize());
                     dto.setContractorDocumentName(tenderBidInfo.get().getTenderDocumentName());
                     dto.setTenderFinanceInfo(tenderBidInfo.get().getTenderFinanceInfo());
                 }

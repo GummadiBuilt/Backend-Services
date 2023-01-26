@@ -4,7 +4,10 @@ import com.infra.gummadibuilt.common.exception.EntityNotFoundException;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.util.Optional;
+
+import static java.time.temporal.ChronoUnit.DAYS;
 
 @Component
 public class CommonModuleUtils {
@@ -52,6 +55,11 @@ public class CommonModuleUtils {
 
         Optional<T> optionalValue = repository.findById(id);
         return optionalValue.orElse(null);
+    }
+
+    public static long dayDiff(LocalDate lastDateOfSubmission) {
+        LocalDate today = LocalDate.now();
+        return DAYS.between(today, lastDateOfSubmission);
     }
 
 }

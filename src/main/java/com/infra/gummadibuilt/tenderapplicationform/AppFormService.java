@@ -318,8 +318,5 @@ public class AppFormService {
         }
     }
 
-    private long dayDiff(LocalDate lastDateOfSubmission) {
-        LocalDate today = LocalDate.now();
-        return DAYS.between(today, lastDateOfSubmission);
-    }
+
 }

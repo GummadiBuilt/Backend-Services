@@ -10,7 +10,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,7 +31,8 @@ public class UpdateTenderStatus {
         logger.info("Started Update Tender Status job");
 
         LocalDate localDate = LocalDate.now();
-        List<TenderInfo> tenderInfo = tenderInfoDao.findAllByWorkflowStepIn(Collections.singletonList(WorkflowStep.PUBLISHED));
+        List<WorkflowStep> workflowSteps = Arrays.asList(WorkflowStep.PUBLISHED, WorkflowStep.QUALIFIED);
+        List<TenderInfo> tenderInfo = tenderInfoDao.findAllByWorkflowStepIn(workflowSteps);
 
         logger.info(String.format("%d tenders in Published state", tenderInfo.size()));
 
@@ -39,14 +40,23 @@ public class UpdateTenderStatus {
                 item -> {
                     String tenderId = item.getId();
                     logger.info(String.format("Processing tender %s", tenderId));
-                    if (item.getFormHeader() != null) {
+                    logger.info(String.format("Tender %s has last date of submission %s", tenderId, item.getLastDateOfSubmission().toString()));
+                    if (item.getLastDateOfSubmission().isBefore(localDate)) {
+                        logger.info(String.format("Updated tender %s to in review status", tenderId));
+                        item.setWorkflowStep(WorkflowStep.IN_REVIEW);
+                    } else {
+                        logger.info(String.format("Skipping Tender %s", tenderId));
+                    }
+
+                    if (item.getFormHeader() != null && item.getWorkflowStep() != WorkflowStep.IN_REVIEW) {
+                        logger.info(String.format("Processing tender %s for PQ", tenderId));
                         LocalDate pqSubmissionDate = item.getFormHeader().getPqLastDateOfSubmission();
                         logger.info(String.format("Tender %s has PQ submission data as %s", tenderId, pqSubmissionDate.toString()));
                         if (pqSubmissionDate.isBefore(localDate)) {
                             logger.info(String.format("Updated tender %s to under process status", tenderId));
                             item.setWorkflowStep(WorkflowStep.UNDER_PROCESS);
                         } else {
-                            logger.info(String.format("Skipping Tender %s ", tenderId, pqSubmissionDate.toString()));
+                            logger.info(String.format("Skipping Tender %s", tenderId));
                         }
                     } else {
                         logger.error(String.format("Tender %s has no PQ Form but with status published", tenderId));

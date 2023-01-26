@@ -79,7 +79,9 @@ public class TenderDetailsDto implements Serializable {
 
     private String contractorDocumentName;
 
-    private long contactorDocumentSize;
+    private long contractorDocumentSize;
+
+    private int contractorBidId;
 
     public static TenderDetailsDto valueOf(TenderInfo tenderInfo, boolean showBidInfo) {
         TenderDetailsDto result = new TenderDetailsDto();

@@ -91,11 +91,10 @@ public class TenderBidInfoService {
         ApplicationUser applicationUser = getById(applicationUserDao, userId, USER_NOT_FOUND);
         TenderInfo tenderInfo = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
         validateApplicantUserQualification(applicationUser, tenderInfo);
+        validateTenderLastDate(tenderInfo);
 
         TenderBidInfo tenderBidInfo = new TenderBidInfo();
-
         JsonNode financialInfo = mapper.readTree(financialBidInfo);
-
 
         FileUtils.checkFileValidOrNot(contractorDocument);
         String filePath = getFilePath(tenderInfo, loggedInUser);
@@ -117,7 +116,8 @@ public class TenderBidInfoService {
         TenderDetailsDto dto = TenderDetailsDto.valueOf(tenderInfo, true);
         dto.setContractorDocumentName(tenderBidInfo.getTenderDocumentName());
         dto.setTenderFinanceInfo(financialInfo);
-        dto.setContactorDocumentSize(tenderBidInfo.getTenderDocumentSize());
+        dto.setContractorDocumentSize(tenderBidInfo.getTenderDocumentSize());
+        dto.setContractorBidId(tenderBidInfo.getId());
         return dto;
 
     }
@@ -141,6 +141,7 @@ public class TenderBidInfoService {
                     String.format("Your bid for tender %s is already submitted", bidInfo.getTenderInfo().getId())
             );
         }
+        validateTenderLastDate(tenderInfo);
         validateBidTender(tenderInfo, bidInfo);
         validateBidUserAndLoggedInUser(bidInfo, loggedInUser);
 
@@ -164,7 +165,8 @@ public class TenderBidInfoService {
         TenderDetailsDto dto = TenderDetailsDto.valueOf(tenderInfo, true);
         dto.setContractorDocumentName(bidInfo.getTenderDocumentName());
         dto.setTenderFinanceInfo(financialInfo);
-        dto.setContactorDocumentSize(bidInfo.getTenderDocumentSize());
+        dto.setContractorDocumentSize(bidInfo.getTenderDocumentSize());
+        dto.setContractorBidId(bidInfo.getId());
         return dto;
     }
 
@@ -174,6 +176,14 @@ public class TenderBidInfoService {
         metaData.put("TypeOfContract", tenderInfo.getTypeOfContract().getTypeOfContract());
 
         return metaData;
+    }
+
+    private void validateTenderLastDate(TenderInfo tenderInfo) {
+        if (dayDiff(tenderInfo.getLastDateOfSubmission()) < 0) {
+            throw new InvalidActionException(
+                    String.format("Cannot apply to tender %s as the last date of submission is in past", tenderInfo.getId())
+            );
+        }
     }
 
     private void validateApplicantUserQualification(ApplicationUser applicationUser, TenderInfo tenderInfo) {
