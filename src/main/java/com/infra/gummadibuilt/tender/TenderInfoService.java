@@ -194,13 +194,14 @@ public class TenderInfoService {
         ) {
             List<String> workflowSteps = Arrays.asList(WorkflowStep.QUALIFIED.getText(), WorkflowStep.IN_REVIEW.getText());
             String appStatus = "";
-            boolean showBidInfo = true;
+            boolean showBidInfo = false;
             if (workflowSteps.contains(tenderInfo.getWorkflowStep().getText())) {
                 Optional<TenderApplicants> tenderApplicants = tenderApplicantsDao.findByApplicationUserAndTenderInfo(applicationUser, tenderInfo);
                 if (tenderApplicants.isPresent()) {
                     if (tenderApplicants.get().getApplicationStatus() == ApplicationStatus.NOT_QUALIFIED) {
-                        showBidInfo = false;
                         appStatus = "NOT_QUALIFIED";
+                    } else {
+                        showBidInfo = true;
                     }
                 }
             }

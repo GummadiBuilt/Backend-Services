@@ -50,6 +50,8 @@ public class TenderApplicants {
     @JoinColumn(name = "applicant_form_id")
     private ApplicationForm applicationForm;
 
+    private boolean isRecommended;
+
     @Embedded
     @NotNull
     @Valid

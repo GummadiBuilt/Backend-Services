@@ -1,0 +1,201 @@
+package com.infra.gummadibuilt.tenderbidinfo;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableMap;
+import com.infra.gummadibuilt.common.ChangeTracking;
+import com.infra.gummadibuilt.common.LoggedInUser;
+import com.infra.gummadibuilt.common.exception.InvalidActionException;
+import com.infra.gummadibuilt.common.file.AmazonFileService;
+import com.infra.gummadibuilt.common.util.FileUtils;
+import com.infra.gummadibuilt.common.util.SaveEntityConstraintHelper;
+import com.infra.gummadibuilt.tender.TenderInfoDao;
+import com.infra.gummadibuilt.tender.TypeOfContractDao;
+import com.infra.gummadibuilt.tender.model.TenderInfo;
+import com.infra.gummadibuilt.tender.model.dto.TenderDetailsDto;
+import com.infra.gummadibuilt.tenderapplicants.TenderApplicantsDao;
+import com.infra.gummadibuilt.tenderapplicants.model.TenderApplicants;
+import com.infra.gummadibuilt.tenderapplicants.model.dto.ApplicationStatus;
+import com.infra.gummadibuilt.tenderapplicationform.ApplicationFormDao;
+import com.infra.gummadibuilt.tenderapplicationform.model.dto.ActionTaken;
+import com.infra.gummadibuilt.tenderbidinfo.model.TenderBidInfo;
+import com.infra.gummadibuilt.userandrole.ApplicationUserDao;
+import com.infra.gummadibuilt.userandrole.model.ApplicationUser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.transaction.Transactional;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Supplier;
+
+import static com.infra.gummadibuilt.common.util.CommonModuleUtils.*;
+import static com.infra.gummadibuilt.common.util.UserInfo.loggedInUserInfo;
+
+@Service
+public class TenderBidInfoService {
+    private static final Logger logger = LoggerFactory.getLogger(TenderBidInfoService.class);
+
+    private static final Map<String, Supplier<? extends RuntimeException>> CONSTRAINT_MAPPING = ImmutableMap
+            .of(TenderBidInfo.UNQ_NAME_CONSTRAINT, TenderBidInfoAlreadyExists::new);
+
+
+    private final ObjectMapper mapper;
+
+    private final TenderApplicantsDao tenderApplicantsDao;
+
+    private final TypeOfContractDao typeOfContractDao;
+
+
+    private final TenderInfoDao tenderInfoDao;
+
+    private final AmazonFileService amazonFileService;
+
+    private final ApplicationUserDao applicationUserDao;
+
+    private final ApplicationFormDao applicationFormDao;
+    private final TenderBidInfoDao tenderBidInfoDao;
+
+    public TenderBidInfoService(ObjectMapper mapper,
+                                TenderBidInfoDao tenderBidInfoDao,
+                                TypeOfContractDao typeOfContractDao,
+                                TenderInfoDao tenderInfoDao,
+                                AmazonFileService amazonFileService,
+                                ApplicationUserDao applicationUserDao,
+                                ApplicationFormDao applicationFormDao,
+                                TenderApplicantsDao tenderApplicantsDao) {
+        this.mapper = mapper;
+        this.tenderBidInfoDao = tenderBidInfoDao;
+        this.typeOfContractDao = typeOfContractDao;
+        this.tenderInfoDao = tenderInfoDao;
+        this.amazonFileService = amazonFileService;
+        this.applicationUserDao = applicationUserDao;
+        this.applicationFormDao = applicationFormDao;
+        this.tenderApplicantsDao = tenderApplicantsDao;
+    }
+
+    @Transactional
+    public TenderDetailsDto createTenderBidInfo(HttpServletRequest request,
+                                                String tenderId,
+                                                MultipartFile tenderDocument,
+                                                String financialBidInfo,
+                                                String actionTaken) throws JsonProcessingException {
+        LoggedInUser loggedInUser = loggedInUserInfo(request);
+        String userId = loggedInUser.getUserId();
+        ApplicationUser applicationUser = getById(applicationUserDao, userId, USER_NOT_FOUND);
+        TenderInfo tenderInfo = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
+        Optional<TenderApplicants> tenderApplicants = tenderApplicantsDao.findByApplicationUserAndTenderInfo(applicationUser, tenderInfo);
+
+        if (tenderApplicants.isPresent()) {
+
+            if (tenderApplicants.get().getApplicationStatus() == ApplicationStatus.QUALIFIED) {
+
+                TenderBidInfo tenderBidInfo = new TenderBidInfo();
+
+                JsonNode financialInfo = mapper.readTree(financialBidInfo);
+
+
+                FileUtils.checkFileValidOrNot(tenderDocument);
+                String filePath = getFilePath(tenderInfo, loggedInUser);
+                String response = amazonFileService.uploadFile(filePath, metaData(tenderInfo), tenderDocument);
+                logger.info(String.format("File upload success, generated ETAG %s", response));
+
+                ActionTaken taken = actionTaken.equals(ActionTaken.DRAFT.getText())? ActionTaken.DRAFT: ActionTaken.SUBMIT;
+
+                tenderBidInfo.setApplicationUser(applicationUser);
+                tenderBidInfo.setTenderInfo(tenderInfo);
+                tenderBidInfo.setTenderFinanceInfo(financialInfo);
+                tenderBidInfo.setTenderDocumentName(tenderDocument.getOriginalFilename());
+                tenderBidInfo.setTenderDocumentSize(tenderDocument.getSize());
+                tenderBidInfo.setActionTaken(taken);
+                tenderBidInfo.setChangeTracking(new ChangeTracking(loggedInUser.toString()));
+
+                SaveEntityConstraintHelper.save(tenderBidInfoDao, tenderBidInfo, CONSTRAINT_MAPPING);
+
+                TenderDetailsDto dto = TenderDetailsDto.valueOf(tenderInfo, true);
+                dto.setTenderDocumentName(tenderBidInfo.getTenderDocumentName());
+                dto.setTenderFinanceInfo(financialInfo);
+                return dto;
+            } else {
+                throw new InvalidActionException(String.format("You are not qualified to bid for this tender %s", tenderId));
+            }
+        } else {
+            throw new InvalidActionException(String.format("You cannot create tender bid for tender %s", tenderId));
+        }
+    }
+
+    @Transactional
+    public TenderDetailsDto updateTenderBidInfo(HttpServletRequest request,
+                                                String tenderId,
+                                                String bidInfoId,
+                                                MultipartFile tenderDocument,
+                                                String financialBidInfo,
+                                                ActionTaken actionTaken) throws JsonProcessingException {
+        LoggedInUser loggedInUser = loggedInUserInfo(request);
+        int bidId = Integer.parseInt(bidInfoId);
+        String userId = loggedInUser.getUserId();
+        ApplicationUser applicationUser = getById(applicationUserDao, userId, USER_NOT_FOUND);
+
+        TenderInfo tenderInfo = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
+        Optional<TenderApplicants> tenderApplicants = tenderApplicantsDao.findByApplicationUserAndTenderInfo(applicationUser, tenderInfo);
+
+        if (tenderApplicants.isPresent()) {
+
+            if (tenderApplicants.get().getApplicationStatus() == ApplicationStatus.QUALIFIED) {
+
+                TenderBidInfo bidInfo = getById(tenderBidInfoDao, bidId, TENDER_BID_NOT_FOUND);
+                if (bidInfo.getActionTaken() == ActionTaken.SUBMIT) {
+                    throw new InvalidActionException(
+                            String.format("Your bid for tender %s is already submitted", bidInfo.getTenderInfo().getId())
+                    );
+                }
+
+
+                JsonNode financialInfo = mapper.readTree(financialBidInfo);
+                bidInfo.setTenderFinanceInfo(financialInfo);
+                bidInfo.setChangeTracking(new ChangeTracking(loggedInUser.toString()));
+
+                if (!tenderDocument.isEmpty()) {
+                    FileUtils.checkFileValidOrNot(tenderDocument);
+                    String filePath = getFilePath(tenderInfo, loggedInUser);
+                    amazonFileService.deleteFile(filePath, bidInfo.getTenderDocumentName());
+                    String response = amazonFileService.uploadFile(filePath, metaData(tenderInfo), tenderDocument);
+                    logger.info(String.format("File upload success, generated ETAG %s", response));
+                    tenderInfo.setTenderDocumentName(tenderDocument.getOriginalFilename());
+                    tenderInfo.setTenderDocumentSize(tenderDocument.getSize());
+                    bidInfo.setTenderDocumentName(tenderDocument.getOriginalFilename());
+                    bidInfo.setTenderDocumentSize(tenderDocument.getSize());
+                }
+                bidInfo.setActionTaken(actionTaken);
+
+                SaveEntityConstraintHelper.save(tenderBidInfoDao, bidInfo, CONSTRAINT_MAPPING);
+
+                TenderDetailsDto dto = TenderDetailsDto.valueOf(tenderInfo, true);
+                dto.setTenderDocumentName(bidInfo.getTenderDocumentName());
+                dto.setTenderFinanceInfo(financialInfo);
+                return dto;
+            } else {
+                throw new InvalidActionException(String.format("You are not qualified to bid for this tender %s", tenderId));
+            }
+        } else {
+            throw new InvalidActionException(String.format("You cannot create tender bid for tender %s", tenderId));
+        }
+    }
+
+    private Map<String, String> metaData(TenderInfo tenderInfo) {
+        Map<String, String> metaData = new HashMap<>();
+        metaData.put("TenderID", tenderInfo.getId());
+        metaData.put("TypeOfContract", tenderInfo.getTypeOfContract().getTypeOfContract());
+
+        return metaData;
+    }
+
+    private String getFilePath(TenderInfo tenderInfo, LoggedInUser loggedInUser) {
+        return String.format("%s/%s/%s", tenderInfo.getId(), loggedInUser.getUserId(), "FINANCIAL_BID");
+    }
+}

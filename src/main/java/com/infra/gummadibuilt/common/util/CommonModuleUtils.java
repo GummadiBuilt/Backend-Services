@@ -26,6 +26,7 @@ public class CommonModuleUtils {
     public static final String USER_NOT_FOUND = "Couldn't find user with id %s";
     public static final String APPLICATION_FORM_NOT_FOUND = "Couldn't find application with id %d";
     public static final String APPLICANT_NOT_FOUND = "Couldn't find applicant with id %d";
+    public static final String TENDER_BID_NOT_FOUND = "Couldn't find tender bid with id %d";
 
     public static <T> T getById(JpaRepository<T, Integer> repository, int id, String exceptionMessage) {
 
