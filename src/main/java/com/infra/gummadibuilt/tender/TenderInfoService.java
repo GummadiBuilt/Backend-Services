@@ -228,6 +228,7 @@ public class TenderInfoService {
                     dto.setContractorDocumentName(tenderBidInfo.get().getTenderDocumentName());
                     dto.setTenderFinanceInfo(tenderBidInfo.get().getTenderFinanceInfo());
                     dto.setContractorActionTaken(tenderBidInfo.get().getActionTaken());
+                    dto.setContractorBidId(tenderBidInfo.get().getId());
                 }
             }
             return dto;
