@@ -48,7 +48,7 @@ public class TenderBidInfoController {
                                                 @PathVariable("tenderId") @NotBlank String tenderId,
                                                 @RequestPart("contractorDocument") @NotNull MultipartFile contractorDocument,
                                                 @RequestPart("financialBid") @NotBlank String financialBid,
-                                                @RequestPart("actionTaken") @NotNull String actionTaken) throws JsonProcessingException {
+                                                @RequestPart("actionTaken") @NotBlank String actionTaken) throws JsonProcessingException {
         return tenderBidInfoService.createTenderBidInfo(request, tenderId, contractorDocument, financialBid, actionTaken);
     }
 
@@ -68,7 +68,7 @@ public class TenderBidInfoController {
                                                 @PathVariable("bidInfoId") @NotBlank String bidInfoId,
                                                 @RequestPart("contractorDocument") @NotNull MultipartFile contractorDocument,
                                                 @RequestPart("financialBid") @NotBlank String financialBid,
-                                                @RequestPart @NotNull ActionTaken actionTaken) throws JsonProcessingException {
+                                                @RequestPart @NotBlank String actionTaken) throws JsonProcessingException {
         return tenderBidInfoService.updateTenderBidInfo(request, tenderId, bidInfoId, contractorDocument, financialBid, actionTaken);
     }
 

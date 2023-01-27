@@ -101,7 +101,7 @@ public class TenderBidInfoService {
         String response = amazonFileService.uploadFile(filePath, metaData(tenderInfo), contractorDocument);
         logger.info(String.format("File upload success, generated ETAG %s", response));
 
-        ActionTaken taken = actionTaken.equals(ActionTaken.DRAFT.getText()) ? ActionTaken.DRAFT : ActionTaken.SUBMIT;
+        ActionTaken taken = actionTaken.equalsIgnoreCase(ActionTaken.DRAFT.getText()) ? ActionTaken.DRAFT : ActionTaken.SUBMIT;
 
         tenderBidInfo.setApplicationUser(applicationUser);
         tenderBidInfo.setTenderInfo(tenderInfo);
@@ -128,7 +128,7 @@ public class TenderBidInfoService {
                                                 String bidInfoId,
                                                 MultipartFile contractorDocument,
                                                 String financialBidInfo,
-                                                ActionTaken actionTaken) throws JsonProcessingException {
+                                                String actionTaken) throws JsonProcessingException {
         LoggedInUser loggedInUser = loggedInUserInfo(request);
         int bidId = Integer.parseInt(bidInfoId);
         String userId = loggedInUser.getUserId();
@@ -158,7 +158,9 @@ public class TenderBidInfoService {
             bidInfo.setTenderDocumentName(contractorDocument.getOriginalFilename());
             bidInfo.setTenderDocumentSize(contractorDocument.getSize());
         }
-        bidInfo.setActionTaken(actionTaken);
+
+        ActionTaken taken = actionTaken.equalsIgnoreCase(ActionTaken.DRAFT.getText()) ? ActionTaken.DRAFT : ActionTaken.SUBMIT;
+        bidInfo.setActionTaken(taken);
 
         SaveEntityConstraintHelper.save(tenderBidInfoDao, bidInfo, CONSTRAINT_MAPPING);
 
