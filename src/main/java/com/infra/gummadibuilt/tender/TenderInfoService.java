@@ -227,6 +227,7 @@ public class TenderInfoService {
                     dto.setContractorDocumentSize(tenderBidInfo.get().getTenderDocumentSize());
                     dto.setContractorDocumentName(tenderBidInfo.get().getTenderDocumentName());
                     dto.setTenderFinanceInfo(tenderBidInfo.get().getTenderFinanceInfo());
+                    dto.setContractorBidId(tenderBidInfo.get().getId());
                 }
             }
             return dto;
