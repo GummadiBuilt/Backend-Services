@@ -1,6 +1,6 @@
 package com.infra.gummadibuilt.tenderapplicants.model.dto;
 
-import software.amazon.awssdk.services.s3.endpoints.internal.Value;
+import com.fasterxml.jackson.databind.JsonNode;
 
 public interface TenderApplicantsDashboardDto {
 
@@ -25,4 +25,10 @@ public interface TenderApplicantsDashboardDto {
     String getModified_date();
 
     String getWorkflow_step();
+
+    String getTender_document();
+
+    int getTender_document_size();
+
+    String getTender_finance_info();
 }

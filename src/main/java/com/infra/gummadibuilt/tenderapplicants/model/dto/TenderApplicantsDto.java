@@ -1,5 +1,8 @@
 package com.infra.gummadibuilt.tenderapplicants.model.dto;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
 
 import javax.persistence.EnumType;
@@ -33,6 +36,12 @@ public class TenderApplicantsDto {
 
     private String tenderStatus;
 
+    private String tenderDocument;
+
+    private int tenderDocumentSize;
+
+    private JsonNode tenderFinanceInfo;
+
     public static TenderApplicantsDto valueOf(TenderApplicantsDashboardDto dashboardDto) {
         TenderApplicantsDto tenderApplicantsDto = new TenderApplicantsDto();
 
@@ -45,6 +54,14 @@ public class TenderApplicantsDto {
         tenderApplicantsDto.setCompanyName(dashboardDto.getCompany_name());
         tenderApplicantsDto.setTenderId(dashboardDto.getTender_info_id());
         tenderApplicantsDto.setTenderStatus(dashboardDto.getWorkflow_step());
+        tenderApplicantsDto.setTenderDocument(dashboardDto.getTender_document());
+        tenderApplicantsDto.setTenderDocumentSize(dashboardDto.getTender_document_size());
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            tenderApplicantsDto.setTenderFinanceInfo(mapper.readTree(dashboardDto.getTender_finance_info()));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
 
         return tenderApplicantsDto;
 

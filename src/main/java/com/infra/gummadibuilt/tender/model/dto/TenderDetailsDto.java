@@ -83,6 +83,8 @@ public class TenderDetailsDto implements Serializable {
 
     private int contractorBidId;
 
+    private ActionTaken contractorActionTaken;
+
     public static TenderDetailsDto valueOf(TenderInfo tenderInfo, boolean showBidInfo) {
         TenderDetailsDto result = new TenderDetailsDto();
         result.setTenderId(tenderInfo.getId());

@@ -1,5 +1,6 @@
 package com.infra.gummadibuilt.scheduler;
 
+import com.infra.gummadibuilt.common.exception.InvalidActionException;
 import com.infra.gummadibuilt.common.util.SaveEntityConstraintHelper;
 import com.infra.gummadibuilt.tender.TenderInfoDao;
 import com.infra.gummadibuilt.tender.model.TenderInfo;
@@ -41,31 +42,39 @@ public class UpdateTenderStatus {
                     String tenderId = item.getId();
                     logger.info(String.format("Processing tender %s", tenderId));
 
-                    if (item.getWorkflowStep() == WorkflowStep.QUALIFIED) {
-                        logger.info(String.format("Tender %s has last date of submission %s", tenderId, item.getLastDateOfSubmission().toString()));
-                        if (item.getLastDateOfSubmission().isBefore(localDate)) {
-                            logger.info(String.format("Updated tender %s to in review status", tenderId));
-                            item.setWorkflowStep(WorkflowStep.IN_REVIEW);
-                        } else {
-                            logger.info(String.format("Skipping Tender %s", tenderId));
-                        }
-                    }
+                    String workflowStep = item.getWorkflowStep().getText().toUpperCase();
 
-                    if (item.getWorkflowStep() == WorkflowStep.PUBLISHED) {
-                        if (item.getFormHeader() != null) {
-                            logger.info(String.format("Processing tender %s for PQ", tenderId));
-                            LocalDate pqSubmissionDate = item.getFormHeader().getPqLastDateOfSubmission();
-                            logger.info(String.format("Tender %s has PQ submission data as %s", tenderId, pqSubmissionDate.toString()));
-                            if (pqSubmissionDate.isBefore(localDate)) {
-                                logger.info(String.format("Updated tender %s to under process status", tenderId));
-                                item.setWorkflowStep(WorkflowStep.UNDER_PROCESS);
+                    switch (workflowStep) {
+                        case "QUALIFIED":
+                            logger.info(String.format("Processing tender %s for QUALIFIED", tenderId));
+                            LocalDate tenderLastDateOfSubmission = item.getLastDateOfSubmission();
+                            logger.info(String.format("Tender %s has last date of submission %s", tenderId, tenderLastDateOfSubmission.toString()));
+                            if (tenderLastDateOfSubmission.isBefore(localDate)) {
+                                logger.info(String.format("Updated tender %s to in review status", tenderId));
+                                item.setWorkflowStep(WorkflowStep.IN_REVIEW);
                             } else {
                                 logger.info(String.format("Skipping Tender %s", tenderId));
                             }
-                        } else {
-                            logger.error(String.format("Tender %s has no PQ Form but with status published", tenderId));
-                        }
+                            break;
+                        case "PUBLISHED":
+                            if (item.getFormHeader() != null) {
+                                logger.info(String.format("Processing tender %s for PQ", tenderId));
+                                LocalDate pqSubmissionDate = item.getFormHeader().getPqLastDateOfSubmission();
+                                logger.info(String.format("Tender %s has PQ submission data as %s", tenderId, pqSubmissionDate.toString()));
+                                if (pqSubmissionDate.isBefore(localDate)) {
+                                    logger.info(String.format("Updated tender %s to under process status", tenderId));
+                                    item.setWorkflowStep(WorkflowStep.UNDER_PROCESS);
+                                } else {
+                                    logger.info(String.format("Skipping Tender %s", tenderId));
+                                }
+                            } else {
+                                logger.error(String.format("Tender %s has no PQ Form but with status published", tenderId));
+                            }
+                            break;
+                        default:
+                            throw new InvalidActionException(String.format("Cannot process tender %s", tenderId));
                     }
+
                 }
         ).collect(Collectors.toList());
 
