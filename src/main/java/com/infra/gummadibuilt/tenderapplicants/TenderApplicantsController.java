@@ -1,5 +1,6 @@
 package com.infra.gummadibuilt.tenderapplicants;
 
+import com.infra.gummadibuilt.tenderapplicants.model.dto.ApplicantsComparisonDto;
 import com.infra.gummadibuilt.tenderapplicants.model.dto.TenderApplicantsDashboardDto;
 import com.infra.gummadibuilt.tenderapplicants.model.dto.TenderApplicantsDto;
 import com.infra.gummadibuilt.tenderapplicationform.model.dto.ActionTaken;
@@ -72,8 +73,8 @@ public class TenderApplicantsController {
     })
     @GetMapping("/{tenderId}/compare/{applicantId}")
     @RolesAllowed({"admin", "client"})
-    public List<ApplicationFormDto> compareApplicants(@PathVariable @NotBlank String tenderId,
-                                                      @PathVariable List<String> applicantId) {
+    public List<ApplicantsComparisonDto> compareApplicants(@PathVariable @NotBlank String tenderId,
+                                                           @PathVariable List<String> applicantId) {
         return tenderApplicantsService.compareApplicants(tenderId, applicantId);
     }
 

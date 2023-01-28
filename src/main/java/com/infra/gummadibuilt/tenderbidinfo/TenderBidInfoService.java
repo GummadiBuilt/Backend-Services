@@ -8,6 +8,7 @@ import com.infra.gummadibuilt.common.ChangeTracking;
 import com.infra.gummadibuilt.common.LoggedInUser;
 import com.infra.gummadibuilt.common.exception.InvalidActionException;
 import com.infra.gummadibuilt.common.file.AmazonFileService;
+import com.infra.gummadibuilt.common.file.FileDownloadDto;
 import com.infra.gummadibuilt.common.util.FileUtils;
 import com.infra.gummadibuilt.common.util.SaveEntityConstraintHelper;
 import com.infra.gummadibuilt.tender.TenderInfoDao;
@@ -97,7 +98,7 @@ public class TenderBidInfoService {
         JsonNode financialInfo = mapper.readTree(financialBidInfo);
 
         FileUtils.checkFileValidOrNot(contractorDocument);
-        String filePath = getFilePath(tenderInfo, loggedInUser);
+        String filePath = getFilePath(tenderInfo, loggedInUser.getUserId());
         String response = amazonFileService.uploadFile(filePath, metaData(tenderInfo), contractorDocument);
         logger.info(String.format("File upload success, generated ETAG %s", response));
 
@@ -151,7 +152,7 @@ public class TenderBidInfoService {
 
         if (!contractorDocument.isEmpty()) {
             FileUtils.checkFileValidOrNot(contractorDocument);
-            String filePath = getFilePath(tenderInfo, loggedInUser);
+            String filePath = getFilePath(tenderInfo, loggedInUser.getUserId());
             amazonFileService.deleteFile(filePath, bidInfo.getTenderDocumentName());
             String response = amazonFileService.uploadFile(filePath, metaData(tenderInfo), contractorDocument);
             logger.info(String.format("File upload success, generated ETAG %s", response));
@@ -170,6 +171,24 @@ public class TenderBidInfoService {
         dto.setContractorDocumentSize(bidInfo.getTenderDocumentSize());
         dto.setContractorBidId(bidInfo.getId());
         return dto;
+    }
+
+    public FileDownloadDto downloadTender(String tenderId, String userId, HttpServletRequest request) {
+        TenderInfo tenderInfo = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
+        LoggedInUser loggedInUser = loggedInUserInfo(request);
+        String logInUser = userId;
+        if (request.isUserInRole("contractor")) {
+            logInUser = loggedInUser.getUserId();
+        }
+
+        ApplicationUser applicationUser = getById(applicationUserDao, logInUser, USER_NOT_FOUND);
+        Optional<TenderBidInfo> bidInfo = tenderBidInfoDao.findByTenderInfoAndApplicationUser(tenderInfo, applicationUser);
+        if (bidInfo.isPresent()) {
+            String filePath = getFilePath(tenderInfo, logInUser);
+            return amazonFileService.downloadFile(filePath, bidInfo.get().getTenderDocumentName());
+        } else {
+            throw new InvalidActionException(String.format("No contractor response found for tender %s", tenderId));
+        }
     }
 
     private Map<String, String> metaData(TenderInfo tenderInfo) {
@@ -220,7 +239,7 @@ public class TenderBidInfoService {
         }
     }
 
-    private String getFilePath(TenderInfo tenderInfo, LoggedInUser loggedInUser) {
-        return String.format("%s/%s/%s", tenderInfo.getId(), loggedInUser.getUserId(), "FINANCIAL_BID");
+    private String getFilePath(TenderInfo tenderInfo, String loggedInUser) {
+        return String.format("%s/%s/%s", tenderInfo.getId(), loggedInUser, "FINANCIAL_BID");
     }
 }

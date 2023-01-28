@@ -1,8 +1,9 @@
 package com.infra.gummadibuilt.tenderbidinfo;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.infra.gummadibuilt.common.file.FileDownloadDto;
 import com.infra.gummadibuilt.tender.model.dto.TenderDetailsDto;
-import com.infra.gummadibuilt.tenderapplicationform.model.dto.ActionTaken;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -10,6 +11,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -66,10 +68,27 @@ public class TenderBidInfoController {
     public TenderDetailsDto updateTenderBidInfo(@Valid HttpServletRequest request,
                                                 @PathVariable("tenderId") @NotBlank String tenderId,
                                                 @PathVariable("bidInfoId") @NotBlank String bidInfoId,
-                                                @RequestPart("contractorDocument") @NotNull MultipartFile contractorDocument,
+                                                @RequestPart("contractorDocument") MultipartFile contractorDocument,
                                                 @RequestPart("financialBid") @NotBlank String financialBid,
                                                 @RequestPart @NotBlank String actionTaken) throws JsonProcessingException {
         return tenderBidInfoService.updateTenderBidInfo(request, tenderId, bidInfoId, contractorDocument, financialBid, actionTaken);
+    }
+
+    @Operation(summary = "Download contractor technical tender response document")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success, when user is able to download tender response document",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(implementation = FileDownloadDto.class))
+                    }),
+            @ApiResponse(responseCode = "404", description = "The resource you were trying to reach is not found")
+    })
+    @RolesAllowed({"client", "contractor", "admin"})
+    @GetMapping("/download/{tenderId}/tender-response/{userId}")
+    @Transactional(readOnly = true)
+    public FileDownloadDto downloadTender(@PathVariable("tenderId") String tenderId,
+                                          @PathVariable("userId") String userId,
+                                          HttpServletRequest request) {
+        return tenderBidInfoService.downloadTender(tenderId, userId, request);
     }
 
 }

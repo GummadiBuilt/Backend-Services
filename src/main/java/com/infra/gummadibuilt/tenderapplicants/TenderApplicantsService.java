@@ -7,13 +7,18 @@ import com.infra.gummadibuilt.common.util.SaveEntityConstraintHelper;
 import com.infra.gummadibuilt.tender.TenderInfoDao;
 import com.infra.gummadibuilt.tender.model.TenderInfo;
 import com.infra.gummadibuilt.tender.model.WorkflowStep;
+import com.infra.gummadibuilt.tender.model.dto.TenderDetailsDto;
 import com.infra.gummadibuilt.tenderapplicants.model.TenderApplicants;
+import com.infra.gummadibuilt.tenderapplicants.model.dto.ApplicantsComparisonDto;
 import com.infra.gummadibuilt.tenderapplicants.model.dto.TenderApplicantsDashboardDto;
 import com.infra.gummadibuilt.tenderapplicants.model.dto.TenderApplicantsDto;
 import com.infra.gummadibuilt.tenderapplicationform.ApplicationFormDao;
 import com.infra.gummadibuilt.tenderapplicationform.model.ApplicationForm;
 import com.infra.gummadibuilt.tenderapplicationform.model.dto.ActionTaken;
 import com.infra.gummadibuilt.tenderapplicationform.model.dto.ApplicationFormDto;
+import com.infra.gummadibuilt.tenderbidinfo.TenderBidInfoDao;
+import com.infra.gummadibuilt.tenderbidinfo.model.TenderBidInfo;
+import com.infra.gummadibuilt.userandrole.model.ApplicationUser;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
@@ -33,13 +38,16 @@ public class TenderApplicantsService {
     private final TenderInfoDao tenderInfoDao;
 
     private final ApplicationFormDao applicationFormDao;
+    private final TenderBidInfoDao tenderBidInfoDao;
 
     public TenderApplicantsService(TenderApplicantsDao tenderApplicantsDao,
                                    TenderInfoDao tenderInfoDao,
-                                   ApplicationFormDao applicationFormDao) {
+                                   ApplicationFormDao applicationFormDao,
+                                   TenderBidInfoDao tenderBidInfoDao) {
         this.tenderApplicantsDao = tenderApplicantsDao;
         this.tenderInfoDao = tenderInfoDao;
         this.applicationFormDao = applicationFormDao;
+        this.tenderBidInfoDao = tenderBidInfoDao;
     }
 
     public List<TenderApplicantsDto> get(String tenderId) {
@@ -102,14 +110,54 @@ public class TenderApplicantsService {
         return this.get(tenderId);
     }
 
-    public List<ApplicationFormDto> compareApplicants(String tenderId, List<String> applicantId) {
+    public List<ApplicantsComparisonDto> compareApplicants(String tenderId, List<String> applicantId) {
         if (applicantId.size() > 10) {
             throw new InvalidActionException("A maximum of 10 applications can be compared at once");
         }
         TenderInfo tenderInfo = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
         List<Integer> applicantIds = applicantId.stream().map(Integer::parseInt).collect(Collectors.toList());
         List<ApplicationForm> applicationForms = this.validateApplicationForm(applicantIds, tenderInfo);
-        return applicationForms.stream().map(ApplicationFormDto::valueOf).collect(Collectors.toList());
+        List<TenderBidInfo> tenderBidInfo = new ArrayList<>();
+        List<TenderApplicantsDto> tenderApplicants = new ArrayList<>();
+        if (tenderInfo.getWorkflowStep().equals(WorkflowStep.IN_REVIEW)) {
+            List<ApplicationUser> userID = applicationForms.stream().map(ApplicationForm::getApplicationUser).collect(Collectors.toList());
+            tenderBidInfo = tenderBidInfoDao.findAllByTenderInfoAndApplicationUserIn(tenderInfo, userID);
+            tenderApplicants = this.get(tenderId);
+        }
+        return this.applicantsComparisonDtos(applicationForms, tenderApplicants, tenderBidInfo);
+    }
+
+    private List<ApplicantsComparisonDto> applicantsComparisonDtos(List<ApplicationForm> applicationForms,
+                                                                   List<TenderApplicantsDto> tenderApplicants,
+                                                                   List<TenderBidInfo> tenderBidInfo) {
+        List<ApplicantsComparisonDto> result = new ArrayList<>();
+
+        applicationForms.forEach(item -> {
+            ApplicantsComparisonDto comparisonDto = new ApplicantsComparisonDto();
+            String userId = item.getApplicationUser().getId();
+
+            Optional<TenderApplicantsDto> applicant = tenderApplicants.stream().filter(ta -> ta.getApplicationUserId().equalsIgnoreCase(userId)).findFirst();
+            applicant.ifPresent(comparisonDto::setTenderApplicantsDto);
+
+            Optional<TenderBidInfo> bidInfo = tenderBidInfo.stream().filter(bid -> bid.getApplicationUser().getId().equalsIgnoreCase(userId)).findFirst();
+            if (bidInfo.isPresent()) {
+                TenderBidInfo bid = bidInfo.get();
+                TenderDetailsDto detailsDto = TenderDetailsDto.valueOf(bid.getTenderInfo(), false);
+                detailsDto.setContractorBidId(bid.getId());
+                detailsDto.setContractorDocumentName(bid.getTenderDocumentName());
+                detailsDto.setTenderFinanceInfo(bid.getTenderFinanceInfo());
+
+                comparisonDto.setTenderDetailsDto(detailsDto);
+            }
+
+            ApplicationFormDto formDto = ApplicationFormDto.valueOf(item);
+            comparisonDto.setApplicationFormDto(formDto);
+
+            result.add(comparisonDto);
+        });
+
+
+        return result;
     }
 
     public void validateApplicationAndApplicant(TenderApplicants applicants, ApplicationForm applicationForm) {
