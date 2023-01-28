@@ -173,7 +173,10 @@ public class TenderApplicantsService {
             item.setRecommended(item.getApplicationForm().getId() == appFormId);
         });
 
+        tenderInfo.setWorkflowStep(WorkflowStep.RECOMMENDED);
+
         SaveEntityConstraintHelper.saveAll(tenderApplicantsDao, tenderApplicants, null);
+        SaveEntityConstraintHelper.save(tenderInfoDao,tenderInfo,null);
 
         return this.get(tenderId, request);
     }
