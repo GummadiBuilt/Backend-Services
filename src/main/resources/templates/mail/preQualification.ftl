@@ -35,6 +35,7 @@
                          <a href="${appUrl}/tenders/edit-tender/${tenderId}">
                          link
                          </a>
+                         <p>Last date for submitting the response is ${lastDate}</p>
                         <#else>
                          <p>We regret to inform you that your organization ${contractorCompanyName} is ${applicationStatus} for project ${projectName}</p>
                          <p>Your application to tender ${tenderId} will no longer be considered for future decisions of this project</p>

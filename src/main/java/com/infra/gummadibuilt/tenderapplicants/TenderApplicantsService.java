@@ -31,6 +31,7 @@ import org.springframework.stereotype.Service;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -267,6 +268,8 @@ public class TenderApplicantsService {
                     String[] mailTo = {user.getApplicationUser().getContactEmailAddress()};
                     model.put("contractorCompanyName", user.getApplicationUser().getCompanyName());
                     model.put("tenderCompanyName", tenderInfo.getApplicationUser().getCompanyName());
+                    String lastDate = tenderInfo.getLastDateOfSubmission().format(DateTimeFormatter.ofPattern(DATE_PATTERN));
+                    model.put("lastDate", lastDate);
                     try {
                         mailService.sendMail(mailTo, adminUser, "preQualification.ftl", model);
                     } catch (IOException | MessagingException | TemplateException e) {
