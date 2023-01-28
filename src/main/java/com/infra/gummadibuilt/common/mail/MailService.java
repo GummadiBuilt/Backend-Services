@@ -41,7 +41,7 @@ public class MailService {
         this.freemarker.setTemplateLoader(new ClassTemplateLoader(MailService.class, "/templates/mail"));
     }
 
-    public void sendMail(String[] to, String templateName, Map<String, Object> model) throws IOException, MessagingException, TemplateException {
+    public void sendMail(String[] to, String[] cc, String templateName, Map<String, Object> model) throws IOException, MessagingException, TemplateException {
 
         if (configuration.isEnableMailFeature()) {
 
@@ -68,6 +68,9 @@ public class MailService {
             File file = new File(configuration.getHeaderPath());
             String html = FreeMarkerTemplateUtils.processTemplateIntoString(template, model);
             helper.setTo(to);
+            if (cc != null) {
+                helper.setCc(cc);
+            }
             helper.setText(html, true);
             helper.setSubject(subject);
             helper.setFrom(configuration.getFromAddress());

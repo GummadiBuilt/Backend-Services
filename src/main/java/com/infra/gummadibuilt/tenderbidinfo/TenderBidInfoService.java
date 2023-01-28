@@ -25,6 +25,7 @@ import com.infra.gummadibuilt.userandrole.ApplicationUserDao;
 import com.infra.gummadibuilt.userandrole.model.ApplicationUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -179,6 +180,11 @@ public class TenderBidInfoService {
         String logInUser = userId;
         if (request.isUserInRole("contractor")) {
             logInUser = loggedInUser.getUserId();
+        }
+        if (request.isUserInRole("client") && Objects.equals(tenderInfo.getApplicationUser().getId(), loggedInUser.getUserId())) {
+            throw new AccessDeniedException(
+                    "Cannot access tenders that are not created by you. This action will be reported"
+            );
         }
 
         ApplicationUser applicationUser = getById(applicationUserDao, logInUser, USER_NOT_FOUND);

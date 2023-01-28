@@ -198,7 +198,7 @@ public class TenderInfoService {
                 && tenderInfo.getWorkflowStep() != WorkflowStep.YET_TO_BE_PUBLISHED)
         ) {
             List<String> workflowSteps = Arrays.asList(WorkflowStep.QUALIFIED.getText(), WorkflowStep.RECOMMENDED.getText());
-            String appStatus = "";
+            String appStatus = tenderInfo.getWorkflowStep().getText();
             boolean showBidInfo = false;
             if (workflowSteps.contains(tenderInfo.getWorkflowStep().getText())) {
                 Optional<TenderApplicants> tenderApplicants = tenderApplicantsDao.findByApplicationUserAndTenderInfo(applicationUser, tenderInfo);

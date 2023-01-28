@@ -132,15 +132,10 @@ public class UserRegistrationService {
         Map<String, Object> model = new HashMap<>();
         model.put("companyName", userRegistrationDto.getCompanyName());
         String[] mailTo = {emailReceived};
-        mailService.sendMail(mailTo, "registrationConfirmation.ftl", model);
+        mailService.sendMail(mailTo, null, "registrationConfirmation.ftl", model);
 
-        Optional<ApplicationRole> adminRole = applicationRoleDao.findByRoleNameIgnoreCase("admin");
-        if (adminRole.isPresent()) {
-            String[] adminUsers = applicationUserDao.findAllByApplicationRole(adminRole.get()).stream().map(ApplicationUser::getContactEmailAddress).toArray(String[]::new);
-            mailService.sendMail(adminUsers, "pendingApproval.ftl", model);
-        } else {
-            throw new RuntimeException("No Admins found in the database, cannot register");
-        }
+        String[] adminUsers = getAdminUserEmailAddress();
+        mailService.sendMail(adminUsers, null, "pendingApproval.ftl", model);
 
         return userRegistrationDto;
     }
@@ -273,7 +268,7 @@ public class UserRegistrationService {
 
         logger.info(String.format("Sending email to user %s", userRegistration.getContactEmailAddress()));
         String[] mailTo = {userRegistration.getContactEmailAddress()};
-        mailService.sendMail(mailTo, "temporaryPassword.ftl", model);
+        mailService.sendMail(mailTo, null, "temporaryPassword.ftl", model);
 
         applicationUser.setId(userId);
 
@@ -287,6 +282,15 @@ public class UserRegistrationService {
                 .serverUrl(serverUrl) //
                 .realm(realm) //
                 .authorization(token).clientId(clientId).build();
+    }
+
+    public String[] getAdminUserEmailAddress() {
+        Optional<ApplicationRole> adminRole = applicationRoleDao.findByRoleNameIgnoreCase("admin");
+        if (adminRole.isPresent()) {
+            return applicationUserDao.findAllByApplicationRole(adminRole.get()).stream().map(ApplicationUser::getContactEmailAddress).toArray(String[]::new);
+        } else {
+            throw new RuntimeException("No Admins found in the database, cannot register");
+        }
     }
 
 }

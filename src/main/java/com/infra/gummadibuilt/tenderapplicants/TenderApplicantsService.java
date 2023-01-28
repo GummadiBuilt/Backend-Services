@@ -3,6 +3,7 @@ package com.infra.gummadibuilt.tenderapplicants;
 import com.infra.gummadibuilt.common.LoggedInUser;
 import com.infra.gummadibuilt.common.exception.EntityNotFoundException;
 import com.infra.gummadibuilt.common.exception.InvalidActionException;
+import com.infra.gummadibuilt.common.mail.MailService;
 import com.infra.gummadibuilt.common.util.SaveEntityConstraintHelper;
 import com.infra.gummadibuilt.tender.TenderInfoDao;
 import com.infra.gummadibuilt.tender.model.TenderInfo;
@@ -10,6 +11,7 @@ import com.infra.gummadibuilt.tender.model.WorkflowStep;
 import com.infra.gummadibuilt.tender.model.dto.TenderDetailsDto;
 import com.infra.gummadibuilt.tenderapplicants.model.TenderApplicants;
 import com.infra.gummadibuilt.tenderapplicants.model.dto.ApplicantsComparisonDto;
+import com.infra.gummadibuilt.tenderapplicants.model.dto.ApplicationStatus;
 import com.infra.gummadibuilt.tenderapplicants.model.dto.TenderApplicantsDashboardDto;
 import com.infra.gummadibuilt.tenderapplicants.model.dto.TenderApplicantsDto;
 import com.infra.gummadibuilt.tenderapplicationform.ApplicationFormDao;
@@ -19,13 +21,17 @@ import com.infra.gummadibuilt.tenderapplicationform.model.dto.ApplicationFormDto
 import com.infra.gummadibuilt.tenderbidinfo.TenderBidInfoDao;
 import com.infra.gummadibuilt.tenderbidinfo.model.TenderBidInfo;
 import com.infra.gummadibuilt.userandrole.model.ApplicationUser;
+import com.infra.gummadibuilt.userregistration.UserRegistrationService;
+import freemarker.template.TemplateException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
+import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.io.IOException;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.infra.gummadibuilt.common.util.CommonModuleUtils.*;
@@ -34,24 +40,41 @@ import static com.infra.gummadibuilt.common.util.UserInfo.loggedInUserInfo;
 @Service
 public class TenderApplicantsService {
 
+    private static final Logger logger = LoggerFactory.getLogger(TenderApplicantsService.class);
+
+
     private final TenderApplicantsDao tenderApplicantsDao;
     private final TenderInfoDao tenderInfoDao;
 
     private final ApplicationFormDao applicationFormDao;
     private final TenderBidInfoDao tenderBidInfoDao;
 
+    private final UserRegistrationService userRegistrationService;
+
+    private final MailService mailService;
+
     public TenderApplicantsService(TenderApplicantsDao tenderApplicantsDao,
                                    TenderInfoDao tenderInfoDao,
                                    ApplicationFormDao applicationFormDao,
-                                   TenderBidInfoDao tenderBidInfoDao) {
+                                   TenderBidInfoDao tenderBidInfoDao,
+                                   MailService mailService,
+                                   UserRegistrationService userRegistrationService) {
         this.tenderApplicantsDao = tenderApplicantsDao;
         this.tenderInfoDao = tenderInfoDao;
         this.applicationFormDao = applicationFormDao;
         this.tenderBidInfoDao = tenderBidInfoDao;
+        this.mailService = mailService;
+        this.userRegistrationService = userRegistrationService;
     }
 
-    public List<TenderApplicantsDto> get(String tenderId) {
-        getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
+    public List<TenderApplicantsDto> get(String tenderId, HttpServletRequest request) {
+        TenderInfo tenderInfo = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
+        LoggedInUser loggedInUser = loggedInUserInfo(request);
+        if (request.isUserInRole("client") && Objects.equals(tenderInfo.getApplicationUser().getId(), loggedInUser.getUserId())) {
+            throw new AccessDeniedException(
+                    "Cannot access tenders that are not created by you. This action will be reported"
+            );
+        }
         List<TenderApplicantsDashboardDto> dashboardDtos = tenderApplicantsDao.getTenderApplicants(tenderId);
 
         return dashboardDtos.stream().map(TenderApplicantsDto::valueOf).collect(Collectors.toList());
@@ -106,15 +129,25 @@ public class TenderApplicantsService {
             tenderInfo.setWorkflowStep(WorkflowStep.QUALIFIED);
             tenderInfo.getChangeTracking().update(loggedInUser.toString());
             SaveEntityConstraintHelper.save(tenderInfoDao, tenderInfo, null);
+            String[] adminUsers = userRegistrationService.getAdminUserEmailAddress();
+            sendEmail(updatedInfo, tenderInfo, ApplicationStatus.QUALIFIED, adminUsers);
+            sendEmail(updatedInfo, tenderInfo, ApplicationStatus.NOT_QUALIFIED, adminUsers);
         }
-        return this.get(tenderId);
+        return this.get(tenderId, request);
     }
 
-    public List<ApplicantsComparisonDto> compareApplicants(String tenderId, List<String> applicantId) {
+
+    public List<ApplicantsComparisonDto> compareApplicants(String tenderId, List<String> applicantId, HttpServletRequest request) {
         if (applicantId.size() > 10) {
             throw new InvalidActionException("A maximum of 10 applications can be compared at once");
         }
         TenderInfo tenderInfo = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
+        LoggedInUser loggedInUser = loggedInUserInfo(request);
+        if (request.isUserInRole("client") && Objects.equals(tenderInfo.getApplicationUser().getId(), loggedInUser.getUserId())) {
+            throw new AccessDeniedException(
+                    "Cannot access tenders that are not created by you. This action will be reported"
+            );
+        }
         List<Integer> applicantIds = applicantId.stream().map(Integer::parseInt).collect(Collectors.toList());
         List<ApplicationForm> applicationForms = this.validateApplicationForm(applicantIds, tenderInfo);
         List<TenderBidInfo> tenderBidInfo = new ArrayList<>();
@@ -122,7 +155,7 @@ public class TenderApplicantsService {
         if (tenderInfo.getWorkflowStep().equals(WorkflowStep.IN_REVIEW)) {
             List<ApplicationUser> userID = applicationForms.stream().map(ApplicationForm::getApplicationUser).collect(Collectors.toList());
             tenderBidInfo = tenderBidInfoDao.findAllByTenderInfoAndApplicationUserIn(tenderInfo, userID);
-            tenderApplicants = this.get(tenderId);
+            tenderApplicants = this.get(tenderId, request);
         }
         return this.applicantsComparisonDtos(applicationForms, tenderApplicants, tenderBidInfo);
     }
@@ -215,5 +248,32 @@ public class TenderApplicantsService {
         }
 
         return applicationForms;
+    }
+
+
+    public void sendEmail(List<TenderApplicants> updatedInfo,
+                          TenderInfo tenderInfo,
+                          ApplicationStatus applicationStatus,
+                          String[] adminUser) {
+        logger.info(String.format("Sending mail communication sent to %s contractors", applicationStatus.getText()));
+        Map<String, Object> model = new HashMap<>();
+        model.put("tenderId", tenderInfo.getId());
+        model.put("projectName", tenderInfo.getProjectName());
+        model.put("applicationStatus", applicationStatus.getText().toUpperCase());
+
+        updatedInfo.stream()
+                .filter(item -> item.getApplicationStatus().equals(applicationStatus))
+                .forEach(user -> {
+                    String[] mailTo = {user.getApplicationUser().getContactEmailAddress()};
+                    model.put("contractorCompanyName", user.getApplicationUser().getCompanyName());
+                    model.put("tenderCompanyName", tenderInfo.getApplicationUser().getCompanyName());
+                    try {
+                        mailService.sendMail(mailTo, adminUser, "preQualification.ftl", model);
+                    } catch (IOException | MessagingException | TemplateException e) {
+                        throw new RuntimeException(e);
+                    }
+                    logger.info(String.format("Mail communication sent to %s contractors", applicationStatus.getText()));
+                });
+
     }
 }
