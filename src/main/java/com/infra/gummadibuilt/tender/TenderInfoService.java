@@ -197,24 +197,37 @@ public class TenderInfoService {
                 && (tenderInfo.getWorkflowStep() != WorkflowStep.DRAFT
                 && tenderInfo.getWorkflowStep() != WorkflowStep.YET_TO_BE_PUBLISHED)
         ) {
-            List<String> workflowSteps = Arrays.asList(WorkflowStep.QUALIFIED.getText(), WorkflowStep.IN_REVIEW.getText());
+            List<String> workflowSteps = Arrays.asList(WorkflowStep.QUALIFIED.getText(), WorkflowStep.RECOMMENDED.getText());
             String appStatus = "";
             boolean showBidInfo = false;
             if (workflowSteps.contains(tenderInfo.getWorkflowStep().getText())) {
                 Optional<TenderApplicants> tenderApplicants = tenderApplicantsDao.findByApplicationUserAndTenderInfo(applicationUser, tenderInfo);
                 if (tenderApplicants.isPresent()) {
-                    if (tenderApplicants.get().getApplicationStatus() == ApplicationStatus.NOT_QUALIFIED) {
-                        appStatus = "NOT_QUALIFIED";
-                    } else {
+                    String workflowStep = tenderInfo.getWorkflowStep().getText();
+                    if (tenderApplicants.get().getApplicationStatus() == ApplicationStatus.QUALIFIED) {
                         showBidInfo = true;
+                    }
+                    switch (workflowStep.toUpperCase()) {
+                        case "QUALIFIED":
+                            if (tenderApplicants.get().getApplicationStatus() == ApplicationStatus.NOT_QUALIFIED) {
+                                appStatus = "NOT_QUALIFIED";
+                            }
+                            break;
+
+                        case "RECOMMENDED":
+                            if (!tenderApplicants.get().isRecommended()) {
+                                appStatus = "NOT_RECOMMENDED";
+                            }
+                            break;
+                        default:
+                            appStatus = workflowStep;
                     }
                 }
             }
 
             TenderDetailsDto dto = TenderDetailsDto.valueOf(tenderInfo, showBidInfo);
-            if (appStatus.length() > 0) {
-                dto.setWorkflowStep(appStatus);
-            }
+            dto.setWorkflowStep(appStatus);
+
             Optional<ApplicationForm> applicationForm = applicationFormDao.findByTenderInfoAndApplicationUser(tenderInfo, applicationUser);
             applicationForm.ifPresent(form -> {
                 dto.setApplicationFormId(form.getId());

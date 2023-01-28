@@ -48,6 +48,8 @@ public interface TenderInfoDao extends JpaRepository<TenderInfo, String> {
             "pfh.id as pq_id, au.company_name, toe.establishment_description, ti.work_description," +
             "ti.project_location, toc.type_of_contract, ti.contract_duration, ti.duration_counter, ti.project_name," +
             "CASE WHEN ti.workflow_step  ='QUALIFIED' THEN coalesce(ta.application_status, 'NOT_QUALIFIED') " +
+            "WHEN ti.workflow_step = 'RECOMMENDED' and ta.is_recommended IS true then 'RECOMMENDED' "+
+            "WHEN ti.workflow_step = 'RECOMMENDED' and ta.is_recommended IS false then 'NOT_RECOMMENDED' "+
             "ELSE ti.workflow_step end as workflow_step," +
             "TO_CHAR(ti.last_date_of_submission\\:\\:date, 'dd/mm/yyyy') as last_date_of_submission," +
             "CASE WHEN ta.application_status ='QUALIFIED' THEN ti.tender_document_name ELSE '' end as tender_document_name," +
@@ -66,6 +68,8 @@ public interface TenderInfoDao extends JpaRepository<TenderInfo, String> {
     @Query(value = "with af as (select * from application_form af  where application_user_id= :userId), " +
             "ta as (select * from tender_applicants where application_user_id= :userId) select ti.id as tender_id, " +
             "CASE WHEN ti.workflow_step  ='QUALIFIED' THEN coalesce(ta.application_status, 'NOT_QUALIFIED') " +
+            "WHEN ti.workflow_step = 'RECOMMENDED' and ta.is_recommended IS true then 'RECOMMENDED' "+
+            "WHEN ti.workflow_step = 'RECOMMENDED' and ta.is_recommended IS false then 'NOT_RECOMMENDED' "+
             "ELSE ti.workflow_step end as workflow_step, CASE WHEN ta.application_status ='QUALIFIED' " +
             "THEN ti.tender_document_name ELSE '' end as tender_document_name," +
             "CASE WHEN ta.application_status ='QUALIFIED' THEN ti.tender_document_size ELSE 0 end as tender_document_size," +
