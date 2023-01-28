@@ -137,6 +137,47 @@ public class TenderApplicantsService {
         return this.get(tenderId, request);
     }
 
+    public List<TenderApplicantsDto> recommendContractor(HttpServletRequest request,
+                                                         String tenderId,
+                                                         String formId) {
+
+        TenderInfo tenderInfo = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
+
+        if (tenderInfo.getWorkflowStep() != WorkflowStep.IN_REVIEW) {
+            throw new InvalidActionException(
+                    String.format("Recommendation can be made only when IN REVIEW, current step for tender %s is %s",
+                            tenderId,
+                            tenderInfo.getWorkflowStep().getText()
+                    )
+            );
+        }
+
+        int appFormId = Integer.parseInt(formId);
+        ApplicationForm applicationForm = getById(applicationFormDao, appFormId, APPLICATION_FORM_NOT_FOUND);
+        if (!applicationForm.getTenderInfo().getId().equalsIgnoreCase(tenderId)) {
+            throw new InvalidActionException(String.format("Given Form ID %s, doesn't map to given tender %s", formId, tenderId));
+        }
+
+        Optional<TenderApplicants> applicant = tenderApplicantsDao.findByApplicationUserAndTenderInfo(applicationForm.getApplicationUser(), tenderInfo);
+        if (applicant.isPresent()) {
+            if (applicant.get().getApplicationStatus() != ApplicationStatus.QUALIFIED) {
+                throw new InvalidActionException(String.format("Cannot recommend this form %s, as this is not QUALIFIED", formId));
+            }
+        } else {
+            throw new InvalidActionException(String.format("For given application form id %s no user is mapped", formId));
+        }
+
+        List<TenderApplicants> tenderApplicants = tenderApplicantsDao.findAllByTenderInfo(tenderInfo);
+
+        tenderApplicants.forEach(item -> {
+            item.setRecommended(item.getApplicationForm().getId() == appFormId);
+        });
+
+        SaveEntityConstraintHelper.saveAll(tenderApplicantsDao, tenderApplicants, null);
+
+        return this.get(tenderId, request);
+    }
+
 
     public List<ApplicantsComparisonDto> compareApplicants(String tenderId, List<String> applicantId, HttpServletRequest request) {
         if (applicantId.size() > 10) {

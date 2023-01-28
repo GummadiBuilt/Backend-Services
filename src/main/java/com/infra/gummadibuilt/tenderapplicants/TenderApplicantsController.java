@@ -76,4 +76,19 @@ public class TenderApplicantsController {
         return tenderApplicantsService.compareApplicants(tenderId, applicantId, request);
     }
 
+    @Operation(summary = "Recommend a contractor for tender")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success, when list of tender applicants are retrieved",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = TenderApplicantsDashboardDto.class)))),
+            @ApiResponse(responseCode = "404", description = "The resource you were trying to reach is not found")
+    })
+    @PutMapping("/{tenderId}/recommend/{applicationFormId}")
+    @RolesAllowed({"admin"})
+    public List<TenderApplicantsDto> recommendContractor(@PathVariable @NotBlank String tenderId,
+                                                         @PathVariable String applicationFormId,
+                                                         HttpServletRequest request) {
+        return tenderApplicantsService.recommendContractor(request, tenderId, applicationFormId);
+    }
+
+
 }
