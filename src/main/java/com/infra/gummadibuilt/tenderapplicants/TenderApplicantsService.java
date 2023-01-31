@@ -188,7 +188,7 @@ public class TenderApplicantsService {
         }
         TenderInfo tenderInfo = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
         LoggedInUser loggedInUser = loggedInUserInfo(request);
-        if (request.isUserInRole("client") && Objects.equals(tenderInfo.getApplicationUser().getId(), loggedInUser.getUserId())) {
+        if (request.isUserInRole("client") && !Objects.equals(tenderInfo.getApplicationUser().getId(), loggedInUser.getUserId())) {
             throw new AccessDeniedException(
                     "Cannot access tenders that are not created by you. This action will be reported"
             );
