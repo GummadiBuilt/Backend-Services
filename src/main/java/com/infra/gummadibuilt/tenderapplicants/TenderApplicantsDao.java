@@ -20,7 +20,7 @@ public interface TenderApplicantsDao extends JpaRepository<TenderApplicants, Int
             "case when ti.workflow_step IN('IN_REVIEW', 'RECOMMENDED') then COALESCE (to_json(tbi.tender_finance_info\\:\\:text) #>> '{}', to_json(''\\:\\:text) #>> '{}') else to_json(''\\:\\:text) #>> '{}'  end as tender_finance_info  " +
             "from tender_applicants ta left join application_user au on ta.application_user_id = au.id " +
             "left join tender_info ti  on ta.tender_info_id = ti.id " +
-            "left join tender_bid_info tbi on tbi.application_user_id = au.id " +
+            "left join tender_bid_info tbi on tbi.application_user_id = au.id and tbi.tender_info_id = ti.id " +
             "where ta.tender_info_id =:tenderId order by ta.applicant_rank", nativeQuery = true)
     List<TenderApplicantsDashboardDto> getTenderApplicants(String tenderId);
 

@@ -176,7 +176,7 @@ public class TenderApplicantsService {
         tenderInfo.setWorkflowStep(WorkflowStep.RECOMMENDED);
 
         SaveEntityConstraintHelper.saveAll(tenderApplicantsDao, tenderApplicants, null);
-        SaveEntityConstraintHelper.save(tenderInfoDao,tenderInfo,null);
+        SaveEntityConstraintHelper.save(tenderInfoDao, tenderInfo, null);
 
         return this.get(tenderId, request);
     }
@@ -197,7 +197,8 @@ public class TenderApplicantsService {
         List<ApplicationForm> applicationForms = this.validateApplicationForm(applicantIds, tenderInfo);
         List<TenderBidInfo> tenderBidInfo = new ArrayList<>();
         List<TenderApplicantsDto> tenderApplicants = new ArrayList<>();
-        if (tenderInfo.getWorkflowStep().equals(WorkflowStep.IN_REVIEW)) {
+        List<String> workflowSteps = Arrays.asList(WorkflowStep.IN_REVIEW.getText().toUpperCase(), WorkflowStep.RECOMMENDED.getText().toUpperCase());
+        if (workflowSteps.contains(tenderInfo.getWorkflowStep().getText().toUpperCase())) {
             List<ApplicationUser> userID = applicationForms.stream().map(ApplicationForm::getApplicationUser).collect(Collectors.toList());
             tenderBidInfo = tenderBidInfoDao.findAllByTenderInfoAndApplicationUserIn(tenderInfo, userID);
             tenderApplicants = this.get(tenderId, request);
