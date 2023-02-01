@@ -31,4 +31,6 @@ public interface TenderApplicantsDashboardDto {
     int getTender_document_size();
 
     String getTender_finance_info();
+
+    Boolean getIs_recommended();
 }

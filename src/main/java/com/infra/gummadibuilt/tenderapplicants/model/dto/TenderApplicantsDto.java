@@ -42,6 +42,8 @@ public class TenderApplicantsDto {
 
     private JsonNode tenderFinanceInfo;
 
+    private boolean isRecommended;
+
     public static TenderApplicantsDto valueOf(TenderApplicantsDashboardDto dashboardDto) {
         TenderApplicantsDto tenderApplicantsDto = new TenderApplicantsDto();
 
@@ -62,6 +64,8 @@ public class TenderApplicantsDto {
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
+
+        tenderApplicantsDto.setRecommended(dashboardDto.getIs_recommended());
 
         return tenderApplicantsDto;
 
