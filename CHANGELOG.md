@@ -2,6 +2,40 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.7](https://github.com/GummadiBuilt/Backend-Services/compare/v0.0.6...v0.0.7) (2023-02-03)
+
+
+### Features
+
+* **bidid:** added bid id in get tender ([439e7bc](https://github.com/GummadiBuilt/Backend-Services/commit/439e7bc9e3202b57ba85f5fe0aa0accd7cb7e993))
+* **comparison:** modified comparision api structure ([1c016cc](https://github.com/GummadiBuilt/Backend-Services/commit/1c016cc6d78859d6e0f7b2486d5ed6c3ae67b616))
+* **contractor:** get contractor document ([874306e](https://github.com/GummadiBuilt/Backend-Services/commit/874306ebc3fdcc48c1fd855250f42a9931753a89))
+* **dashboard:** dashboard changes for recommended & not recommended ([dda0241](https://github.com/GummadiBuilt/Backend-Services/commit/dda0241a7f3819d50100524c6722e0fbfb653554))
+* **dashboard:** Updated queries ([11b46cc](https://github.com/GummadiBuilt/Backend-Services/commit/11b46cca309bf6ef1327f34a550879dae4cf388a))
+* **email:** Email to admins ([db975fb](https://github.com/GummadiBuilt/Backend-Services/commit/db975fb9b64754f6f554b7758d0b82b6ed6d9c70))
+* **mail:** send emails on qualification action ([159b3dd](https://github.com/GummadiBuilt/Backend-Services/commit/159b3dd070ad579c094d8a9a7fa69a129dd90064))
+* **recommendation:** added recommendation api ([8dc23db](https://github.com/GummadiBuilt/Backend-Services/commit/8dc23db824cc1a8510fd78d048f6292b3d67a3ce))
+* **recommendation:** added recommendation api ([4b28ae0](https://github.com/GummadiBuilt/Backend-Services/commit/4b28ae01c5be6f7e8d19a588c5df417582d9bba5))
+* **tenderapplicants:** modified tender applicants query ([8e9a60a](https://github.com/GummadiBuilt/Backend-Services/commit/8e9a60a1e946de0be21c0f66504c22fbd169eaa3))
+* **tenderbid:** contractor applying for bid ([ad5fcff](https://github.com/GummadiBuilt/Backend-Services/commit/ad5fcff112c55b3977d1c8098771759106d5f8a1))
+* **tenderinfo:** Show technical & finance info ([b92e951](https://github.com/GummadiBuilt/Backend-Services/commit/b92e951a42bc7ad6be07c54db18ad3d875e696bb))
+
+
+### Bug Fixes
+
+* **applicant:** query fix for tender-applicants ([4dbac56](https://github.com/GummadiBuilt/Backend-Services/commit/4dbac56a13471d277ca582cad92df8095ccaada9))
+* **bid:** added tender bid id ([33fe97b](https://github.com/GummadiBuilt/Backend-Services/commit/33fe97b9b63f4a40d58571af83b932eb964174f5))
+* **bid:** bid fixes for put action ([0ade755](https://github.com/GummadiBuilt/Backend-Services/commit/0ade7550fb2f5f5f47718dadb8217377c8a107a2))
+* **compare:** fixes an issue for client with auth ([cd96c84](https://github.com/GummadiBuilt/Backend-Services/commit/cd96c84204cea5a9414a05f159c8f7ac1648587c))
+* **compare:** remove validation for compare ([97c1e93](https://github.com/GummadiBuilt/Backend-Services/commit/97c1e93758a73ac9fa41418ccce64fb5da086468))
+* **contractor:** fixes an issue with IN_REVIEW step ([4c8c97f](https://github.com/GummadiBuilt/Backend-Services/commit/4c8c97f9f8e6f66a7fe08c98be1b0c686c61be0b))
+* **document:** fix for blob uploads ([0e6193c](https://github.com/GummadiBuilt/Backend-Services/commit/0e6193c5b310790bea0f44a32b16a65ec66d02c8))
+* **query:** fixed issue in query ([133246f](https://github.com/GummadiBuilt/Backend-Services/commit/133246f86ea6792f68606e1f20b9cfe57bbfdd77))
+* **query:** Fixes an issue with query ([8335936](https://github.com/GummadiBuilt/Backend-Services/commit/833593689f11967ed05e7729bbeb727d41511ae1))
+* **query:** Fixes an issue with query ([3f40b0e](https://github.com/GummadiBuilt/Backend-Services/commit/3f40b0ec542a8f0b079a879b1c446be5473700a9))
+* **scheduler:** fixes for scheduler ([0c9aff6](https://github.com/GummadiBuilt/Backend-Services/commit/0c9aff6b4f54db9806c4dd69c643243410954c73))
+* **tenderapplicants:** Code refactor ([731ead1](https://github.com/GummadiBuilt/Backend-Services/commit/731ead133e995f5c05e3f826ab3ae814480436be))
+
 ### [0.0.6](https://github.com/GummadiBuilt/Backend-Services/compare/v0.0.5...v0.0.6) (2023-01-18)
 
 
