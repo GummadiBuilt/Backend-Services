@@ -133,7 +133,7 @@ public class TenderInfoService {
         CreateTenderInfoDto tenderInfoDto = mapper.readValue(tenderInformation, CreateTenderInfoDto.class);
         validateTenderInfo(tenderInfoDto);
         validateOnUpdate(tenderInfo, request);
-        if (!tenderDocument.isEmpty()) {
+        if (!tenderDocument.getOriginalFilename().equalsIgnoreCase("blob")) {
             FileUtils.checkFileValidOrNot(tenderDocument);
             amazonFileService.deleteFile(tenderInfo.getId(), tenderInfo.getTenderDocumentName());
             String response = amazonFileService.uploadFile(tenderInfo.getId(), metaData(tenderInfo), tenderDocument);

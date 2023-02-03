@@ -120,6 +120,7 @@ public class TenderBidInfoService {
         dto.setTenderFinanceInfo(financialInfo);
         dto.setContractorDocumentSize(tenderBidInfo.getTenderDocumentSize());
         dto.setContractorBidId(tenderBidInfo.getId());
+        dto.setContractorActionTaken(tenderBidInfo.getActionTaken());
         return dto;
 
     }
@@ -151,7 +152,7 @@ public class TenderBidInfoService {
         bidInfo.setTenderFinanceInfo(financialInfo);
         bidInfo.getChangeTracking().update(loggedInUser.toString());
 
-        if (!contractorDocument.isEmpty()) {
+        if (!contractorDocument.getOriginalFilename().equalsIgnoreCase("blob")) {
             FileUtils.checkFileValidOrNot(contractorDocument);
             String filePath = getFilePath(tenderInfo, loggedInUser.getUserId());
             amazonFileService.deleteFile(filePath, bidInfo.getTenderDocumentName());
@@ -171,6 +172,7 @@ public class TenderBidInfoService {
         dto.setTenderFinanceInfo(financialInfo);
         dto.setContractorDocumentSize(bidInfo.getTenderDocumentSize());
         dto.setContractorBidId(bidInfo.getId());
+        dto.setContractorActionTaken(bidInfo.getActionTaken());
         return dto;
     }
 
