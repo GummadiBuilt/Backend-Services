@@ -2,11 +2,13 @@ package com.infra.gummadibuilt.tenderapplicants.model.dto;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import java.math.BigDecimal;
+
 public interface TenderApplicantsDashboardDto {
 
     int getId();
 
-    int getApplicant_rank();
+    BigDecimal getApplicant_rank();
 
     String getApplication_status();
 
@@ -34,7 +36,7 @@ public interface TenderApplicantsDashboardDto {
 
     String getLocal_office_address();
 
-    float getTotal_revenue();
+    String getTurn_over_details();
 
     String getTender_finance_info();
 

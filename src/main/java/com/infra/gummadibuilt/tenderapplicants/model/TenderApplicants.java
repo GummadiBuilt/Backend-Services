@@ -12,8 +12,10 @@ import lombok.ToString;
 
 import javax.persistence.*;
 import javax.validation.Valid;
+import javax.validation.constraints.Digits;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.math.BigDecimal;
 
 @Entity
 @Getter
@@ -27,7 +29,8 @@ public class TenderApplicants {
     private int id;
 
     @NotNull
-    private int applicantRank;
+    @Digits(integer = 2, fraction = 3)
+    private BigDecimal applicantRank;
 
     @Size(max = 2500)
     private String justificationNote;

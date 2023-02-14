@@ -30,6 +30,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.transaction.Transactional;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
@@ -121,7 +122,7 @@ public class AppFormService {
         if (createDto.getActionTaken().equals(ActionTaken.SUBMIT)) {
             TenderApplicants applicants = new TenderApplicants();
             int currentApplicant = tenderApplicantsDao.countByTenderInfo(tenderInfo);
-            applicants.setApplicantRank(currentApplicant+1);
+            applicants.setApplicantRank(BigDecimal.valueOf(currentApplicant+1));
             applicants.setApplicationForm(form);
             applicants.setApplicationUser(applicationUser);
             applicants.setTenderInfo(tenderInfo);

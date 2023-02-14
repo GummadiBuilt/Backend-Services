@@ -16,7 +16,7 @@ public interface TenderApplicantsDao extends JpaRepository<TenderApplicants, Int
             "au.company_name, ta.justification_note, au.id as application_user_id ,ta.modified_by, ta.modified_date, " +
             "ti.workflow_step, ta.is_recommended, af.local_office_address," +
             "COALESCE (to_json(af.client_references\\:\\:text) #>> '{}', to_json(''\\:\\:text) #>> '{}') as client_references, " +
-            "(select coalesce(SUM((value ->>'revenue')\\:\\:float),0) from json_array_elements(coalesce(af.turn_over_details\\:\\:json,'[{}]'\\:\\:json))) as total_revenue,"+
+            "COALESCE (to_json(af.turn_over_details\\:\\:text) #>> '{}', to_json(''\\:\\:text) #>> '{}') as turn_over_details, " +
             "(select coalesce(SUM((value ->>'Total Price')\\:\\:float),0) from json_array_elements(coalesce(tbi.tender_finance_info\\:\\:json,'[{}]'\\:\\:json))) as financial_info,"+
             "case when ti.workflow_step IN('IN_REVIEW', 'RECOMMENDED') then COALESCE (tbi.tender_document_name,'') else '' end as tender_document," +
             "case when ti.workflow_step IN('IN_REVIEW', 'RECOMMENDED') then COALESCE (tbi.tender_document_size,0) else 0 end as tender_document_size, " +

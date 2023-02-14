@@ -9,6 +9,7 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -19,7 +20,7 @@ public class TenderApplicantsDto {
     private int id;
 
     @NotNull
-    private int applicantRank;
+    private BigDecimal applicantRank;
 
     @Size(max = 2500)
     private String justificationNote;
@@ -49,7 +50,7 @@ public class TenderApplicantsDto {
 
     private boolean isRecommended;
 
-    private float totalRevenue;
+    private Double totalRevenue;
 
     private float financialInfoTotal;
 
@@ -94,12 +95,19 @@ public class TenderApplicantsDto {
 
                 tenderApplicantsDto.setContractValue(totalContractValue);
             }
+            if (dashboardDto.getTurn_over_details().length() > 0) {
+                JsonNode clientRef = mapper.readTree(dashboardDto.getTurn_over_details());
+                Double totalTurnOver = StreamSupport.stream(clientRef.spliterator(), true)
+                        .filter(item -> item.get("revenue").asText().length() > 0)
+                        .map(c -> c.get("revenue")).mapToDouble(JsonNode::asDouble).sum();
+                tenderApplicantsDto.setTotalRevenue(totalTurnOver);
+            }
+
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
 
         tenderApplicantsDto.setLocalOfficeAddress(dashboardDto.getLocal_office_address());
-        tenderApplicantsDto.setTotalRevenue(dashboardDto.getTotal_revenue());
         tenderApplicantsDto.setFinancialInfoTotal(dashboardDto.getFinancial_info());
         tenderApplicantsDto.setRecommended(dashboardDto.getIs_recommended());
 
