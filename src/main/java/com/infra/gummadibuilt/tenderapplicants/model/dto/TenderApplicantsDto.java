@@ -80,15 +80,18 @@ public class TenderApplicantsDto {
                         .filter(item -> item.get("details").asText().equalsIgnoreCase("Contract Value:"))
                         .collect(Collectors.toList());
                 float totalContractValue = 0;
-                if (contractValue.get(0).has("Project 1")) {
-                    totalContractValue = totalContractValue + contractValue.get(0).get("Project 1").asLong();
+                if (contractValue.size() > 0) {
+                    if (contractValue.get(0).has("Project 1")) {
+                        totalContractValue = totalContractValue + contractValue.get(0).get("Project 1").asLong();
+                    }
+                    if (contractValue.get(0).has("Project 2")) {
+                        totalContractValue = totalContractValue + contractValue.get(0).get("Project 2").asLong();
+                    }
+                    if (contractValue.get(0).has("Project 3")) {
+                        totalContractValue = totalContractValue + contractValue.get(0).get("Project 3").asLong();
+                    }
                 }
-                if (contractValue.get(0).has("Project 2")) {
-                    totalContractValue = totalContractValue + contractValue.get(0).get("Project 2").asLong();
-                }
-                if (contractValue.get(0).has("Project 3")) {
-                    totalContractValue = totalContractValue + contractValue.get(0).get("Project 3").asLong();
-                }
+
                 tenderApplicantsDto.setContractValue(totalContractValue);
             }
         } catch (JsonProcessingException e) {
