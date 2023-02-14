@@ -30,7 +30,15 @@ public interface TenderApplicantsDashboardDto {
 
     int getTender_document_size();
 
+    float getFinancial_info();
+
+    String getLocal_office_address();
+
+    float getTotal_revenue();
+
     String getTender_finance_info();
+
+    String getClient_references();
 
     Boolean getIs_recommended();
 }
