@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.8](https://github.com/GummadiBuilt/Backend-Services/compare/v0.0.7...v0.0.8) (2023-02-15)
+
+
+### Features
+
+* **applicants:** added additional info ([5e13daf](https://github.com/GummadiBuilt/Backend-Services/commit/5e13daf3bf4c8be094b784b960d897928ec1cc1b))
+* **applicants:** added additional info ([83f81b8](https://github.com/GummadiBuilt/Backend-Services/commit/83f81b8060dea992f29a1d999907fbfc155440f5))
+* **applicants:** added additional info ([dcee9af](https://github.com/GummadiBuilt/Backend-Services/commit/dcee9af830d662a2f61a949ae54bade0d5408ae4))
+
+
+### Bug Fixes
+
+* **applicants:** turnover calculation chang ([3952c22](https://github.com/GummadiBuilt/Backend-Services/commit/3952c221da9e1755d44dea2cedb3558ce45b3b58))
+
 ### [0.0.7](https://github.com/GummadiBuilt/Backend-Services/compare/v0.0.6...v0.0.7) (2023-02-03)
 
 
