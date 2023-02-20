@@ -71,7 +71,7 @@ public class ExportToExcel {
             styleMap.put("n", style);
             styleMap.put("n+1", colorStyle);
 
-            Sheet sheet = workbook.createSheet(String.format("Tender_%s_comparison",tenderId));
+            Sheet sheet = workbook.createSheet(String.format("Tender_%s_comparison", tenderId));
             sheet.setColumnWidth(0, 9000);
 
             List<String> headerList = Arrays.asList(CommonModuleUtils.excelHeaders());
@@ -229,18 +229,18 @@ public class ExportToExcel {
     }
 
     private void fillData(Sheet sheet, List<String> comparisonDtos, Row row, Map<String, CellStyle> style) {
-        comparisonDtos.forEach(item -> {
-            int i = comparisonDtos.indexOf(item) + 1;
+        int i = 0;
+        for (String dto : comparisonDtos) {
             sheet.setColumnWidth(i, 9999);
             Cell data = row.createCell(i);
-            data.setCellValue(item);
+            data.setCellValue(dto);
             if (i % 2 == 1) {
                 data.setCellStyle(style.get("n+1"));
             } else {
                 data.setCellStyle(style.get("n"));
             }
-        });
-
+            i++;
+        }
     }
 
     private Row createCell(Sheet sheet, int index, String cellValue, CellStyle style) {
