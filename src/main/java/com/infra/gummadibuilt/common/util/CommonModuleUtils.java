@@ -62,4 +62,51 @@ public class CommonModuleUtils {
         return DAYS.between(today, lastDateOfSubmission);
     }
 
+    public static String[] excelHeaders() {
+        return new String[]{
+                "Company Name",
+                "Year of establishment",
+                "Type of establishment",
+                "Postal Address[Corporate Office]",
+                "Postal Address[Local Office]",
+                "Telephone",
+                "Fax",
+                "Contact Person Name",
+                "Designation",
+                "Contact Phone Number",
+                "Contact Email ID",
+                "Regional Head/Project Coordinator",
+                "Regional Head/Project Coordinator Mobile No",
+                "Turnover Details",
+                "Client Reference #1",
+                "Client Reference #2",
+                "Client Reference #3",
+                "Similar Project #1",
+                "Similar Project #2",
+                "Similar Project #3",
+                "ESI Registration",
+                "EPF Registration",
+                "GST Registration",
+                "PAN Number",
+                "Employee Strength",
+                "Capital Equipments",
+                "Safety Policy Manual",
+                "PPE to Staff",
+                "PPE to Work Men",
+                "Safety Office Availability",
+                "Financial Information",
+                "Company Bankers",
+                "Company Auditors"
+        };
+    }
+
+    public static String[] clientReferenceHeaders() {
+        return new String[]{
+                "Name & Location of Project:",
+                "Scope of Contract:",
+                "Contract Value:",
+                "Built Up Area:"
+        };
+    }
+
 }

@@ -1,5 +1,6 @@
 package com.infra.gummadibuilt.tenderapplicants;
 
+import com.infra.gummadibuilt.common.file.FileDownloadDto;
 import com.infra.gummadibuilt.tenderapplicants.model.dto.ApplicantsComparisonDto;
 import com.infra.gummadibuilt.tenderapplicants.model.dto.TenderApplicantsDashboardDto;
 import com.infra.gummadibuilt.tenderapplicants.model.dto.TenderApplicantsDto;
@@ -19,6 +20,7 @@ import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -29,10 +31,13 @@ import java.util.List;
 public class TenderApplicantsController {
 
     private final TenderApplicantsService tenderApplicantsService;
+    private final ExportToExcel exportToExcel;
 
     @Autowired
-    public TenderApplicantsController(TenderApplicantsService tenderApplicantsService) {
+    public TenderApplicantsController(TenderApplicantsService tenderApplicantsService,
+                                      ExportToExcel exportToExcel) {
         this.tenderApplicantsService = tenderApplicantsService;
+        this.exportToExcel = exportToExcel;
     }
 
     @Operation(summary = "Get applicants info by tender")
@@ -90,5 +95,13 @@ public class TenderApplicantsController {
         return tenderApplicantsService.recommendContractor(request, tenderId, applicationFormId);
     }
 
+
+    @GetMapping("/{tenderId}/export-to-excel/{applicantId}")
+    public FileDownloadDto exportToExcel(@PathVariable @NotBlank String tenderId,
+                                         @PathVariable List<String> applicantId,
+                                         HttpServletRequest request) throws IOException {
+
+        return exportToExcel.exportToExcel(tenderId, applicantId, request);
+    }
 
 }
