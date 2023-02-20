@@ -229,7 +229,7 @@ public class ExportToExcel {
     }
 
     private void fillData(Sheet sheet, List<String> comparisonDtos, Row row, Map<String, CellStyle> style) {
-        int i = 0;
+        int i = 1;
         for (String dto : comparisonDtos) {
             sheet.setColumnWidth(i, 9999);
             Cell data = row.createCell(i);
