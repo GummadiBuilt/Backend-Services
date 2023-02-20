@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.9](https://github.com/GummadiBuilt/Backend-Services/compare/v0.0.8...v0.0.9) (2023-02-20)
+
+
+### Features
+
+* **Enquiry:** Added feature to enquiry about application ([eed2e56](https://github.com/GummadiBuilt/Backend-Services/commit/eed2e56e95b9a3cf642d1fe8bab5fb31a8df82da))
+* **excel:** added feature to export application forms to excel ([47182c7](https://github.com/GummadiBuilt/Backend-Services/commit/47182c73ee5677246322e73ca3e57d7f16c8d768))
+* **excel:** added feature to export application forms to excel ([a96a469](https://github.com/GummadiBuilt/Backend-Services/commit/a96a4695acd8c23326bf143528a56eaf51139400))
+* **excel:** added feature to export application forms to excel ([556734d](https://github.com/GummadiBuilt/Backend-Services/commit/556734dfacca21f8694f621f20ffb6b63b85c241))
+* **excel:** added feature to export application forms to excel ([309c07e](https://github.com/GummadiBuilt/Backend-Services/commit/309c07eded9fd32aefd9ee7e28201c9c5a0ddb11))
+* **excel:** added feature to export application forms to excel ([7b07cc1](https://github.com/GummadiBuilt/Backend-Services/commit/7b07cc163759ac5b0e651cc32409c5d042dd246e))
+
 ### [0.0.8](https://github.com/GummadiBuilt/Backend-Services/compare/v0.0.7...v0.0.8) (2023-02-15)
 
 
