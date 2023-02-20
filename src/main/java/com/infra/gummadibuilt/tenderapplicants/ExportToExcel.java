@@ -71,7 +71,7 @@ public class ExportToExcel {
             styleMap.put("n", style);
             styleMap.put("n+1", colorStyle);
 
-            Sheet sheet = workbook.createSheet("Comparison");
+            Sheet sheet = workbook.createSheet(String.format("Tender_%s_comparison",tenderId));
             sheet.setColumnWidth(0, 9000);
 
             List<String> headerList = Arrays.asList(CommonModuleUtils.excelHeaders());
