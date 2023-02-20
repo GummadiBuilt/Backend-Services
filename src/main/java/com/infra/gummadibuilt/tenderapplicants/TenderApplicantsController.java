@@ -97,6 +97,7 @@ public class TenderApplicantsController {
 
 
     @GetMapping("/{tenderId}/export-to-excel/{applicantId}")
+    @RolesAllowed({"admin", "client"})
     public FileDownloadDto exportToExcel(@PathVariable @NotBlank String tenderId,
                                          @PathVariable List<String> applicantId,
                                          HttpServletRequest request) throws IOException {
