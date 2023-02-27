@@ -1,4 +1,4 @@
-<#assign subject>Registration pending approval</#assign>
+<#assign subject>Enquiry - Contact Us</#assign>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
 	<head>
