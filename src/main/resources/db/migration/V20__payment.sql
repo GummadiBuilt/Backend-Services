@@ -1,0 +1,20 @@
+CREATE TABLE payment (
+  reference_id              VARCHAR(255)    NOT NULL,
+  application_role_id       INT4            NOT NULL REFERENCES application_role(id),
+  tender_info_id            VARCHAR(255)    NOT NULL REFERENCES tender_info(id),
+  payment_amount            NUMERIC(10,2)   NOT NULL,
+  short_url                 VARCHAR(255)    NOT NULL,
+  payment_id                VARCHAR(255)    NOT NULL,
+  expire_by                 INT4            NOT NULL,
+  payment_description       VARCHAR(50)     NOT NULL,
+  contact_name              VARCHAR(50)     NOT NULL,
+  contact_phone_number      VARCHAR(13),
+  contact_email_address     VARCHAR(50),
+  notify_via_sms            BOOLEAN,
+  notify_via_email          BOOLEAN,
+  created_by                VARCHAR(255)    NOT NULL,
+  created_date              TIMESTAMP       NOT NULL,
+  modified_by               VARCHAR(255)    NOT NULL,
+  modified_date             TIMESTAMP       NOT NULL,
+  PRIMARY KEY (reference_id)
+);

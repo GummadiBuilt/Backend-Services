@@ -7,7 +7,6 @@ import com.infra.gummadibuilt.common.LoggedInUser;
 import com.infra.gummadibuilt.common.mail.MailService;
 import com.infra.gummadibuilt.common.util.SaveEntityConstraintHelper;
 import com.infra.gummadibuilt.userandrole.ApplicationRoleDao;
-import com.infra.gummadibuilt.userandrole.ApplicationUserDao;
 import com.infra.gummadibuilt.userandrole.model.ApplicationRole;
 import com.infra.gummadibuilt.userregistration.UserRegistrationService;
 import freemarker.template.TemplateException;
