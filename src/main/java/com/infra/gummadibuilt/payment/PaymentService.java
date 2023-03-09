@@ -15,8 +15,7 @@ import com.infra.gummadibuilt.tenderapplicants.model.TenderApplicants;
 import com.infra.gummadibuilt.userandrole.ApplicationRoleDao;
 import com.infra.gummadibuilt.userandrole.model.ApplicationRole;
 import com.infra.gummadibuilt.userandrole.model.ApplicationUser;
-import com.infra.gummadibuilt.userandrole.model.dto.ApplicationRoleDto;
-import com.razorpay.PaymentLink;
+    import com.razorpay.PaymentLink;
 import com.razorpay.RazorpayClient;
 import com.razorpay.RazorpayException;
 import org.json.JSONObject;
@@ -66,7 +65,8 @@ public class PaymentService {
         var tenderPayUsers = new ArrayList<TenderPayUserDto>();
         var client = new TenderPayUserDto();
         ApplicationUser applicationUser = tenderInfo.getApplicationUser();
-        client.setApplicationRole(ApplicationRoleDto.valueOf(applicationUser.getApplicationRole()));
+        client.setApplicationRoleId(applicationUser.getApplicationRole().getId());
+        client.setApplicationRoleName(applicationUser.getApplicationRole().getRoleName());
         client.setCompanyName(applicationUser.getCompanyName());
         client.setContactName(String.format("%s, %s", applicationUser.getContactFirstName(), applicationUser.getContactLastName()));
         client.setContactPhoneNumber(applicationUser.getContactPhoneNumber());
@@ -79,7 +79,8 @@ public class PaymentService {
         tenderApplicants.forEach(applicants -> {
             var contractors = new TenderPayUserDto();
             ApplicationUser appUser = applicants.getApplicationUser();
-            contractors.setApplicationRole(ApplicationRoleDto.valueOf(appUser.getApplicationRole()));
+            contractors.setApplicationRoleId(appUser.getApplicationRole().getId());
+            contractors.setApplicationRoleName(appUser.getApplicationRole().getRoleName());
             contractors.setCompanyName(appUser.getCompanyName());
             contractors.setContactName(String.format("%s, %s", appUser.getContactFirstName(), appUser.getContactLastName()));
             contractors.setContactPhoneNumber(appUser.getContactPhoneNumber());
