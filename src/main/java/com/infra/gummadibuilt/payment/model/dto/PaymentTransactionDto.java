@@ -52,6 +52,7 @@ public class PaymentTransactionDto {
         result.setPaymentDescription(payment.getPaymentDescription());
         result.setContactName(payment.getContactName());
         result.setContactEmailAddress(payment.getContactEmailAddress());
+        result.setContactPhoneNumber(payment.getContactPhoneNumber());
         result.setNotifyViaEmail(payment.isNotifyViaEmail());
         result.setNotifyViaSms(payment.isNotifyViaSms());
         result.setApplicationRole(ApplicationRoleDto.valueOf(payment.getApplicationRole()));
