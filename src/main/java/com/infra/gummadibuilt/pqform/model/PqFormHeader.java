@@ -37,9 +37,6 @@ public class PqFormHeader {
     private LocalDate tentativeDateOfAward;
 
     @NotNull
-    private LocalDate scheduledCompletion;
-
-    @NotNull
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "tender_info_id")
     private TenderInfo tenderInfo;
@@ -57,11 +54,11 @@ public class PqFormHeader {
 
         PqFormHeader that = (PqFormHeader) o;
 
-        return new EqualsBuilder().append(getId(), that.getId()).append(getPqDocumentIssueDate(), that.getPqDocumentIssueDate()).append(getPqLastDateOfSubmission(), that.getPqLastDateOfSubmission()).append(getTentativeDateOfAward(), that.getTentativeDateOfAward()).append(getScheduledCompletion(), that.getScheduledCompletion()).append(getTenderInfo(), that.getTenderInfo()).append(getChangeTracking(), that.getChangeTracking()).isEquals();
+        return new EqualsBuilder().append(getId(), that.getId()).append(getPqDocumentIssueDate(), that.getPqDocumentIssueDate()).append(getPqLastDateOfSubmission(), that.getPqLastDateOfSubmission()).append(getTentativeDateOfAward(), that.getTentativeDateOfAward()).append(getTenderInfo(), that.getTenderInfo()).append(getChangeTracking(), that.getChangeTracking()).isEquals();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder(17, 37).append(getId()).append(getPqDocumentIssueDate()).append(getPqLastDateOfSubmission()).append(getTentativeDateOfAward()).append(getScheduledCompletion()).append(getTenderInfo()).append(getChangeTracking()).toHashCode();
+        return new HashCodeBuilder(17, 37).append(getId()).append(getPqDocumentIssueDate()).append(getPqLastDateOfSubmission()).append(getTentativeDateOfAward()).append(getTenderInfo()).append(getChangeTracking()).toHashCode();
     }
 }

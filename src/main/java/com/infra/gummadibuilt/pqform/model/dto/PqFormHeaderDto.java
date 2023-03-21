@@ -32,7 +32,6 @@ public class PqFormHeaderDto extends PqFormHeaderCreateDto implements Serializab
         }
         result.setPqLastDateOfSubmission(pqFormHeader.getPqLastDateOfSubmission().format(DateTimeFormatter.ofPattern(DATE_PATTERN)));
         result.setTentativeDateOfAward(pqFormHeader.getTentativeDateOfAward().format(DateTimeFormatter.ofPattern(DATE_PATTERN)));
-        result.setScheduledCompletion(pqFormHeader.getScheduledCompletion().format(DateTimeFormatter.ofPattern(DATE_PATTERN)));
         result.setTenderId(pqFormHeader.getTenderInfo().getId());
         result.setWorkflowStep(pqFormHeader.getTenderInfo().getWorkflowStep());
         return result;

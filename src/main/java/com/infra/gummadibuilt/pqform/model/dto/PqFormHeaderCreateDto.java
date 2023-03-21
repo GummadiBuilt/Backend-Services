@@ -15,8 +15,5 @@ public class PqFormHeaderCreateDto implements Serializable {
     @NotNull
     private String tentativeDateOfAward;
 
-    @NotNull
-    private String scheduledCompletion;
-
     private WorkflowStep workflowStep;
 }

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
 import com.infra.gummadibuilt.common.ChangeTracking;
 import com.infra.gummadibuilt.common.LoggedInUser;
+import com.infra.gummadibuilt.common.exception.InValidDataSubmittedException;
 import com.infra.gummadibuilt.common.exception.InvalidActionException;
 import com.infra.gummadibuilt.common.file.AmazonFileService;
 import com.infra.gummadibuilt.common.file.FileDownloadDto;
@@ -20,7 +21,8 @@ import com.infra.gummadibuilt.tenderapplicationform.model.ApplicationForm;
 import com.infra.gummadibuilt.tenderapplicationform.model.dto.ActionTaken;
 import com.infra.gummadibuilt.tenderapplicationform.model.dto.ApplicationFormCreateDto;
 import com.infra.gummadibuilt.tenderapplicationform.model.dto.ApplicationFormDto;
-import com.infra.gummadibuilt.tenderapplicationform.model.dto.FinancialYearDocument;
+import com.infra.gummadibuilt.tenderapplicationform.model.dto.DocumentType;
+import com.infra.gummadibuilt.userandrole.ApplicationRoleDao;
 import com.infra.gummadibuilt.userandrole.ApplicationUserDao;
 import com.infra.gummadibuilt.userandrole.model.ApplicationUser;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,18 +57,21 @@ public class AppFormService {
     private final AmazonFileService amazonFileService;
 
     private final TenderApplicantsDao tenderApplicantsDao;
+    private final ApplicationRoleDao applicationRoleDao;
 
     @Autowired
     public AppFormService(TenderInfoDao tenderInfoDao,
                           ApplicationFormDao applicationFormDao,
                           ApplicationUserDao applicationUserDao,
                           AmazonFileService amazonFileService,
-                          TenderApplicantsDao tenderApplicantsDao) {
+                          TenderApplicantsDao tenderApplicantsDao,
+                          ApplicationRoleDao applicationRoleDao) {
         this.tenderInfoDao = tenderInfoDao;
         this.applicationFormDao = applicationFormDao;
         this.applicationUserDao = applicationUserDao;
         this.amazonFileService = amazonFileService;
         this.tenderApplicantsDao = tenderApplicantsDao;
+        this.applicationRoleDao = applicationRoleDao;
     }
 
     public ApplicationFormDto get(HttpServletRequest request, String tenderId, int applicationId) {
@@ -81,14 +86,14 @@ public class AppFormService {
     }
 
     @Transactional
-    public ApplicationFormDto applyTender(HttpServletRequest request, ApplicationFormCreateDto createDto, String tenderId) {
+    public ApplicationFormDto applyTender(HttpServletRequest request, String tenderId) {
         LoggedInUser loggedInUser = loggedInUserInfo(request);
         ApplicationUser applicationUser = getById(applicationUserDao, loggedInUser.getUserId(), USER_NOT_FOUND);
         TenderInfo tenderInfo = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
         this.validateTypeOfEstablishment(applicationUser, tenderInfo);
         this.validatePqForm(tenderInfo);
         ApplicationForm form = new ApplicationForm();
-        this.createApplication(form, createDto);
+        this.setUserKnownInfo(form, applicationUser);
         form.setChangeTracking(new ChangeTracking(loggedInUser.toString()));
         form.setTenderInfo(tenderInfo);
         form.setApplicationUser(applicationUser);
@@ -120,9 +125,10 @@ public class AppFormService {
         form.setApplicationUser(applicationUser);
         SaveEntityConstraintHelper.save(applicationFormDao, form, null);
         if (createDto.getActionTaken().equals(ActionTaken.SUBMIT)) {
+            this.validateFileUpload(form);
             TenderApplicants applicants = new TenderApplicants();
             int currentApplicant = tenderApplicantsDao.countByTenderInfo(tenderInfo);
-            applicants.setApplicantRank(BigDecimal.valueOf(currentApplicant+1));
+            applicants.setApplicantRank(BigDecimal.valueOf(currentApplicant + 1));
             applicants.setApplicationForm(form);
             applicants.setApplicationUser(applicationUser);
             applicants.setTenderInfo(tenderInfo);
@@ -136,9 +142,9 @@ public class AppFormService {
 
     @Transactional
     public ApplicationFormDto uploadDocument(HttpServletRequest request,
-                                             MultipartFile yearDocument,
+                                             MultipartFile fileToUpload,
                                              String tenderId,
-                                             FinancialYearDocument fileYear,
+                                             DocumentType documentType,
                                              String applicationId) {
         LoggedInUser loggedInUser = loggedInUserInfo(request);
         ApplicationUser applicationUser = getById(applicationUserDao, loggedInUser.getUserId(), USER_NOT_FOUND);
@@ -149,68 +155,115 @@ public class AppFormService {
         this.validatePqForm(tenderInfo);
         this.validateTenderAndStatus(applicationForm, tenderId);
         this.validateAccess(applicationUser, loggedInUser);
-        FileUtils.checkFileValidOrNot(yearDocument);
+        FileUtils.checkFileValidOrNot(fileToUpload);
         String filePath = String.format("%s/%s", tenderId, loggedInUser.getUserId());
-        List<JsonNode> turnOverInfoNodes;
+        List<JsonNode> turnOverInfoNodes = null;
         List<JsonNode> turnOverDetails = applicationForm.getTurnOverDetails();
-        switch (fileYear.getText()) {
+        boolean modifyTax = false;
+        String fileName = fileToUpload.getOriginalFilename();
+        switch (documentType.getText()) {
+            case "GST":
+                filePath = String.format("%s/%s", filePath, DocumentType.GST.getText());
+                applicationForm.setGstRegistrationFileName(fileName);
+                break;
+            case "ESI":
+                filePath = String.format("%s/%s", filePath, DocumentType.ESI.getText());
+                applicationForm.setEsiRegistrationFileName(fileName);
+                break;
+            case "EPF":
+                filePath = String.format("%s/%s", filePath, DocumentType.EPF.getText());
+                applicationForm.setEpfRegistrationFileName(fileName);
+                break;
+            case "PAN":
+                filePath = String.format("%s/%s", filePath, DocumentType.PAN.getText());
+                applicationForm.setPanFileName(fileName);
+                break;
             case "YEAR_ONE":
-                turnOverInfoNodes = this.modifyTurnOverInfo(turnOverDetails, yearDocument, FinancialYearDocument.YEAR_ONE.getText());
-                filePath = String.format("%s/%s", filePath, FinancialYearDocument.YEAR_ONE.getText());
+                modifyTax = true;
+                turnOverInfoNodes = this.modifyTurnOverInfo(turnOverDetails, fileToUpload, DocumentType.YEAR_ONE.getText());
+                filePath = String.format("%s/%s", filePath, DocumentType.YEAR_ONE.getText());
                 break;
             case "YEAR_TWO":
-                turnOverInfoNodes = this.modifyTurnOverInfo(turnOverDetails, yearDocument, FinancialYearDocument.YEAR_TWO.getText());
-                filePath = String.format("%s/%s", filePath, FinancialYearDocument.YEAR_TWO.getText());
+                modifyTax = true;
+                turnOverInfoNodes = this.modifyTurnOverInfo(turnOverDetails, fileToUpload, DocumentType.YEAR_TWO.getText());
+                filePath = String.format("%s/%s", filePath, DocumentType.YEAR_TWO.getText());
                 break;
             case "YEAR_THREE":
-                turnOverInfoNodes = this.modifyTurnOverInfo(turnOverDetails, yearDocument, FinancialYearDocument.YEAR_THREE.getText());
-                filePath = String.format("%s/%s", filePath, FinancialYearDocument.YEAR_THREE.getText());
+                modifyTax = true;
+                turnOverInfoNodes = this.modifyTurnOverInfo(turnOverDetails, fileToUpload, DocumentType.YEAR_THREE.getText());
+                filePath = String.format("%s/%s", filePath, DocumentType.YEAR_THREE.getText());
                 break;
             default:
-                throw new RuntimeException(String.format("Given year format %s is invalid", fileYear));
+                throw new RuntimeException(String.format("Given year format %s is invalid", documentType));
         }
 
-        amazonFileService.uploadFile(filePath, metaData(applicationForm), yearDocument);
-        applicationForm.setTurnOverDetails(turnOverInfoNodes);
+        amazonFileService.uploadFile(filePath, metaData(applicationForm), fileToUpload);
+        if (modifyTax) {
+            applicationForm.setTurnOverDetails(turnOverInfoNodes);
+        }
         SaveEntityConstraintHelper.save(applicationFormDao, applicationForm, null);
         return ApplicationFormDto.valueOf(applicationForm);
     }
 
     public FileDownloadDto downloadDocument(HttpServletRequest request,
                                             String tenderId,
-                                            FinancialYearDocument fileYear,
+                                            DocumentType documentType,
                                             String applicationId) {
 
         LoggedInUser loggedInUser = loggedInUserInfo(request);
         ApplicationUser applicationUser = getById(applicationUserDao, loggedInUser.getUserId(), USER_NOT_FOUND);
         int appId = Integer.parseInt(applicationId);
         ApplicationForm applicationForm = getById(applicationFormDao, appId, APPLICATION_FORM_NOT_FOUND);
-        TenderInfo tenderInfo = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
+        getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
         this.validateTenderAndStatus(applicationForm, tenderId);
         if (request.isUserInRole("contractor")) {
             this.validateAccess(applicationUser, loggedInUser);
         }
 
         String filePath = String.format("%s/%s", tenderId, loggedInUser.getUserId());
-        String fileName = applicationForm.getTurnOverDetails().stream()
-                .filter(item -> item.get("row").asText().equals("YEAR_ONE"))
-                .map(item -> item.get("fileName").asText())
-                .collect(Collectors.joining(","));
-
-        switch (fileYear.getText()) {
-            case "YEAR_ONE":
-                filePath = String.format("%s/%s", filePath, FinancialYearDocument.YEAR_ONE.getText());
-                break;
-            case "YEAR_TWO":
-                filePath = String.format("%s/%s", filePath, FinancialYearDocument.YEAR_TWO.getText());
-                break;
-            case "YEAR_THREE":
-                filePath = String.format("%s/%s", filePath, FinancialYearDocument.YEAR_THREE.getText());
-                break;
-            default:
-                throw new RuntimeException(String.format("Given year format %s is invalid", fileYear));
+        String fileName = "";
+        if (documentType.getText().equals("YEAR_ONE") ||
+                documentType.getText().equals("YEAR_TWO") ||
+                documentType.getText().equals("YEAR_THREE")
+        ) {
+            fileName = applicationForm.getTurnOverDetails().stream()
+                    .filter(item -> item.get("row").asText().equals(documentType.getText()))
+                    .map(item -> item.get("fileName").asText())
+                    .collect(Collectors.joining(","));
         }
 
+        switch (documentType.getText()) {
+            case "GST":
+                fileName = applicationForm.getGstRegistrationFileName();
+                filePath = String.format("%s/%s", filePath, DocumentType.GST.getText());
+                break;
+            case "ESI":
+                fileName = applicationForm.getEsiRegistrationFileName();
+                filePath = String.format("%s/%s", filePath, DocumentType.ESI.getText());
+                break;
+            case "EPF":
+                fileName = applicationForm.getEpfRegistrationFileName();
+                filePath = String.format("%s/%s", filePath, DocumentType.EPF.getText());
+                break;
+            case "PAN":
+                fileName = applicationForm.getPanFileName();
+                filePath = String.format("%s/%s", filePath, DocumentType.PAN.getText());
+                break;
+            case "YEAR_ONE":
+                filePath = String.format("%s/%s", filePath, DocumentType.YEAR_ONE.getText());
+                break;
+            case "YEAR_TWO":
+                filePath = String.format("%s/%s", filePath, DocumentType.YEAR_TWO.getText());
+                break;
+            case "YEAR_THREE":
+                filePath = String.format("%s/%s", filePath, DocumentType.YEAR_THREE.getText());
+                break;
+            default:
+                throw new RuntimeException(String.format("Given document type %s is invalid", documentType));
+        }
+        if (fileName.isEmpty()) {
+            throw new InValidDataSubmittedException(String.format("Request document type %s doesn't exist", documentType.getText()));
+        }
         return amazonFileService.downloadFile(filePath, fileName);
     }
 
@@ -239,10 +292,18 @@ public class AppFormService {
                 .collect(Collectors.toList());
     }
 
+    private void setUserKnownInfo(ApplicationForm form, ApplicationUser user) {
+        form.setCompanyName(user.getCompanyName());
+        form.setYearOfEstablishment(String.valueOf(user.getYearOfEstablishment()));
+        form.setTypeOfEstablishment(String.join(",", user.getTypeOfEstablishment()));
+        form.setCorpOfficeAddress(user.getAddress());
+        form.setContactName(String.format("%s, %s", user.getContactFirstName(), user.getContactLastName()));
+        form.setContactEmailId(user.getContactEmailAddress());
+        form.setContactDesignation(user.getContactDesignation());
+        form.setContactPhoneNum(user.getContactPhoneNumber());
+    }
+
     private void createApplication(ApplicationForm form, ApplicationFormCreateDto createDto) {
-        form.setCompanyName(createDto.getCompanyName());
-        form.setYearOfEstablishment(createDto.getYearOfEstablishment());
-        form.setTypeOfEstablishment(createDto.getTypeOfEstablishment());
         form.setCorpOfficeAddress(createDto.getCorpOfficeAddress());
         form.setLocalOfficeAddress(createDto.getLocalOfficeAddress());
         form.setTelephoneNum(createDto.getTelephoneNum());
@@ -318,5 +379,22 @@ public class AppFormService {
         }
     }
 
+    public void validateFileUpload(ApplicationForm applicationForm) {
+        if (applicationForm.getGstRegistrationFileName().isEmpty()) {
+            throw new InValidDataSubmittedException("GST registration is missing file upload");
+        }
+
+        if (applicationForm.getEpfRegistrationFileName().isEmpty()) {
+            throw new InValidDataSubmittedException("EPF registration is missing file upload");
+        }
+
+        if (applicationForm.getEsiRegistrationFileName().isEmpty()) {
+            throw new InValidDataSubmittedException("ESI registration is missing file upload");
+        }
+
+        if (applicationForm.getPanFileName().isEmpty()) {
+            throw new InValidDataSubmittedException("PAN is missing file upload");
+        }
+    }
 
 }

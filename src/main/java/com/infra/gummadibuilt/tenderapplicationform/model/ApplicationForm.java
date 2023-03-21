@@ -47,7 +47,7 @@ public class ApplicationForm {
     private String yearOfEstablishment;
 
     @NotBlank
-    @Size(max = 255)
+    @Size(max = 2500)
     private String typeOfEstablishment;
 
     @Size(max = 500)
@@ -102,13 +102,25 @@ public class ApplicationForm {
     private String esiRegistration;
 
     @Size(max = 255)
+    private String esiRegistrationFileName;
+
+    @Size(max = 255)
     private String epfRegistration;
+
+    @Size(max = 255)
+    private String epfRegistrationFileName;
 
     @Size(max = 255)
     private String gstRegistration;
 
+    @Size(max = 255)
+    private String gstRegistrationFileName;
+
     @Size(max = 25)
     private String panNumber;
+
+    @Size(max = 255)
+    private String panFileName;
 
     @Type(type = "jsonb")
     @Column(columnDefinition = "jsonb")

@@ -3,7 +3,7 @@ package com.infra.gummadibuilt.tenderapplicationform;
 import com.infra.gummadibuilt.common.file.FileDownloadDto;
 import com.infra.gummadibuilt.tenderapplicationform.model.dto.ApplicationFormCreateDto;
 import com.infra.gummadibuilt.tenderapplicationform.model.dto.ApplicationFormDto;
-import com.infra.gummadibuilt.tenderapplicationform.model.dto.FinancialYearDocument;
+import com.infra.gummadibuilt.tenderapplicationform.model.dto.DocumentType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -40,7 +40,7 @@ public class AppFormController {
             @ApiResponse(responseCode = "404", description = "The resource you were trying to reach is not found")
     })
     @GetMapping("/{applicationId}")
-    @RolesAllowed({"contractor", "client", "admin"})
+    @RolesAllowed({"contractor", "admin"})
     public ApplicationFormDto get(HttpServletRequest request,
                                   @PathVariable("tenderId") String tenderId,
                                   @PathVariable("applicationId") String applicationId) {
@@ -58,10 +58,9 @@ public class AppFormController {
     @PostMapping
     @RolesAllowed("contractor")
     public ApplicationFormDto applyTender(HttpServletRequest request,
-                                          @RequestBody ApplicationFormCreateDto createDto,
                                           @PathVariable("tenderId") String tenderId) {
 
-        return appFormService.applyTender(request, createDto, tenderId);
+        return appFormService.applyTender(request, tenderId);
     }
 
     @Operation(summary = "Update tender application form")
@@ -81,7 +80,7 @@ public class AppFormController {
         return appFormService.update(request, createDto, tenderId, applicationId);
     }
 
-    @Operation(summary = "Upload file to a financial year")
+    @Operation(summary = "Upload files in Application form")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success, when given file is uploaded",
                     content = {@Content(mediaType = "application/json",
@@ -89,14 +88,14 @@ public class AppFormController {
                     }),
             @ApiResponse(responseCode = "404", description = "The resource you were trying to reach is not found")
     })
-    @PutMapping("/{applicationId}/upload/{fileYear}")
+    @PutMapping("/{applicationId}/upload/{documentType}")
     @RolesAllowed("contractor")
     public ApplicationFormDto uploadDocument(HttpServletRequest request,
-                                  @RequestPart("yearDocument") @NotNull MultipartFile yearDocument,
-                                  @PathVariable("tenderId") String tenderId,
-                                  @PathVariable("fileYear") FinancialYearDocument fileYear,
-                                  @PathVariable("applicationId") String applicationId) {
-        return appFormService.uploadDocument(request, yearDocument, tenderId, fileYear, applicationId);
+                                             @RequestPart("document") @NotNull MultipartFile fileToUpload,
+                                             @PathVariable("tenderId") String tenderId,
+                                             @PathVariable("documentType") DocumentType documentType,
+                                             @PathVariable("applicationId") String applicationId) {
+        return appFormService.uploadDocument(request, fileToUpload, tenderId, documentType, applicationId);
     }
 
     @Operation(summary = "Download file for the given application id & financial year")
@@ -107,12 +106,12 @@ public class AppFormController {
                     }),
             @ApiResponse(responseCode = "404", description = "The resource you were trying to reach is not found")
     })
-    @GetMapping("/{applicationId}/download/{fileYear}")
+    @GetMapping("/{applicationId}/download/{documentType}")
     @RolesAllowed("contractor")
     public FileDownloadDto downloadDocument(HttpServletRequest request,
-                                             @PathVariable("tenderId") String tenderId,
-                                             @PathVariable("fileYear") FinancialYearDocument fileYear,
-                                             @PathVariable("applicationId") String applicationId) {
-        return appFormService.downloadDocument(request, tenderId, fileYear, applicationId);
+                                            @PathVariable("tenderId") String tenderId,
+                                            @PathVariable("fileYear") DocumentType documentType,
+                                            @PathVariable("applicationId") String applicationId) {
+        return appFormService.downloadDocument(request, tenderId, documentType, applicationId);
     }
 }

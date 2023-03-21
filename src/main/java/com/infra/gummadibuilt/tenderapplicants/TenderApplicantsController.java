@@ -47,7 +47,7 @@ public class TenderApplicantsController {
             @ApiResponse(responseCode = "404", description = "The resource you were trying to reach is not found")
     })
     @GetMapping("/{tenderId}")
-    @RolesAllowed({"admin", "client"})
+    @RolesAllowed({"admin"})
     public List<TenderApplicantsDto> get(@PathVariable @NotBlank String tenderId, HttpServletRequest request) {
         return tenderApplicantsService.get(tenderId, request);
     }
@@ -74,7 +74,7 @@ public class TenderApplicantsController {
             @ApiResponse(responseCode = "404", description = "The resource you were trying to reach is not found")
     })
     @GetMapping("/{tenderId}/compare/{applicantId}")
-    @RolesAllowed({"admin", "client"})
+    @RolesAllowed({"admin"})
     public List<ApplicantsComparisonDto> compareApplicants(@PathVariable @NotBlank String tenderId,
                                                            @PathVariable List<String> applicantId,
                                                            HttpServletRequest request) {
@@ -97,7 +97,7 @@ public class TenderApplicantsController {
 
 
     @GetMapping("/{tenderId}/export-to-excel/{applicantId}")
-    @RolesAllowed({"admin", "client"})
+    @RolesAllowed({"admin"})
     public FileDownloadDto exportToExcel(@PathVariable @NotBlank String tenderId,
                                          @PathVariable List<String> applicantId,
                                          HttpServletRequest request) throws IOException {

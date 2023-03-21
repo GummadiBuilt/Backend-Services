@@ -1,0 +1,1 @@
+ALTER TABLE pq_form_header DROP COLUMN IF EXISTS scheduled_completion;
