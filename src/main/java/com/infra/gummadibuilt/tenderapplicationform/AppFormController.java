@@ -1,5 +1,6 @@
 package com.infra.gummadibuilt.tenderapplicationform;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.infra.gummadibuilt.common.file.FileDownloadDto;
 import com.infra.gummadibuilt.tenderapplicationform.model.dto.ApplicationFormCreateDto;
 import com.infra.gummadibuilt.tenderapplicationform.model.dto.ApplicationFormDto;
@@ -58,7 +59,7 @@ public class AppFormController {
     @PostMapping
     @RolesAllowed("contractor")
     public ApplicationFormDto applyTender(HttpServletRequest request,
-                                          @PathVariable("tenderId") String tenderId) {
+                                          @PathVariable("tenderId") String tenderId) throws JsonProcessingException {
 
         return appFormService.applyTender(request, tenderId);
     }

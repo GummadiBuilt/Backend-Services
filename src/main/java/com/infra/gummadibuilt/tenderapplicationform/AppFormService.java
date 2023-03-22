@@ -1,9 +1,10 @@
 package com.infra.gummadibuilt.tenderapplicationform;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
-import com.google.gson.JsonArray;
 import com.infra.gummadibuilt.common.ChangeTracking;
 import com.infra.gummadibuilt.common.LoggedInUser;
 import com.infra.gummadibuilt.common.exception.InValidDataSubmittedException;
@@ -27,8 +28,6 @@ import com.infra.gummadibuilt.userandrole.ApplicationRoleDao;
 import com.infra.gummadibuilt.userandrole.ApplicationUserDao;
 import com.infra.gummadibuilt.userandrole.model.ApplicationUser;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -38,10 +37,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.transaction.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -90,7 +86,7 @@ public class AppFormService {
     }
 
     @Transactional
-    public ApplicationFormDto applyTender(HttpServletRequest request, String tenderId) {
+    public ApplicationFormDto applyTender(HttpServletRequest request, String tenderId) throws JsonProcessingException {
         LoggedInUser loggedInUser = loggedInUserInfo(request);
         ApplicationUser applicationUser = getById(applicationUserDao, loggedInUser.getUserId(), USER_NOT_FOUND);
         TenderInfo tenderInfo = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
@@ -102,6 +98,7 @@ public class AppFormService {
         form.setChangeTracking(new ChangeTracking(loggedInUser.toString()));
         form.setTenderInfo(tenderInfo);
         form.setApplicationUser(applicationUser);
+
         SaveEntityConstraintHelper.save(applicationFormDao, form, CONSTRAINT_MAPPING);
 
         return ApplicationFormDto.valueOf(form);
@@ -124,7 +121,7 @@ public class AppFormService {
         this.validatePqForm(tenderInfo);
         this.validateTenderAndStatus(form, tenderId);
         this.validateAccess(applicationUser, loggedInUser);
-        this.createApplication(form, createDto);
+        this.updateApplication(form, createDto);
         form.getChangeTracking().update(loggedInUser.toString());
         form.setTenderInfo(tenderInfo);
         form.setApplicationUser(applicationUser);
@@ -297,7 +294,7 @@ public class AppFormService {
                 .collect(Collectors.toList());
     }
 
-    private void setUserKnownInfo(ApplicationForm form, ApplicationUser user) {
+    private void setUserKnownInfo(ApplicationForm form, ApplicationUser user) throws JsonProcessingException {
         form.setCompanyName(user.getCompanyName());
         form.setYearOfEstablishment(String.valueOf(user.getYearOfEstablishment()));
         form.setTypeOfEstablishment(String.join(",", user.getTypeOfEstablishment()));
@@ -306,9 +303,23 @@ public class AppFormService {
         form.setContactEmailId(user.getContactEmailAddress());
         form.setContactDesignation(user.getContactDesignation());
         form.setContactPhoneNum(user.getContactPhoneNumber());
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        String yearOne = String.format("{\"row\":%s,\"year\":\"\",\"revenue\":\"\",\"fileName\":\"\"}",DocumentType.YEAR_ONE.getText());
+        JsonNode yearOneNode = objectMapper.readTree(yearOne);
+        String yearTwo = String.format("{\"row\":%s,\"year\":\"\",\"revenue\":\"\",\"fileName\":\"\"}",DocumentType.YEAR_TWO.getText());
+        JsonNode yearTwoNode = objectMapper.readTree(yearTwo);
+        String yearThree = String.format("{\"row\":%s,\"year\":\"\",\"revenue\":\"\",\"fileName\":\"\"}",DocumentType.YEAR_THREE.getText());
+        JsonNode yearThreeNode = objectMapper.readTree(yearThree);
+        List<JsonNode> turnOverDetails = new ArrayList<>();
+        turnOverDetails.add(yearOneNode);
+        turnOverDetails.add(yearTwoNode);
+        turnOverDetails.add(yearThreeNode);
+
+        form.setTurnOverDetails(turnOverDetails);
     }
 
-    private void createApplication(ApplicationForm form, ApplicationFormCreateDto createDto) {
+    private void updateApplication(ApplicationForm form, ApplicationFormCreateDto createDto) {
         form.setCorpOfficeAddress(createDto.getCorpOfficeAddress());
         form.setLocalOfficeAddress(createDto.getLocalOfficeAddress());
         form.setTelephoneNum(createDto.getTelephoneNum());
