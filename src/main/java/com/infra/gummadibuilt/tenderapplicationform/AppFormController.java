@@ -111,7 +111,7 @@ public class AppFormController {
     @RolesAllowed("contractor")
     public FileDownloadDto downloadDocument(HttpServletRequest request,
                                             @PathVariable("tenderId") String tenderId,
-                                            @PathVariable("fileYear") DocumentType documentType,
+                                            @PathVariable("documentType") DocumentType documentType,
                                             @PathVariable("applicationId") String applicationId) {
         return appFormService.downloadDocument(request, tenderId, documentType, applicationId);
     }

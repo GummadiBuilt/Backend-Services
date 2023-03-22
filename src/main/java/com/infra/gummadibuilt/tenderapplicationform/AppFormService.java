@@ -305,11 +305,11 @@ public class AppFormService {
         form.setContactPhoneNum(user.getContactPhoneNumber());
 
         ObjectMapper objectMapper = new ObjectMapper();
-        String yearOne = String.format("{\"row\":%s,\"year\":\"\",\"revenue\":\"\",\"fileName\":\"\"}",DocumentType.YEAR_ONE.getText());
+        String yearOne = String.format("{\"row\":\"%s\",\"year\":\"\",\"revenue\":\"\",\"fileName\":\"\"}",DocumentType.YEAR_ONE.getText());
         JsonNode yearOneNode = objectMapper.readTree(yearOne);
-        String yearTwo = String.format("{\"row\":%s,\"year\":\"\",\"revenue\":\"\",\"fileName\":\"\"}",DocumentType.YEAR_TWO.getText());
+        String yearTwo = String.format("{\"row\":\"%s\",\"year\":\"\",\"revenue\":\"\",\"fileName\":\"\"}",DocumentType.YEAR_TWO.getText());
         JsonNode yearTwoNode = objectMapper.readTree(yearTwo);
-        String yearThree = String.format("{\"row\":%s,\"year\":\"\",\"revenue\":\"\",\"fileName\":\"\"}",DocumentType.YEAR_THREE.getText());
+        String yearThree = String.format("{\"row\":\"%s\",\"year\":\"\",\"revenue\":\"\",\"fileName\":\"\"}",DocumentType.YEAR_THREE.getText());
         JsonNode yearThreeNode = objectMapper.readTree(yearThree);
         List<JsonNode> turnOverDetails = new ArrayList<>();
         turnOverDetails.add(yearOneNode);
