@@ -3,6 +3,7 @@ package com.infra.gummadibuilt.tenderapplicationform;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
+import com.google.gson.JsonArray;
 import com.infra.gummadibuilt.common.ChangeTracking;
 import com.infra.gummadibuilt.common.LoggedInUser;
 import com.infra.gummadibuilt.common.exception.InValidDataSubmittedException;
@@ -25,6 +26,9 @@ import com.infra.gummadibuilt.tenderapplicationform.model.dto.DocumentType;
 import com.infra.gummadibuilt.userandrole.ApplicationRoleDao;
 import com.infra.gummadibuilt.userandrole.ApplicationUserDao;
 import com.infra.gummadibuilt.userandrole.model.ApplicationUser;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -94,6 +98,7 @@ public class AppFormService {
         this.validatePqForm(tenderInfo);
         ApplicationForm form = new ApplicationForm();
         this.setUserKnownInfo(form, applicationUser);
+        form.setActionTaken(ActionTaken.DRAFT);
         form.setChangeTracking(new ChangeTracking(loggedInUser.toString()));
         form.setTenderInfo(tenderInfo);
         form.setApplicationUser(applicationUser);
