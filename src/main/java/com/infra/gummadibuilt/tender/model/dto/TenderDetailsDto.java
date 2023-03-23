@@ -13,6 +13,8 @@ import javax.validation.constraints.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.infra.gummadibuilt.common.util.CommonModuleUtils.DATE_PATTERN;
 
@@ -83,6 +85,8 @@ public class TenderDetailsDto implements Serializable {
 
     private int contractorBidId;
 
+    private List<TenderClientDocumentDto> tenderClientDocumentDto;
+
     private ActionTaken contractorActionTaken;
 
     public static TenderDetailsDto valueOf(TenderInfo tenderInfo, boolean showBidInfo) {
@@ -113,6 +117,12 @@ public class TenderDetailsDto implements Serializable {
             JsonNode financeInfo = mapper.createObjectNode();
             result.setTenderFinanceInfo(financeInfo);
         }
+        result.setTenderClientDocumentDto(
+                tenderInfo.getTenderClientDocuments()
+                        .stream()
+                        .map(TenderClientDocumentDto::valueOf)
+                        .collect(Collectors.toList())
+        );
         result.setChangeTracking(tenderInfo.getChangeTracking());
 
         if (tenderInfo.getFormHeader() != null) {

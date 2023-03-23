@@ -52,8 +52,9 @@ public class TenderInfoController {
     @PostMapping
     public TenderDetailsDto createTender(@Valid HttpServletRequest request,
                                          @RequestPart("tenderDocument") @NotNull MultipartFile tenderDocument,
+                                         @RequestPart("clientDocument") @NotNull List<MultipartFile> clientDocument,
                                          @RequestPart("tenderInfo") @NotBlank String tenderInfo) throws JsonProcessingException {
-        return tenderInfoService.createTender(request, tenderDocument, tenderInfo);
+        return tenderInfoService.createTender(request, tenderDocument, clientDocument, tenderInfo);
     }
 
     @Operation(summary = "Create a new tender in the application")

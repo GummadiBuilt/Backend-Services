@@ -19,6 +19,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Getter
 @Setter
@@ -90,6 +91,9 @@ public class TenderInfo {
     @ManyToOne
     @JoinColumn(name = "application_user_id")
     private ApplicationUser applicationUser;
+
+    @OneToMany(mappedBy = "tenderInfo", cascade = CascadeType.REMOVE)
+    private List<TenderClientDocument> tenderClientDocuments;
 
     @OneToOne(mappedBy = "tenderInfo", cascade = CascadeType.ALL)
     private PqFormHeader formHeader;

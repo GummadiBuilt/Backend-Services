@@ -13,6 +13,7 @@ import com.infra.gummadibuilt.common.util.FileUtils;
 import com.infra.gummadibuilt.common.util.SaveEntityConstraintHelper;
 import com.infra.gummadibuilt.masterdata.common.TypeOfEstablishmentDao;
 import com.infra.gummadibuilt.masterdata.common.model.TypeOfEstablishment;
+import com.infra.gummadibuilt.tender.model.TenderClientDocument;
 import com.infra.gummadibuilt.tender.model.TenderInfo;
 import com.infra.gummadibuilt.tender.model.TypeOfContract;
 import com.infra.gummadibuilt.tender.model.WorkflowStep;
@@ -37,6 +38,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.transaction.Transactional;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -66,6 +69,8 @@ public class TenderInfoService {
     private final TenderApplicantsDao tenderApplicantsDao;
     private final TenderBidInfoDao tenderBidInfoDao;
 
+    private final TenderClientDocumentDao tenderClientDocumentDao;
+
     public TenderInfoService(ObjectMapper mapper,
                              Validator validator,
                              TypeOfContractDao typeOfContractDao,
@@ -75,7 +80,8 @@ public class TenderInfoService {
                              TypeOfEstablishmentDao typeOfEstablishmentDao,
                              ApplicationFormDao applicationFormDao,
                              TenderApplicantsDao tenderApplicantsDao,
-                             TenderBidInfoDao tenderBidInfoDao) {
+                             TenderBidInfoDao tenderBidInfoDao,
+                             TenderClientDocumentDao tenderClientDocumentDao) {
         this.mapper = mapper;
         this.validator = validator;
         this.typeOfContractDao = typeOfContractDao;
@@ -86,10 +92,14 @@ public class TenderInfoService {
         this.applicationFormDao = applicationFormDao;
         this.tenderApplicantsDao = tenderApplicantsDao;
         this.tenderBidInfoDao = tenderBidInfoDao;
+        this.tenderClientDocumentDao = tenderClientDocumentDao;
     }
 
     @Transactional
-    public TenderDetailsDto createTender(HttpServletRequest request, MultipartFile tenderDocument, String tenderInformation) throws JsonProcessingException {
+    public TenderDetailsDto createTender(HttpServletRequest request,
+                                         MultipartFile tenderDocument,
+                                         List<MultipartFile> clientDocument,
+                                         String tenderInformation) throws JsonProcessingException {
 
         LoggedInUser loggedInUser = loggedInUserInfo(request);
 
@@ -114,15 +124,24 @@ public class TenderInfoService {
         ApplicationUser applicationUser = getById(applicationUserDao, loggedInUser.getUserId(), USER_NOT_FOUND);
         tenderInfo.setApplicationUser(applicationUser);
         tenderInfo.setChangeTracking(new ChangeTracking(loggedInUser.toString()));
-        SaveEntityConstraintHelper.save(tenderInfoDao, tenderInfo, null);
-        logger.info(String.format("User %s created Tender %s", loggedInUser, tenderInfo.getId()));
 
         String response = amazonFileService.uploadFile(tenderInfo.getId(), metaData(tenderInfo), tenderDocument);
         logger.info(String.format("File upload success, generated ETAG %s", response));
 
+        SaveEntityConstraintHelper.save(tenderInfoDao, tenderInfo, null);
+
+        if (clientDocument.size() > 0) {
+            List<TenderClientDocument> tenderClientDocuments = validateAndUploadClientDocument(clientDocument,
+                    tenderInfo,
+                    applicationUser,
+                    loggedInUser.toString());
+
+            SaveEntityConstraintHelper.saveAll(tenderClientDocumentDao, tenderClientDocuments, null);
+        }
+
+        logger.info(String.format("User %s created Tender %s", loggedInUser, tenderInfo.getId()));
         return TenderDetailsDto.valueOf(tenderInfo, true);
     }
-
 
     @Transactional
     public TenderDetailsDto updateTender(HttpServletRequest request, String tenderId, MultipartFile tenderDocument, String tenderInformation) throws JsonProcessingException {
@@ -248,6 +267,7 @@ public class TenderInfoService {
                     dto.setContractorBidId(tenderBidInfo.get().getId());
                 }
             }
+            dto.setTenderClientDocumentDto(null);
             return dto;
         } else if (request.isUserInRole("client") && Objects.equals(tenderInfo.getApplicationUser().getId(), loggedInUser.getUserId())) {
             return TenderDetailsDto.valueOf(tenderInfo, true);
@@ -273,9 +293,29 @@ public class TenderInfoService {
         tenderInfo.setDurationCounter(createTenderInfoDto.getDurationCounter());
         tenderInfo.setEstimatedBudget(createTenderInfoDto.getEstimatedBudget());
         tenderInfo.setLastDateOfSubmission(localDate);
-        tenderInfo.setTenderFinanceInfo(createTenderInfoDto.getTenderFinanceInfo());
     }
 
+    private List<TenderClientDocument> validateAndUploadClientDocument(@NotNull List<MultipartFile> clientDocument,
+                                                                       @NotNull TenderInfo tenderInfo,
+                                                                       @NotNull ApplicationUser applicationUser,
+                                                                       @NotBlank String loggedInUser) {
+        List<TenderClientDocument> tenderClientDocuments = new ArrayList<>();
+        String filePath = String.format("%s/CLIENT_FILES", tenderInfo.getId());
+        clientDocument.forEach(FileUtils::checkFileValidOrNot);
+        clientDocument.forEach(doc -> {
+            amazonFileService.uploadFile(filePath, metaData(tenderInfo), doc);
+            logger.info(String.format("Client file %s upload success", doc.getOriginalFilename()));
+            TenderClientDocument document = new TenderClientDocument();
+            document.setTenderInfo(tenderInfo);
+            document.setFileName(doc.getOriginalFilename());
+            document.setFileSize(doc.getSize());
+            document.setApplicationUser(applicationUser);
+            document.setChangeTracking(new ChangeTracking(loggedInUser));
+            tenderClientDocuments.add(document);
+        });
+
+        return tenderClientDocuments;
+    }
     private String tenderIdGenerator(TenderInfo tenderInfo) {
         String shortCode = tenderInfo.getTypeOfContract().getContractShortCode();
         String subMonth = Integer.toString(tenderInfo.getLastDateOfSubmission().getMonthValue());
