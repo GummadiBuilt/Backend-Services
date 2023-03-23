@@ -120,11 +120,9 @@ public class PqFormHeaderService {
     private void createPqForm(PqFormHeaderCreateDto pqFormHeaderCreateDto, PqFormHeader formHeader) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_PATTERN);
         LocalDate tentativeAwardDate = LocalDate.parse(pqFormHeaderCreateDto.getTentativeDateOfAward(), formatter);
-        LocalDate scheduledCompletion = LocalDate.parse(pqFormHeaderCreateDto.getScheduledCompletion(), formatter);
         LocalDate lastDateOfSubmission = LocalDate.parse(pqFormHeaderCreateDto.getPqLastDateOfSubmission(), formatter);
         formHeader.setTentativeDateOfAward(tentativeAwardDate);
         formHeader.setPqLastDateOfSubmission(lastDateOfSubmission);
-        formHeader.setScheduledCompletion(scheduledCompletion);
     }
 
     private void validateFetch(HttpServletRequest request, TenderInfo tenderInfo) {
