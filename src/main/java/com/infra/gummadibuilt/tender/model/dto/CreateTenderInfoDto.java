@@ -52,6 +52,8 @@ public class CreateTenderInfoDto implements Serializable {
 
     private WorkflowStep workflowStep;
 
+    private boolean fileUpload;
+
     @NotNull
     private JsonNode tenderFinanceInfo;
 

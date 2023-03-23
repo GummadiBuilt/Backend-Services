@@ -6,6 +6,7 @@ import com.infra.gummadibuilt.common.ChangeTracking;
 import com.infra.gummadibuilt.common.LoggedInUser;
 import com.infra.gummadibuilt.common.exception.EntityFieldNotNullException;
 import com.infra.gummadibuilt.common.exception.EntityFieldSizeLimitException;
+import com.infra.gummadibuilt.common.exception.InValidDataSubmittedException;
 import com.infra.gummadibuilt.common.exception.InvalidActionException;
 import com.infra.gummadibuilt.common.file.AmazonFileService;
 import com.infra.gummadibuilt.common.file.FileDownloadDto;
@@ -124,13 +125,21 @@ public class TenderInfoService {
         ApplicationUser applicationUser = getById(applicationUserDao, loggedInUser.getUserId(), USER_NOT_FOUND);
         tenderInfo.setApplicationUser(applicationUser);
         tenderInfo.setChangeTracking(new ChangeTracking(loggedInUser.toString()));
+        boolean isFileUpload = tenderInfoDto.isFileUpload();
+        tenderInfo.setFileUpload(isFileUpload);
+        if (isFileUpload) {
+            tenderInfo.setTenderFinanceInfo(null);
+        } else {
+            tenderInfo.setTenderFinanceInfo(tenderInfo.getTenderFinanceInfo());
+        }
 
         String response = amazonFileService.uploadFile(tenderInfo.getId(), metaData(tenderInfo), tenderDocument);
         logger.info(String.format("File upload success, generated ETAG %s", response));
 
         SaveEntityConstraintHelper.save(tenderInfoDao, tenderInfo, null);
 
-        if (clientDocument.size() > 0) {
+
+        if (isFileUpload && clientDocument.size() > 0) {
             List<TenderClientDocument> tenderClientDocuments = validateAndUploadClientDocument(clientDocument,
                     tenderInfo,
                     applicationUser,
@@ -138,7 +147,6 @@ public class TenderInfoService {
 
             SaveEntityConstraintHelper.saveAll(tenderClientDocumentDao, tenderClientDocuments, null);
         }
-
         logger.info(String.format("User %s created Tender %s", loggedInUser, tenderInfo.getId()));
         return TenderDetailsDto.valueOf(tenderInfo, true);
     }
@@ -166,7 +174,29 @@ public class TenderInfoService {
         createTenderInfo(tenderInfo, tenderInfoDto);
         tenderInfo.getChangeTracking().update(loggedInUser.toString());
 
+        if (request.isUserInRole("client")) {
+            boolean fileUpload = tenderInfoDto.isFileUpload();
+            tenderInfo.setFileUpload(fileUpload);
+            if (tenderInfoDto.getWorkflowStep().equals(WorkflowStep.YET_TO_BE_PUBLISHED)) {
+                boolean hasData;
+                if (fileUpload) {
+                    tenderInfo.setTenderFinanceInfo(null);
+                    hasData = tenderInfo.getTenderClientDocuments().size() > 0;
+                } else {
+                    tenderInfo.setTenderFinanceInfo(tenderInfoDto.getTenderFinanceInfo());
+                    hasData = tenderInfo.getTenderFinanceInfo() != null;
+                }
+                if (!hasData) {
+                    throw new InValidDataSubmittedException("Missing Financial Bid Information");
+                }
+            }
+        }
+
+
         if (request.isUserInRole("admin") & tenderInfoDto.getWorkflowStep() == WorkflowStep.PUBLISHED) {
+            if (tenderInfo.getTenderFinanceInfo() == null) {
+                throw new InValidDataSubmittedException("Missing Financial Bid Information");
+            }
             tenderInfo.setWorkflowStep(WorkflowStep.PUBLISHED);
         } else if (request.isUserInRole("admin")) {
             tenderInfo.setWorkflowStep(WorkflowStep.YET_TO_BE_PUBLISHED);
@@ -316,6 +346,7 @@ public class TenderInfoService {
 
         return tenderClientDocuments;
     }
+
     private String tenderIdGenerator(TenderInfo tenderInfo) {
         String shortCode = tenderInfo.getTypeOfContract().getContractShortCode();
         String subMonth = Integer.toString(tenderInfo.getLastDateOfSubmission().getMonthValue());

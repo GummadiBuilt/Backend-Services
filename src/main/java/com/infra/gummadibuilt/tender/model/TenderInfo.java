@@ -87,6 +87,8 @@ public class TenderInfo {
     @Column(columnDefinition = "jsonb")
     private JsonNode tenderFinanceInfo;
 
+    private boolean fileUpload;
+
     @NotNull
     @ManyToOne
     @JoinColumn(name = "application_user_id")

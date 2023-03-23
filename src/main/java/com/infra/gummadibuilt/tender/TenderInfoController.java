@@ -130,7 +130,7 @@ public class TenderInfoController {
             @ApiResponse(responseCode = "404", description = "The resource you were trying to reach is not found")
     })
     @RolesAllowed({"client", "contractor", "admin"})
-    @GetMapping("/download/{tenderId}")
+    @GetMapping("/download/{tenderId}/documentType/")
     @Transactional(readOnly = true)
     public FileDownloadDto downloadTender(@PathVariable("tenderId") String tenderId) {
         return tenderInfoService.downloadTender(tenderId);

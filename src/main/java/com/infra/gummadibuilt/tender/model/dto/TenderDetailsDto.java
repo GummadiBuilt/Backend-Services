@@ -87,6 +87,7 @@ public class TenderDetailsDto implements Serializable {
 
     private List<TenderClientDocumentDto> tenderClientDocumentDto;
 
+    private boolean fileUpload;
     private ActionTaken contractorActionTaken;
 
     public static TenderDetailsDto valueOf(TenderInfo tenderInfo, boolean showBidInfo) {
@@ -104,6 +105,7 @@ public class TenderDetailsDto implements Serializable {
         );
         result.setEstimatedBudget(tenderInfo.getEstimatedBudget());
         result.setWorkflowStep(tenderInfo.getWorkflowStep().getText());
+        result.setFileUpload(tenderInfo.isFileUpload());
 
         result.setClientInformation(tenderInfo.getApplicationUser().getCompanyName());
         if (showBidInfo) {
