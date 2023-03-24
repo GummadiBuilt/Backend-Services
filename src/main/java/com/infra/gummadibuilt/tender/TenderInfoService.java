@@ -136,16 +136,15 @@ public class TenderInfoService {
         String response = amazonFileService.uploadFile(tenderInfo.getId(), metaData(tenderInfo), tenderDocument);
         logger.info(String.format("File upload success, generated ETAG %s", response));
 
-        SaveEntityConstraintHelper.save(tenderInfoDao, tenderInfo, null);
-
-
         if (isFileUpload && clientDocument.size() > 0) {
             List<TenderClientDocument> tenderClientDocuments = validateAndUploadClientDocument(clientDocument,
                     tenderInfo,
                     applicationUser,
                     loggedInUser.toString());
-
-            SaveEntityConstraintHelper.saveAll(tenderClientDocumentDao, tenderClientDocuments, null);
+            tenderInfo.setTenderClientDocuments(tenderClientDocuments);
+            SaveEntityConstraintHelper.save(tenderInfoDao, tenderInfo, null);
+        }else{
+            SaveEntityConstraintHelper.save(tenderInfoDao, tenderInfo, null);        
         }
         logger.info(String.format("User %s created Tender %s", loggedInUser, tenderInfo.getId()));
         return TenderDetailsDto.valueOf(tenderInfo, true);

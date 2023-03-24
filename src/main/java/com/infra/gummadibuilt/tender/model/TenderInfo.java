@@ -82,7 +82,6 @@ public class TenderInfo {
     @NotNull
     private long tenderDocumentSize;
 
-    @NotNull
     @Type(type = "jsonb")
     @Column(columnDefinition = "jsonb")
     private JsonNode tenderFinanceInfo;
