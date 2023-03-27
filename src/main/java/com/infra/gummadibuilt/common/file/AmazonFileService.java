@@ -57,8 +57,8 @@ public class AmazonFileService {
         return fileDownloadDto;
     }
 
-    public void deleteFile(String tenderId, String fileName) {
-        String path = String.format("%s/%s", tenderId, fileName);
+    public void deleteFile(String fileLocation, String fileName) {
+        String path = String.format("%s/%s", fileLocation, fileName);
         deleteBucketObjects(this.buildConnection(), amazonConfiguration.getBucketName(), path);
     }
 

@@ -172,7 +172,7 @@ public class TenderInfoService {
             tenderInfo.setTenderDocumentSize(tenderDocument.getSize());
         }
 
-        if(clientDocument.size() > 0){
+        if (clientDocument.size() > 0) {
             List<TenderClientDocument> tenderClientDocuments = validateAndUploadClientDocument(clientDocument,
                     tenderInfo,
                     applicationUser,
@@ -216,6 +216,14 @@ public class TenderInfoService {
         }
         SaveEntityConstraintHelper.save(tenderInfoDao, tenderInfo, null);
         logger.info(String.format("User %s updated Tender %s", loggedInUser, tenderInfo.getId()));
+        return TenderDetailsDto.valueOf(tenderInfo, true);
+    }
+
+    @Transactional
+    public TenderDetailsDto deleteDocument(String documentId, String tenderId){
+        TenderInfo tenderInfo = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
+        amazonFileService.deleteFile(tenderInfo.getId(), tenderInfo.getTenderDocumentName());
+
         return TenderDetailsDto.valueOf(tenderInfo, true);
     }
 

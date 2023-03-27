@@ -77,6 +77,22 @@ public class TenderInfoController {
         return tenderInfoService.updateTender(request, tenderId, tenderDocument, clientDocument, tenderInfo);
     }
 
+    @Operation(summary = "Delete an uploaded document")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success, when user is onboarded to the application",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(implementation = TenderDetailsDto.class))
+                    }),
+            @ApiResponse(responseCode = "400", description = "Exception when email already in use",
+                    content = @Content(mediaType = "text/plain", schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "404", description = "The resource you were trying to reach is not found")
+    })
+    @RolesAllowed({"client"})
+    @PutMapping("{tenderId}/delete-document/{documentId}")
+    public TenderDetailsDto deleteDocument(@Valid @RequestPart("documentId") @NotBlank String documentId,
+                                           @RequestPart("tenderId") @NotBlank String tenderId) {
+        return tenderInfoService.deleteDocument(documentId, tenderId);
+    }
 
     @Operation(summary = "Get all tenders")
     @ApiResponses(value = {
