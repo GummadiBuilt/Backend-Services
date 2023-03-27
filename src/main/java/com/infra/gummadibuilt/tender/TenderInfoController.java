@@ -72,8 +72,9 @@ public class TenderInfoController {
     public TenderDetailsDto updateTender(@Valid HttpServletRequest request,
                                          @PathVariable("tenderId") @NotBlank String tenderId,
                                          @RequestPart("tenderDocument") MultipartFile tenderDocument,
+                                         @RequestPart("clientDocument") @NotNull List<MultipartFile> clientDocument,
                                          @RequestPart("tenderInfo") @NotBlank String tenderInfo) throws JsonProcessingException {
-        return tenderInfoService.updateTender(request, tenderId, tenderDocument, tenderInfo);
+        return tenderInfoService.updateTender(request, tenderId, tenderDocument, clientDocument, tenderInfo);
     }
 
 

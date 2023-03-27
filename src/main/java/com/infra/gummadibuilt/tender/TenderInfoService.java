@@ -143,17 +143,21 @@ public class TenderInfoService {
                     loggedInUser.toString());
             tenderInfo.setTenderClientDocuments(tenderClientDocuments);
             SaveEntityConstraintHelper.save(tenderInfoDao, tenderInfo, null);
-        }else{
-            SaveEntityConstraintHelper.save(tenderInfoDao, tenderInfo, null);        
+        } else {
+            SaveEntityConstraintHelper.save(tenderInfoDao, tenderInfo, null);
         }
         logger.info(String.format("User %s created Tender %s", loggedInUser, tenderInfo.getId()));
         return TenderDetailsDto.valueOf(tenderInfo, true);
     }
 
     @Transactional
-    public TenderDetailsDto updateTender(HttpServletRequest request, String tenderId, MultipartFile tenderDocument, String tenderInformation) throws JsonProcessingException {
+    public TenderDetailsDto updateTender(HttpServletRequest request,
+                                         String tenderId,
+                                         MultipartFile tenderDocument,
+                                         List<MultipartFile> clientDocument,
+                                         String tenderInformation) throws JsonProcessingException {
         LoggedInUser loggedInUser = loggedInUserInfo(request);
-
+        ApplicationUser applicationUser = getById(applicationUserDao, loggedInUser.getUserId(), USER_NOT_FOUND);
         logger.info(String.format("User %s initiated tender update process", loggedInUser));
         TenderInfo tenderInfo = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
         CreateTenderInfoDto tenderInfoDto = mapper.readValue(tenderInformation, CreateTenderInfoDto.class);
@@ -166,6 +170,14 @@ public class TenderInfoService {
             logger.info(String.format("File upload success, generated ETAG %s", response));
             tenderInfo.setTenderDocumentName(tenderDocument.getOriginalFilename());
             tenderInfo.setTenderDocumentSize(tenderDocument.getSize());
+        }
+
+        if(clientDocument.size() > 0){
+            List<TenderClientDocument> tenderClientDocuments = validateAndUploadClientDocument(clientDocument,
+                    tenderInfo,
+                    applicationUser,
+                    loggedInUser.toString());
+            tenderInfo.setTenderClientDocuments(tenderClientDocuments);
         }
 
         TypeOfContract typeOfContract = getById(typeOfContractDao, tenderInfoDto.getTypeOfContract(), TYPE_OF_CONTRACT_NOT_FOUND);

@@ -93,7 +93,7 @@ public class TenderInfo {
     @JoinColumn(name = "application_user_id")
     private ApplicationUser applicationUser;
 
-    @OneToMany(mappedBy = "tenderInfo", cascade = CascadeType.REMOVE)
+    @OneToMany(mappedBy = "tenderInfo", cascade = CascadeType.ALL)
     private List<TenderClientDocument> tenderClientDocuments;
 
     @OneToOne(mappedBy = "tenderInfo", cascade = CascadeType.ALL)
