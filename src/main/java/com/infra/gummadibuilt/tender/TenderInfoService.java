@@ -142,7 +142,12 @@ public class TenderInfoService {
                     applicationUser,
                     loggedInUser.toString());
             tenderInfo.setTenderClientDocuments(tenderClientDocuments);
+            try{
             SaveEntityConstraintHelper.save(tenderInfoDao, tenderInfo, null);
+            }
+            catch(Exception e){
+                System.out.println(e.getMessage());
+            }
         } else {
             SaveEntityConstraintHelper.save(tenderInfoDao, tenderInfo, null);
         }
@@ -173,11 +178,18 @@ public class TenderInfoService {
         }
 
         if(clientDocument.size() > 0){
-            List<TenderClientDocument> tenderClientDocuments = validateAndUploadClientDocument(clientDocument,
+            if(!clientDocument.get(0).getOriginalFilename().equalsIgnoreCase("blob")){
+                List<TenderClientDocument> tenderClientDocuments = new ArrayList<>();
+                if(tenderInfo.getTenderClientDocuments()!=null){
+                       tenderClientDocuments = tenderInfo.getTenderClientDocuments(); 
+                }
+
+                tenderClientDocuments = validateAndUploadClientDocument(clientDocument,
                     tenderInfo,
                     applicationUser,
                     loggedInUser.toString());
-            tenderInfo.setTenderClientDocuments(tenderClientDocuments);
+                tenderInfo.setTenderClientDocuments(tenderClientDocuments);
+            }            
         }
 
         TypeOfContract typeOfContract = getById(typeOfContractDao, tenderInfoDto.getTypeOfContract(), TYPE_OF_CONTRACT_NOT_FOUND);
