@@ -4,10 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.infra.gummadibuilt.common.ChangeTracking;
 import com.infra.gummadibuilt.common.LoggedInUser;
-import com.infra.gummadibuilt.common.exception.EntityFieldNotNullException;
-import com.infra.gummadibuilt.common.exception.EntityFieldSizeLimitException;
-import com.infra.gummadibuilt.common.exception.InValidDataSubmittedException;
-import com.infra.gummadibuilt.common.exception.InvalidActionException;
+import com.infra.gummadibuilt.common.exception.*;
 import com.infra.gummadibuilt.common.file.AmazonFileService;
 import com.infra.gummadibuilt.common.file.FileDownloadDto;
 import com.infra.gummadibuilt.common.util.FileUtils;
@@ -27,6 +24,7 @@ import com.infra.gummadibuilt.tenderapplicants.model.dto.ApplicationStatus;
 import com.infra.gummadibuilt.tenderapplicationform.ApplicationFormDao;
 import com.infra.gummadibuilt.tenderapplicationform.model.ApplicationForm;
 import com.infra.gummadibuilt.tenderbidinfo.TenderBidInfoDao;
+import com.infra.gummadibuilt.tenderbidinfo.TenderBidInfoService;
 import com.infra.gummadibuilt.tenderbidinfo.model.TenderBidInfo;
 import com.infra.gummadibuilt.userandrole.ApplicationUserDao;
 import com.infra.gummadibuilt.userandrole.model.ApplicationUser;
@@ -71,6 +69,7 @@ public class TenderInfoService {
     private final TenderBidInfoDao tenderBidInfoDao;
 
     private final TenderClientDocumentDao tenderClientDocumentDao;
+    private final TenderBidInfoService tenderBidInfoService;
 
     public TenderInfoService(ObjectMapper mapper,
                              Validator validator,
@@ -82,7 +81,8 @@ public class TenderInfoService {
                              ApplicationFormDao applicationFormDao,
                              TenderApplicantsDao tenderApplicantsDao,
                              TenderBidInfoDao tenderBidInfoDao,
-                             TenderClientDocumentDao tenderClientDocumentDao) {
+                             TenderClientDocumentDao tenderClientDocumentDao,
+                             TenderBidInfoService tenderBidInfoService) {
         this.mapper = mapper;
         this.validator = validator;
         this.typeOfContractDao = typeOfContractDao;
@@ -94,6 +94,7 @@ public class TenderInfoService {
         this.tenderApplicantsDao = tenderApplicantsDao;
         this.tenderBidInfoDao = tenderBidInfoDao;
         this.tenderClientDocumentDao = tenderClientDocumentDao;
+        this.tenderBidInfoService = tenderBidInfoService;
     }
 
     @Transactional
@@ -142,10 +143,9 @@ public class TenderInfoService {
                     applicationUser,
                     loggedInUser.toString());
             tenderInfo.setTenderClientDocuments(tenderClientDocuments);
-            try{
-            SaveEntityConstraintHelper.save(tenderInfoDao, tenderInfo, null);
-            }
-            catch(Exception e){
+            try {
+                SaveEntityConstraintHelper.save(tenderInfoDao, tenderInfo, null);
+            } catch (Exception e) {
                 System.out.println(e.getMessage());
             }
         } else {
@@ -177,17 +177,17 @@ public class TenderInfoService {
             tenderInfo.setTenderDocumentSize(tenderDocument.getSize());
         }
 
-        if(clientDocument.size() > 0){
-            if(!clientDocument.get(0).getOriginalFilename().equalsIgnoreCase("blob")){
+        if (clientDocument.size() > 0) {
+            if (!clientDocument.get(0).getOriginalFilename().equalsIgnoreCase("blob")) {
                 List<TenderClientDocument> tenderClientDocuments = new ArrayList<>();
-                if(tenderInfo.getTenderClientDocuments()!=null){
-                       tenderClientDocuments = tenderInfo.getTenderClientDocuments();
+                if (tenderInfo.getTenderClientDocuments() != null) {
+                    tenderClientDocuments = tenderInfo.getTenderClientDocuments();
                 }
 
                 tenderClientDocuments = validateAndUploadClientDocument(clientDocument,
-                    tenderInfo,
-                    applicationUser,
-                    loggedInUser.toString());
+                        tenderInfo,
+                        applicationUser,
+                        loggedInUser.toString());
                 tenderInfo.setTenderClientDocuments(tenderClientDocuments);
             }
         }
@@ -232,11 +232,25 @@ public class TenderInfoService {
     }
 
     @Transactional
-    public TenderDetailsDto deleteDocument(String documentId, String tenderId){
+    public TenderDetailsDto deleteDocument(String documentId, String tenderId) {
         TenderInfo tenderInfo = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
-        amazonFileService.deleteFile(tenderInfo.getId(), tenderInfo.getTenderDocumentName());
+        String filePath = String.format("%s/CLIENT_FILES", tenderInfo.getId());
+        Optional<TenderClientDocument> clientDocument = tenderInfo
+                .getTenderClientDocuments()
+                .stream()
+                .filter(doc -> doc.getId() == Integer.parseInt(documentId))
+                .findFirst();
+        if (clientDocument.isPresent()) {
+            amazonFileService.deleteFile(filePath, tenderInfo.getTenderDocumentName());
+            tenderClientDocumentDao.deleteById(clientDocument.get().getId());
+            TenderInfo updated = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
+            return TenderDetailsDto.valueOf(updated, true);
+        } else {
+            throw new EntityNotFoundException(
+                    String.format("Couldn't find document with id %s in tender %s", documentId, tenderId)
+            );
+        }
 
-        return TenderDetailsDto.valueOf(tenderInfo, true);
     }
 
     public List<TenderDashboardProjection> getAllTenders(HttpServletRequest request) {
@@ -339,9 +353,40 @@ public class TenderInfoService {
         return tenderDetailsDto;
     }
 
-    public FileDownloadDto downloadTender(String tenderId) {
+    public FileDownloadDto downloadTender(HttpServletRequest request, String tenderId, String documentId, String documentType) {
         TenderInfo tenderInfo = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
-        return amazonFileService.downloadFile(tenderInfo.getId(), tenderInfo.getTenderDocumentName());
+
+        if (request.isUserInRole("contractor")) {
+            LoggedInUser loggedInUser = loggedInUserInfo(request);
+            String userId = loggedInUser.getUserId();
+            ApplicationUser applicationUser = getById(applicationUserDao, userId, USER_NOT_FOUND);
+            tenderBidInfoService.validateApplicantUserQualification(applicationUser, tenderInfo);
+        }
+        switch (documentType.toUpperCase()) {
+            case "FINANCE":
+                if (documentId.length() > 0) {
+                    String filePath = String.format("%s/CLIENT_FILES", tenderInfo.getId());
+                    Optional<TenderClientDocument> clientDocument = tenderInfo
+                            .getTenderClientDocuments()
+                            .stream()
+                            .filter(doc -> doc.getId() == Integer.parseInt(documentId))
+                            .findFirst();
+                    if (clientDocument.isPresent()) {
+                        return amazonFileService.downloadFile(filePath, clientDocument.get().getFileName());
+                    } else {
+                        throw new EntityNotFoundException(
+                                String.format("Couldn't find document with id %s in tender %s", documentId, tenderId)
+                        );
+                    }
+                } else {
+                    throw new InValidDataSubmittedException("Document Id is needed");
+                }
+            case "TECHNICAL":
+                return amazonFileService.downloadFile(tenderInfo.getId(), tenderInfo.getTenderDocumentName());
+            default:
+                throw new InValidDataSubmittedException(String.format("Nothing matched for given document type %s", documentType));
+
+        }
     }
 
     private void createTenderInfo(TenderInfo tenderInfo, CreateTenderInfoDto createTenderInfoDto) {

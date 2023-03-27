@@ -215,7 +215,7 @@ public class TenderBidInfoService {
         }
     }
 
-    private void validateApplicantUserQualification(ApplicationUser applicationUser, TenderInfo tenderInfo) {
+    public void validateApplicantUserQualification(ApplicationUser applicationUser, TenderInfo tenderInfo) {
         String tenderId = tenderInfo.getId();
         Optional<TenderApplicants> tenderApplicants = tenderApplicantsDao.findByApplicationUserAndTenderInfo(applicationUser, tenderInfo);
         if (tenderApplicants.isPresent()) {
