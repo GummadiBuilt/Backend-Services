@@ -181,13 +181,13 @@ public class TenderInfoService {
             if (!clientDocument.get(0).getOriginalFilename().equalsIgnoreCase("blob")) {
                 List<TenderClientDocument> tenderClientDocuments = new ArrayList<>();
                 if (tenderInfo.getTenderClientDocuments() != null) {
-                    tenderClientDocuments = tenderInfo.getTenderClientDocuments();
+                    tenderClientDocuments.addAll(tenderInfo.getTenderClientDocuments());
                 }
 
-                tenderClientDocuments = validateAndUploadClientDocument(clientDocument,
+                tenderClientDocuments.addAll(validateAndUploadClientDocument(clientDocument,
                         tenderInfo,
                         applicationUser,
-                        loggedInUser.toString());
+                        loggedInUser.toString()));
                 tenderInfo.setTenderClientDocuments(tenderClientDocuments);
             }
         }
@@ -196,17 +196,16 @@ public class TenderInfoService {
         tenderInfo.setTypeOfContract(typeOfContract);
         createTenderInfo(tenderInfo, tenderInfoDto);
         tenderInfo.getChangeTracking().update(loggedInUser.toString());
+        tenderInfo.setTenderFinanceInfo(tenderInfoDto.getTenderFinanceInfo());
 
         if (request.isUserInRole("client")) {
             boolean fileUpload = tenderInfoDto.isFileUpload();
             tenderInfo.setFileUpload(fileUpload);
             if (tenderInfoDto.getWorkflowStep().equals(WorkflowStep.YET_TO_BE_PUBLISHED)) {
                 boolean hasData;
-                if (fileUpload) {
-                    tenderInfo.setTenderFinanceInfo(null);
+                if (fileUpload) {                    
                     hasData = tenderInfo.getTenderClientDocuments().size() > 0;
-                } else {
-                    tenderInfo.setTenderFinanceInfo(tenderInfoDto.getTenderFinanceInfo());
+                } else {                    
                     hasData = tenderInfo.getTenderFinanceInfo() != null;
                 }
                 if (!hasData) {
