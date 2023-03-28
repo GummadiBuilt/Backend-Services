@@ -42,6 +42,7 @@ import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.infra.gummadibuilt.common.util.CommonModuleUtils.*;
 import static com.infra.gummadibuilt.common.util.UserInfo.loggedInUserInfo;
@@ -241,9 +242,10 @@ public class TenderInfoService {
                 .findFirst();
         if (clientDocument.isPresent()) {
             amazonFileService.deleteFile(filePath, tenderInfo.getTenderDocumentName());
-            tenderClientDocumentDao.deleteById(clientDocument.get().getId());
-            TenderInfo updated = getById(tenderInfoDao, tenderId, TENDER_NOT_FOUND);
-            return TenderDetailsDto.valueOf(updated, true);
+            tenderClientDocumentDao.deleteClientDocument(clientDocument.get().getId());
+            List<TenderClientDocument> updated = tenderInfo.getTenderClientDocuments().stream().filter(doc -> doc.getId() != clientDocument.get().getId()).collect(Collectors.toList());
+            tenderInfo.setTenderClientDocuments(updated);
+            return TenderDetailsDto.valueOf(tenderInfo, true);
         } else {
             throw new EntityNotFoundException(
                     String.format("Couldn't find document with id %s in tender %s", documentId, tenderId)

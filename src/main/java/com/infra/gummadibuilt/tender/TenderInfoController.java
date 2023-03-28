@@ -88,7 +88,7 @@ public class TenderInfoController {
             @ApiResponse(responseCode = "404", description = "The resource you were trying to reach is not found")
     })
     @RolesAllowed({"client"})
-    @PutMapping("{tenderId}/delete-document/{documentId}")
+    @PostMapping("{tenderId}/delete-document/{documentId}")
     public TenderDetailsDto deleteDocument(@Valid @RequestPart("documentId") @NotBlank String documentId,
                                            @RequestPart("tenderId") @NotBlank String tenderId) {
         return tenderInfoService.deleteDocument(documentId, tenderId);
