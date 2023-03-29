@@ -129,16 +129,12 @@ public class TenderInfoService {
         tenderInfo.setChangeTracking(new ChangeTracking(loggedInUser.toString()));
         boolean isFileUpload = tenderInfoDto.isFileUpload();
         tenderInfo.setFileUpload(isFileUpload);
-        if (isFileUpload) {
-            tenderInfo.setTenderFinanceInfo(null);
-        } else {
-            tenderInfo.setTenderFinanceInfo(tenderInfo.getTenderFinanceInfo());
-        }
 
         String response = amazonFileService.uploadFile(tenderInfo.getId(), metaData(tenderInfo), tenderDocument);
         logger.info(String.format("File upload success, generated ETAG %s", response));
 
         if (isFileUpload && clientDocument.size() > 0) {
+            tenderInfo.setTenderFinanceInfo(null);
             List<TenderClientDocument> tenderClientDocuments = validateAndUploadClientDocument(clientDocument,
                     tenderInfo,
                     applicationUser,
@@ -150,6 +146,8 @@ public class TenderInfoService {
                 System.out.println(e.getMessage());
             }
         } else {
+            tenderInfo.setTenderClientDocuments(new ArrayList<>());
+            tenderInfo.setTenderFinanceInfo(tenderInfoDto.getTenderFinanceInfo());
             SaveEntityConstraintHelper.save(tenderInfoDao, tenderInfo, null);
         }
         logger.info(String.format("User %s created Tender %s", loggedInUser, tenderInfo.getId()));
@@ -204,9 +202,9 @@ public class TenderInfoService {
             tenderInfo.setFileUpload(fileUpload);
             if (tenderInfoDto.getWorkflowStep().equals(WorkflowStep.YET_TO_BE_PUBLISHED)) {
                 boolean hasData;
-                if (fileUpload) {                    
+                if (fileUpload) {
                     hasData = tenderInfo.getTenderClientDocuments().size() > 0;
-                } else {                    
+                } else {
                     hasData = tenderInfo.getTenderFinanceInfo() != null;
                 }
                 if (!hasData) {
