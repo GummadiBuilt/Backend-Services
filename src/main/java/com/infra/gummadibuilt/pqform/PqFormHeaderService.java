@@ -3,6 +3,7 @@ package com.infra.gummadibuilt.pqform;
 import com.google.common.collect.ImmutableMap;
 import com.infra.gummadibuilt.common.ChangeTracking;
 import com.infra.gummadibuilt.common.LoggedInUser;
+import com.infra.gummadibuilt.common.exception.InValidDataSubmittedException;
 import com.infra.gummadibuilt.common.exception.InvalidActionException;
 import com.infra.gummadibuilt.common.util.SaveEntityConstraintHelper;
 import com.infra.gummadibuilt.pqform.model.PqFormHeader;
@@ -67,7 +68,7 @@ public class PqFormHeaderService {
                 pqFormHeaderDto.setApplicationFormStatus(form.getActionTaken());
             });
         }
-        
+        pqFormHeaderDto.setHasFinanceInfo(validateFinanceInfo(tenderInfo));
         pqFormHeaderDto.setTenderSubmissionDate(tenderInfo.getLastDateOfSubmission().format(DateTimeFormatter.ofPattern(DATE_PATTERN)));
         return pqFormHeaderDto;
     }
@@ -85,6 +86,7 @@ public class PqFormHeaderService {
         PqFormHeaderDto headerDto = PqFormHeaderDto.valueOf(formHeader);
         headerDto.setTenderSubmissionDate(tenderInfo.getLastDateOfSubmission().format(DateTimeFormatter.ofPattern(DATE_PATTERN)));
 
+        headerDto.setHasFinanceInfo(validateFinanceInfo(tenderInfo));
         return headerDto;
     }
 
@@ -100,7 +102,7 @@ public class PqFormHeaderService {
 
         PqFormHeaderDto headerDto = PqFormHeaderDto.valueOf(formHeader);
         headerDto.setTenderSubmissionDate(tenderInfo.getLastDateOfSubmission().format(DateTimeFormatter.ofPattern(DATE_PATTERN)));
-
+        headerDto.setHasFinanceInfo(validateFinanceInfo(tenderInfo));
         return headerDto;
     }
 
@@ -108,6 +110,9 @@ public class PqFormHeaderService {
         if (pqFormHeaderCreateDto.getWorkflowStep().getText().equals(WorkflowStep.PUBLISHED.getText())) {
             formHeader.setPqDocumentIssueDate(LocalDate.now());
             tenderInfo.setWorkflowStep(pqFormHeaderCreateDto.getWorkflowStep());
+            if (!validateFinanceInfo(tenderInfo)) {
+                throw new InValidDataSubmittedException("Cannot submit PQ form, please fill Finance information in Tender");
+            }
         } else {
             formHeader.setPqDocumentIssueDate(null);
         }
@@ -123,6 +128,10 @@ public class PqFormHeaderService {
         LocalDate lastDateOfSubmission = LocalDate.parse(pqFormHeaderCreateDto.getPqLastDateOfSubmission(), formatter);
         formHeader.setTentativeDateOfAward(tentativeAwardDate);
         formHeader.setPqLastDateOfSubmission(lastDateOfSubmission);
+    }
+
+    private boolean validateFinanceInfo(TenderInfo tenderInfo) {
+        return tenderInfo.getTenderFinanceInfo() != null;
     }
 
     private void validateFetch(HttpServletRequest request, TenderInfo tenderInfo) {

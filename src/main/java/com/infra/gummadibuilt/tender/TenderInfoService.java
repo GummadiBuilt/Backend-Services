@@ -195,7 +195,6 @@ public class TenderInfoService {
         tenderInfo.setTypeOfContract(typeOfContract);
         createTenderInfo(tenderInfo, tenderInfoDto);
         tenderInfo.getChangeTracking().update(loggedInUser.toString());
-        tenderInfo.setTenderFinanceInfo(tenderInfoDto.getTenderFinanceInfo());
 
         if (request.isUserInRole("client")) {
             boolean fileUpload = tenderInfoDto.isFileUpload();
@@ -203,8 +202,10 @@ public class TenderInfoService {
             if (tenderInfoDto.getWorkflowStep().equals(WorkflowStep.YET_TO_BE_PUBLISHED)) {
                 boolean hasData;
                 if (fileUpload) {
+                    tenderInfo.setTenderFinanceInfo(null);
                     hasData = tenderInfo.getTenderClientDocuments().size() > 0;
                 } else {
+                    tenderInfo.setTenderFinanceInfo(tenderInfoDto.getTenderFinanceInfo());
                     hasData = tenderInfo.getTenderFinanceInfo() != null;
                 }
                 if (!hasData) {

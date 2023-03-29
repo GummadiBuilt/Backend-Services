@@ -22,6 +22,8 @@ public class PqFormHeaderDto extends PqFormHeaderCreateDto implements Serializab
 
     private int applicationFormId;
 
+    private boolean hasFinanceInfo;
+
     private ActionTaken applicationFormStatus;
 
     public static PqFormHeaderDto valueOf(PqFormHeader pqFormHeader) {
