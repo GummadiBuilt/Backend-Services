@@ -195,6 +195,7 @@ public class TenderInfoService {
         tenderInfo.setTypeOfContract(typeOfContract);
         createTenderInfo(tenderInfo, tenderInfoDto);
         tenderInfo.getChangeTracking().update(loggedInUser.toString());
+        tenderInfo.setTenderFinanceInfo(tenderInfoDto.getTenderFinanceInfo());
 
         if (request.isUserInRole("client")) {
             boolean fileUpload = tenderInfoDto.isFileUpload();
