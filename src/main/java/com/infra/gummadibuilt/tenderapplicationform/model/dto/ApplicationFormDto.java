@@ -46,9 +46,13 @@ public class ApplicationFormDto extends ApplicationFormCreateDto implements Seri
         result.setClientReferences(applicationForm.getClientReferences());
         result.setSimilarProjectNature(applicationForm.getSimilarProjectNature());
         result.setEsiRegistration(applicationForm.getEsiRegistration());
+        result.setEsiRegistrationFileName(applicationForm.getEsiRegistrationFileName());
         result.setEpfRegistration(applicationForm.getEpfRegistration());
+        result.setEpfRegistrationFileName(applicationForm.getEpfRegistrationFileName());
         result.setGstRegistration(applicationForm.getGstRegistration());
+        result.setGstRegistrationFileName(applicationForm.getGstRegistrationFileName());
         result.setPanNumber(applicationForm.getPanNumber());
+        result.setPanFileName(applicationForm.getPanFileName());
         result.setEmployeesStrength(applicationForm.getEmployeesStrength());
         result.setCapitalEquipment(applicationForm.getCapitalEquipment());
         result.setPpeToStaff(applicationForm.getPpeToStaff());
