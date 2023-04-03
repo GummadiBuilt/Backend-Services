@@ -108,7 +108,7 @@ public class AppFormController {
             @ApiResponse(responseCode = "404", description = "The resource you were trying to reach is not found")
     })
     @GetMapping("/{applicationId}/download/{documentType}")
-    @RolesAllowed("contractor")
+    @RolesAllowed({"contractor", "admin"})
     public FileDownloadDto downloadDocument(HttpServletRequest request,
                                             @PathVariable("tenderId") String tenderId,
                                             @PathVariable("documentType") DocumentType documentType,
