@@ -2,6 +2,36 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.11](https://github.com/GummadiBuilt/Backend-Services/compare/v0.0.10...v0.0.11) (2023-04-03)
+
+
+### Features
+
+* **applytender:** modified the process applying tender ([4959f3f](https://github.com/GummadiBuilt/Backend-Services/commit/4959f3fc560061ad088a3f013136652ec9f3e214))
+* **clientdoc:** added feature for client documents upload ([82ce1cb](https://github.com/GummadiBuilt/Backend-Services/commit/82ce1cb7580eb57284d1f950214cc8c6a1fb703c))
+* **clientdoc:** added feature for client documents upload ([1212b4d](https://github.com/GummadiBuilt/Backend-Services/commit/1212b4d415af1720722f3f4307294cb2318e1545))
+* **download:** modified download documents logic ([108c63f](https://github.com/GummadiBuilt/Backend-Services/commit/108c63f7f188acb1d0ce69c8f4e146d35e555022))
+* **migration:** migration added for master-data ([df4473d](https://github.com/GummadiBuilt/Backend-Services/commit/df4473d9f74a63797c6481d5f4bf17251614ee3a))
+* **payment:** added payment feature ([903e447](https://github.com/GummadiBuilt/Backend-Services/commit/903e4472a29f71155a1367000ece59868590938e))
+* **pqvalidation:** added pq form validation ([36eddb5](https://github.com/GummadiBuilt/Backend-Services/commit/36eddb5973b9941a9273aaec101f8560222d1fe5))
+* **turnonver:** added default turnover details ([b724d34](https://github.com/GummadiBuilt/Backend-Services/commit/b724d340ce94e1da65d474f58e5ccac3f5432d56))
+* **turnonver:** added default turnover details ([5ff2f1d](https://github.com/GummadiBuilt/Backend-Services/commit/5ff2f1d277b27f9dcb228771652a128a999038d6))
+
+
+### Bug Fixes
+
+* **action:** added action taken ([dd10ee2](https://github.com/GummadiBuilt/Backend-Services/commit/dd10ee2afbae48a58f66a8e2126c67d76c564e86))
+* **appform:** return file names on get ([b7b18fa](https://github.com/GummadiBuilt/Backend-Services/commit/b7b18fa2aa956d0356a3404a533b16ef73acc6cd))
+* **clientdocs:** fixed a feature of client document upload ([eec0d14](https://github.com/GummadiBuilt/Backend-Services/commit/eec0d14c256884dfa78c6225e7b14b6b51188a55))
+* **clientdocs:** fixed a feature of client document upload ([9a466ae](https://github.com/GummadiBuilt/Backend-Services/commit/9a466aeb2e81b52c9b80e343e4e8e31a701a19e1))
+* **delete:** fixes an issue with delete documents ([5ed1894](https://github.com/GummadiBuilt/Backend-Services/commit/5ed1894f8d931605d837509b74d1f2e4fb659839))
+* **download:** fixes issues with downloading document ([c726701](https://github.com/GummadiBuilt/Backend-Services/commit/c72670163b56e761785d84bc96c77a61c31bf98e))
+* **payment:** fixes in payment api ([239338e](https://github.com/GummadiBuilt/Backend-Services/commit/239338e93e62da62b86cfa21eae2339376282588))
+* **tender:** client document saving to database ([d26256c](https://github.com/GummadiBuilt/Backend-Services/commit/d26256c126d004ae3a9db90b41d3c49ea1d1fe24))
+* **tender:** fixes issue during tender create with finance info ([f99ecf3](https://github.com/GummadiBuilt/Backend-Services/commit/f99ecf35f8410a204cdb4ac6e16cf86e3ba998f9))
+* **update:** fixes update tender ([6b69faa](https://github.com/GummadiBuilt/Backend-Services/commit/6b69faa01c4da420a7e49bf42901edddb36d1289))
+* **upload:** fixes an issue with upload doc ([84ad92f](https://github.com/GummadiBuilt/Backend-Services/commit/84ad92fc8be1a30198e5542e6f7c17a7e8bb5866))
+
 ### [0.0.10](https://github.com/GummadiBuilt/Backend-Services/compare/v0.0.9...v0.0.10) (2023-02-27)
 
 ### [0.0.9](https://github.com/GummadiBuilt/Backend-Services/compare/v0.0.8...v0.0.9) (2023-02-20)
